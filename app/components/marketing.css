@@ -634,3 +634,6 @@
 /* Offset each anchor once; avoid adding both scroll padding and scroll margin. */
 html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions) { scroll-padding-top: 0; }
 .pc-site .pc-paged-solutions > .pc-hero { scroll-margin-top: calc(var(--pc-header-height) + var(--pc-announcement-height)); }
+/* The first panel starts below the header, so navigation uses its light surface. */
+.pc-site:has(.pc-paged-solutions) .pc-header { background: #fff; color: #171a20; }
+.pc-site:has(.pc-paged-solutions) .pc-header .pc-logo img { filter: brightness(0); }
