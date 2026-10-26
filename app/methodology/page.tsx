@@ -1,3 +1,4 @@
+import { Shell } from '../components/marketing';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -16,13 +17,8 @@ const Table = ({ headers, rows }: { headers: string[]; rows: string[][] }) => (
 
 export default function MethodologyPage() {
   return (
-    <main className="methodologyPage">
-      <header className="methodologyTop">
-        <div className="methodologyShell methodologyTopInner">
-          <a className="methodologyBrand" href="/PVCirconomy/" aria-label="PV Circonomy"><img src="/PVCirconomy/images/pv-circonomy-logo.svg" alt="PV Circonomy" /></a>
-          <a className="methodologyBack" href="/PVCirconomy/business-case">← BACK TO CALCULATOR</a>
-        </div>
-      </header>
+    <Shell><div className="methodologyPage">
+
 
       <div className="methodologyShell">
         <section className="methodologyHero">
@@ -118,6 +114,6 @@ export default function MethodologyPage() {
         </section>
       </div>
       <footer className="methodologyFooter"><div className="methodologyShell methodologyFooterInner"><span>© PV Circonomy · Business Case Calculator</span><a className="methodologyBack" href="/PVCirconomy/business-case">RETURN TO CALCULATOR ↗</a></div></footer>
-    </main>
+    </div></Shell>
   );
 }

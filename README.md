@@ -1,19 +1,17 @@
-# PV Circonomy
+# PV Circonomy redesign
 
-English corporate website preview for PV Circonomy.
+Tesla-inspired image-first corporate website prototype. Main navigation: Solutions 解決方案 / Services 回收服務 / Circular Products 循環產品 / Discover 探索 / Shop 線上商店.
 
-Published at https://andrewhung1028.github.io/PVCirconomy/ using GitHub Pages.
+The three conversion paths are recycling estimates and booking, PV Circulator and the business case calculator, and circular-material RFQs. Existing company equipment video, poster, logos and brochures are retained. `solar-circularity.png` is generated illustrative imagery, not a photograph of a company facility. Material SVGs are original category illustrations, not actual batch photographs.
 
-## Preview scope
+## Preview limits
 
-Solutions, Services, Circular Products, Discover and Shop demonstrate the new website architecture. The Business Case Calculator runs in the browser with built-in sample assumptions. No Microsoft Graph, SharePoint or Apollo integrations or credentials are included.
+Recycling prices are illustrative. Booking and RFQ forms validate locally without submitting, reserving, emailing or saving requests. Material passports demonstrate information structure, not verified batch records. The calculator uses its existing scenario assumptions.
 
-Recycling prices are illustrative. Booking, equipment inquiry and materials RFQ forms validate locally without transmitting, reserving, emailing or saving submissions. Material passports are structural examples, not live batch records. Material graphics are abstract category illustrations.
-
-The existing PV Circonomy logo, brochures and equipment video are included. The still is a frame from that video. Competitor photographs used in local exploration are not included.
+`/settings/` controls the announcement content, link and visibility, plus the bottom assistant entry. Settings persist in this browser and sync between same-origin tabs; they are not global admin settings. The bottom support panel is clearly labeled knowledge navigation, with OpenAI not connected. See `server/README.md` for the server-only API handoff.
 
 ## Development
 
-Use Node.js 24, run `npm ci`, then `npm run dev` and open `/PVCirconomy/`.
+Use Node.js 24, `npm ci`, then `npm run dev`. The application base path is `/PVCirconomy/`. `npm run build` exports to `out/`.
 
-`npm run build` generates the static `out/` directory. GitHub Actions deploys it after pushes to main.
+The GitHub Pages workflow deploys the static export on a push to main. Live site: https://andrewhung1028.github.io/PVCirconomy/.

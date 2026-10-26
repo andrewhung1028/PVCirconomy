@@ -558,30 +558,11 @@ export default function Page() {
   ======================================================= */
 
   return (
-    <main className="site">
+    <div className="site">
 
       {/* HEADER */}
 
-      <header className="header">
-        <div className="pageShell headerInner">
 
-          <a
-            className="brandLogo"
-            href="/PVCirconomy/"
-            aria-label="PV Circonomy"
-          >
-            <img
-              src="/PVCirconomy/images/pv-circonomy-logo.svg"
-              alt="PV Circonomy"
-            />
-          </a>
-
-          <a className="headerContact" href="#follow-up">
-            CONTACT US
-          </a>
-
-        </div>
-      </header>
 
       {/* HERO */}
 
@@ -1784,26 +1765,8 @@ export default function Page() {
         </button>
       )}
 
-      {/* FOOTER */}
 
-      <footer>
-        <div className="pageShell footerInner">
 
-          <div>
-            <span>PV Circonomy</span>
-            <span>PV Circulator®</span>
-            <span>
-              Business Case Calculator
-            </span>
-          </div>
-
-          <span>
-            © 2026 PV Circonomy
-          </span>
-
-        </div>
-      </footer>
-
-    </main>
+    </div>
   );
 }
