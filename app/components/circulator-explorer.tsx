@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 export const solutionSections = [
-  ['solutions-intro', 'California true solar panel recycling'], ['whole-cycle', 'Meet PV Circonomy'], ['circulator', 'Explore PV Circulator'], ['affordable', 'Our most affordable starting point'], ['beyond-recycling', 'Beyond recycling'], ['connected', 'Always connected'], ['specs', 'PV Circulator specs'],
+  ['solutions-intro', 'California true solar panel recycling'], ['whole-cycle', 'Meet PV Circonomy'], ['circulator', 'Explore PV Circulator'], ['affordable', 'Our most affordable starting point'], ['beyond-recycling', 'Beyond recycling'], ['connected', 'Always connected'], ['next-step', 'Put circularity into motion'], ['specs', 'PV Circulator specs'],
 ] as const;
 export function SolutionIndex() {
   const [active, setActive] = useState('solutions-intro');
