@@ -577,3 +577,60 @@
  .pc-site .pc-nav > a, .pc-site .pc-discover-trigger { justify-content: space-between; }
  .pc-site .pc-ask-trigger > span { display: none; }
 }
+
+/* Solutions: one viewport per section, with native document scrolling. */
+.pc-site { --pc-support-height: 0px; }
+.pc-has-assistant { --pc-support-height: calc(64px + env(safe-area-inset-bottom)); }
+.pc-paged-solutions { --pc-screen-height: calc(100svh - var(--pc-header-height) - var(--pc-announcement-height) - var(--pc-support-height)); }
+.pc-paged-solutions > .pc-hero { margin-top: calc(var(--pc-header-height) + var(--pc-announcement-height)); height: var(--pc-screen-height); min-height: 520px; max-height: none; scroll-snap-align: start; }
+.pc-site .pc-paged-solutions .pc-hero-content { padding-top: clamp(55px, 10svh, 130px); padding-bottom: 50px; }
+.pc-paged-solutions .pc-solution-screen { min-height: var(--pc-screen-height); box-sizing: border-box; padding: clamp(35px, 5svh, 70px) 54px; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; scroll-margin-top: calc(var(--pc-header-height) + var(--pc-announcement-height)); }
+.pc-paged-solutions .pc-editorial { width: min(1280px, 100%); margin: 0 auto; }
+.pc-paged-solutions .pc-editorial-left, .pc-paged-solutions .pc-editorial-right { align-items: center; }
+.pc-paged-solutions .pc-editorial-left .pc-editorial-image, .pc-paged-solutions .pc-editorial-right .pc-editorial-image { height: clamp(280px, 48svh, 600px); aspect-ratio: auto; }
+.pc-paged-solutions .pc-solution-overview .pc-editorial-image { height: clamp(180px, 27svh, 340px); min-height: 0; }
+.pc-paged-solutions .pc-editorial-stacked .pc-editorial-caption { padding: 24px 0 0; gap: 10px; }
+.pc-paged-solutions .pc-info-cards { padding: 24px 0 0; gap: 16px; }
+.pc-paged-solutions .pc-info-cards article { padding: 20px; }
+.pc-paged-solutions .pc-info-cards article > span { font-size: 28px; margin-bottom: 12px; }
+.pc-paged-solutions .pc-info-cards h3 { font-size: 24px; margin-bottom: 10px; }
+.pc-paged-solutions .pc-info-cards p { font-size: 13px; }
+.pc-paged-solutions .pc-solution-business { background: #f4f4f4; }
+.pc-paged-solutions .pc-solution-business > .pc-wrap { width: min(1280px, 100%); }
+.pc-paged-solutions .pc-solution-business .pc-fine { max-width: 780px; }
+.pc-paged-solutions .pc-solution-next .pc-end { width: 100%; padding: 0; }
+.pc-section-index { position: fixed; top: 50%; right: 14px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 25; }
+.pc-section-index a { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #fff; color: #393c41; border: 1px solid #d0d1d2; font-size: 9px; font-weight: 500; }
+.pc-section-index a:hover, .pc-section-index a:focus-visible { background: #171a20; color: #fff; }
+@supports selector(html:has(.pc-paged-solutions)) {
+ html:has(.pc-paged-solutions) { scroll-snap-type: y proximity; scroll-padding-top: 80px; }
+ html:has(.pc-has-announcement .pc-paged-solutions) { scroll-padding-top: 124px; }
+}
+@media(max-width: 1000px) {
+ .pc-paged-solutions .pc-solution-screen { padding-inline: 40px; }
+ .pc-paged-solutions .pc-info-cards article { padding: 16px; }
+ .pc-paged-solutions .pc-info-cards h3 { font-size: 20px; }
+}
+@media(max-width: 760px) {
+ .pc-paged-solutions > .pc-hero { min-height: 490px; }
+ .pc-site .pc-paged-solutions .pc-hero-content { padding-top: 65px; padding-bottom: 40px; }
+ .pc-paged-solutions .pc-solution-screen { padding: 40px 30px 40px 22px; }
+ .pc-paged-solutions .pc-editorial-left, .pc-paged-solutions .pc-editorial-right { gap: 25px; }
+ .pc-paged-solutions .pc-editorial-left .pc-editorial-image, .pc-paged-solutions .pc-editorial-right .pc-editorial-image { height: clamp(200px, 32svh, 350px); }
+ .pc-paged-solutions .pc-solution-overview .pc-editorial-image { height: 25svh; min-height: 160px; }
+ .pc-paged-solutions .pc-info-cards { grid-template-columns: 1fr; gap: 12px; padding-top: 22px; }
+ .pc-paged-solutions .pc-info-cards article { padding: 18px; }
+ .pc-paged-solutions .pc-info-cards article > span { display: none; }
+ .pc-paged-solutions .pc-info-cards h3 { font-size: 21px; }
+ .pc-section-index { right: 4px; gap: 8px; }.pc-section-index a { width: 22px; height: 22px; font-size: 8px; }
+ @supports selector(html:has(.pc-paged-solutions)) {
+  html:has(.pc-paged-solutions) { scroll-padding-top: 68px; }
+  html:has(.pc-has-announcement .pc-paged-solutions) { scroll-padding-top: 136px; }
+ }
+}
+@media(prefers-reduced-motion: reduce) {
+ html:has(.pc-paged-solutions) { scroll-snap-type: none; scroll-behavior: auto; }
+}
+/* Offset each anchor once; avoid adding both scroll padding and scroll margin. */
+html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions) { scroll-padding-top: 0; }
+.pc-site .pc-paged-solutions > .pc-hero { scroll-margin-top: calc(var(--pc-header-height) + var(--pc-announcement-height)); }
