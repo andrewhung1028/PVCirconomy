@@ -1,6 +1,6 @@
 # PV Circonomy redesign
 
-Tesla-inspired image-first corporate website prototype. Main navigation: Solutions 解決方案 / Services 回收服務 / Circular Products 循環產品 / Discover 探索 / Shop 線上商店.
+Tesla-inspired image-first corporate website prototype. Main navigation: Solutions / Services / Circular Products / Discover / Shop.
 
 The three conversion paths are recycling estimates and booking, PV Circulator and the business case calculator, and circular-material RFQs. Existing company equipment video, poster, logos and brochures are retained. `solar-circularity.png` is generated illustrative imagery, not a photograph of a company facility. Material SVGs are original category illustrations, not actual batch photographs.
 

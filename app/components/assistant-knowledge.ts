@@ -1,28 +1,28 @@
 export type GuideReply = { text: string; links: { label: string; href: string }[] };
 export function guideReply(input: string): GuideReply {
   const q = input.toLowerCase();
-  if (/價格|費用|估價|多少錢|price|cost|quote|\d+\s*(片|panels)/.test(q)) return {
-    text: '回收費用需依模組種類、數量、狀態與運輸條件確認。預覽試算採 USD 10／片，自送不加運費；選擇收運另加示範費用 USD 250。這不是正式報價。你可以在 Shop 調整數量並查看估算。',
-    links: [{ label: '試算回收費用', href: '/shop?type=recycling' }, { label: '了解回收服務', href: '/services' }],
+  if (/price|cost|quote|fee|\d+\s*panels/.test(q)) return {
+    text: 'Recycling costs depend on panel type, quantity, condition and logistics. This preview uses USD 10 per panel for self-delivery, plus an illustrative USD 250 for collection. This is not a commercial quote. Adjust your quantity in Shop to explore an estimate.',
+    links: [{ label: 'Estimate recycling costs', href: '/shop?type=recycling' }, { label: 'Explore recycling services', href: '/services' }],
   };
-  if (/材料|玻璃|鋁|銅|矽|material|glass|aluminum|copper|silicon/.test(q)) return {
-    text: 'Circular Products 集中展示玻璃、鋁、銅與電池片材料。實際可供應數量、成分、純度與交貨條件需按批次確認。材料詢價時，請提供用途、規格、需求量與交貨地點。',
-    links: [{ label: '瀏覽循環產品', href: '/circular-products' }, { label: '材料詢價', href: '/shop?type=materials' }],
+  if (/material|glass|aluminum|copper|silicon/.test(q)) return {
+    text: 'Circular Products presents recovered glass, aluminum, copper and cell materials. Availability, composition, purity and delivery terms require batch-specific confirmation. Include your application, specifications, volume and delivery location in a materials inquiry.',
+    links: [{ label: 'Explore circular products', href: '/circular-products' }, { label: 'Request a material quote', href: '/shop?type=materials' }],
   };
-  if (/設備|circulator|equipment|投資|商業|獲利|calculator|business|payback/.test(q)) return {
-    text: 'PV Circulator 是設備方案入口。你可以先看運作影片與型錄，再用 Business Case Calculator 調整處理量、收費與營運假設。試算結果僅供情境評估，不保證投資報酬。',
-    links: [{ label: '了解 PV Circulator', href: '/solutions#circulator' }, { label: '開啟商業試算', href: '/business-case' }, { label: '設備詢問', href: '/shop?type=equipment' }],
+  if (/circulator|equipment|invest|calculator|business|payback/.test(q)) return {
+    text: 'Explore the PV Circulator video and brochure, then use the Business Case Calculator to adjust volume, processing fees and operating assumptions. Results are indicative scenarios, not guaranteed investment returns.',
+    links: [{ label: 'Explore PV Circulator', href: '/solutions#circulator' }, { label: 'Open the business case calculator', href: '/business-case' }, { label: 'Equipment inquiry', href: '/shop?type=equipment' }],
   };
-  if (/epr|法規|合規|證明|報告|compliance|report|環保/.test(q)) return {
-    text: '回收與 EPR 相關文件需要依市場、服務範圍及專案條件確認。這個預覽沒有提供法律判定或已驗證的環境績效數據。預約前，請先列出你需要的回收、追溯與報告文件。',
-    links: [{ label: '查看整體解決方案', href: '/solutions' }, { label: '查看服務說明', href: '/services' }],
+  if (/epr|compliance|report|regulation|environment/.test(q)) return {
+    text: 'Recycling and EPR-related documentation depends on your market, service scope and project conditions. This preview does not provide legal determinations or verified environmental performance data. Define your recycling, traceability and reporting requirements before booking.',
+    links: [{ label: 'Explore the complete approach', href: '/solutions' }, { label: 'View service information', href: '/services' }],
   };
-  if (/預約|回收|收運|運送|破損|recycl|book|collect|panel/.test(q)) return {
-    text: '回收服務從模組資訊開始：數量、技術類型、完整或破損狀態、所在地點，以及希望的處理日期。可先評估自行送達或安排收運。這個版本可預覽預約流程，但不會送出訂單或保留時段。',
-    links: [{ label: '回收估價與預約', href: '/shop?type=recycling' }, { label: '回收前常見問題', href: '/services' }],
+  if (/recycl|book|collect|panel|damaged|transport/.test(q)) return {
+    text: 'Start with your panel quantity, technology, condition, location and preferred date. Explore self-delivery or collection. This version previews the booking flow but does not submit an order or reserve a time slot.',
+    links: [{ label: 'Estimate & book recycling', href: '/shop?type=recycling' }, { label: 'Recycling FAQ', href: '/services#faq' }],
   };
   return {
-    text: '目前是網站知識導覽示範，尚未連線 OpenAI。我可以協助你找到回收估價、PV Circulator、商業試算或循環材料資訊。你想處理退役模組、評估設備，還是採購材料？',
-    links: [{ label: '回收估價', href: '/shop?type=recycling' }, { label: '評估回收設備', href: '/solutions' }, { label: '採購循環材料', href: '/circular-products' }],
+    text: 'This is a website knowledge guide demo; OpenAI is not connected. I can help you find recycling estimates, PV Circulator information, the business case calculator or circular materials. Are you recycling panels, evaluating equipment or sourcing materials?',
+    links: [{ label: 'Estimate recycling costs', href: '/shop?type=recycling' }, { label: 'Evaluate recycling equipment', href: '/solutions' }, { label: 'Source circular materials', href: '/circular-products' }],
   };
 }

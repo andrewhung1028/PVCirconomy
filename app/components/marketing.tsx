@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import './marketing.css';
 import { Announcement, AssistantBar, useSiteSettings } from './site-utilities';
 
-const nav = [['Solutions', '解決方案', '/solutions'], ['Services', '回收服務', '/services'], ['Circular Products', '循環產品', '/circular-products'], ['Discover', '探索', '/discover']] as const;
+const nav = [['Solutions', '/solutions'], ['Services', '/services'], ['Circular Products', '/circular-products'], ['Discover', '/discover']] as const;
 import { products } from './marketing-data';
 export function Shell({ children }: { children: ReactNode }) {
   const settings = useSiteSettings();
@@ -29,27 +29,27 @@ export function Shell({ children }: { children: ReactNode }) {
       <Link href="/" aria-label="PV Circonomy home" className="pc-logo"><img src="/PVCirconomy/images/pv-circonomy-logo.svg" alt="PV Circonomy" /></Link>
       <button className="pc-menu-toggle" aria-expanded={open} aria-controls="pc-navigation" onClick={() => { setOpen(!open); closeDiscover(); }}>{open ? 'Close −' : 'Menu +'}</button>
       <nav id="pc-navigation" className={open ? 'pc-nav pc-nav-open' : 'pc-nav'} aria-label="Main navigation">
-        {nav.map(([name, zh, url]) => name === 'Discover' ? <div className="pc-discover-wrap" key={url}>
+        {nav.map(([name, url]) => name === 'Discover' ? <div className="pc-discover-wrap" key={url}>
           <button ref={discoverTrigger} className="pc-discover-trigger" aria-expanded={discoverOpen} aria-controls="pc-discover-panel"
             onMouseEnter={() => { if (window.matchMedia('(hover: hover)').matches) setDiscoverOpen(true); }}
             onClick={() => setDiscoverOpen(v => !v)}
             onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); setDiscoverOpen(true); setTimeout(() => firstDiscoverLink.current?.focus(), 0); } }}>
-            <span>{name}</span><small lang="zh-Hant">{zh} <span aria-hidden="true">⌄</span></small>
+            <span>{name}</span><span aria-hidden="true" className="pc-discover-chevron">⌄</span>
           </button>
-          {discoverOpen && <div id="pc-discover-panel" className="pc-mega" aria-label="Discover 探索選單"><div className="pc-mega-inner">
+          {discoverOpen && <div id="pc-discover-panel" className="pc-mega" aria-label="Discover navigation"><div className="pc-mega-inner">
             {[
-              { label: 'Resources', zh: '資源', links: [['所有探索內容', '/discover'], ['PV Circulator 型錄', '/2026_PV_Circulator_Solution_Brochure.pdf'], ['方案簡介', '/PV_Circulator_Solution_Overview.pdf'], ['回收常見問題', '/services#faq']] },
-              { label: 'Learn', zh: '知識', links: [['技術與運作影片', '/solutions#circulator'], ['Business Case Calculator', '/business-case'], ['試算方法與假設', '/methodology'], ['材料履歷', '/circular-products#passport']] },
-              { label: 'Company', zh: '公司', links: [['關於 PV Circonomy', '/discover#company'], ['循環經濟理念', '/solutions'], ['合作與設備詢問', '/shop?type=equipment'], ['聯繫與服務需求', '/shop']] },
-            ].map((group, i) => <section key={group.label}><h2>{group.label}<span lang="zh-Hant">{group.zh}</span></h2>{group.links.map(([label, href], j) => <Link key={href} href={href} ref={i === 0 && j === 0 ? firstDiscoverLink : undefined} onClick={() => { closeDiscover(); setOpen(false); }}>{label}</Link>)}</section>)}
-          </div><Link className="pc-mega-all" href="/discover" onClick={() => { closeDiscover(); setOpen(false); }}>Explore Discover / 探索更多 <Arrow /></Link></div>}
-        </div> : <Link href={url} key={url} aria-current={path === url ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>{name}</span><small lang="zh-Hant">{zh}</small></Link>)}
-        <Link href="/shop" className="pc-nav-shop" aria-current={path === '/shop' ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>Shop<small lang="zh-Hant">線上商店</small></span><Arrow /></Link>
+              { label: 'Resources', links: [['Explore Discover', '/discover'], ['PV Circulator brochure', '/2026_PV_Circulator_Solution_Brochure.pdf'], ['Solution overview', '/PV_Circulator_Solution_Overview.pdf'], ['Recycling FAQ', '/services#faq']] },
+              { label: 'Learn', links: [['Technology & video', '/solutions#circulator'], ['Business Case Calculator', '/business-case'], ['Methodology & assumptions', '/methodology'], ['Material passports', '/circular-products#passport']] },
+              { label: 'Company', links: [['About PV Circonomy', '/discover#company'], ['Our circular approach', '/solutions'], ['Partnerships & equipment', '/shop?type=equipment'], ['Contact & service requests', '/shop']] },
+            ].map((group, i) => <section key={group.label}><h2>{group.label}</h2>{group.links.map(([label, href], j) => <Link key={href} href={href} ref={i === 0 && j === 0 ? firstDiscoverLink : undefined} onClick={() => { closeDiscover(); setOpen(false); }}>{label}</Link>)}</section>)}
+          </div><Link className="pc-mega-all" href="/discover" onClick={() => { closeDiscover(); setOpen(false); }}>Explore Discover <Arrow /></Link></div>}
+        </div> : <Link href={url} key={url} aria-current={path === url ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>{name}</span></Link>)}
+        <Link href="/shop" className="pc-nav-shop" aria-current={path === '/shop' ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>Shop</span><Arrow /></Link>
       </nav>
     </header>
-    {discoverOpen && <button className="pc-mega-backdrop" aria-label="關閉探索選單" tabIndex={-1} onClick={() => closeDiscover(true)}/>}
+    {discoverOpen && <button className="pc-mega-backdrop" aria-label="Close Discover navigation" tabIndex={-1} onClick={() => closeDiscover(true)}/>}
     <main id="pc-content">{children}</main>
-    <footer className="pc-footer"><div className="pc-footer-top"><Link href="/" className="pc-logo"><img src="/PVCirconomy/images/pv-circonomy-logo.svg" alt="PV Circonomy" /></Link><p>A new life for solar.<br />A better use of resources.</p><Link href="/shop?type=recycling">Estimate & book recycling <Arrow /></Link></div><div className="pc-footer-bottom"><span>© {new Date().getFullYear()} PV Circonomy</span><span>English · 繁體中文導覽</span><Link href="/discover">About this preview</Link><Link href="/settings">系統設定</Link></div></footer>
+    <footer className="pc-footer"><div className="pc-footer-top"><Link href="/" className="pc-logo"><img src="/PVCirconomy/images/pv-circonomy-logo.svg" alt="PV Circonomy" /></Link><p>A new life for solar.<br />A better use of resources.</p><Link href="/shop?type=recycling">Estimate & book recycling <Arrow /></Link></div><div className="pc-footer-bottom"><span>© {new Date().getFullYear()} PV Circonomy</span><span>English</span><Link href="/discover">About this preview</Link><Link href="/settings">System settings</Link></div></footer>
     {settings.assistantEnabled && <AssistantBar />}
   </div>;
 }

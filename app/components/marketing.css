@@ -561,3 +561,19 @@
  .pc-site .pc-segmented button { font-size: 12px; }.pc-site .pc-segmented button small { font-size: 10px; }.pc-site .pc-tabs button { font-size: 12px; }
  .pc-site .pc-announcement, .pc-site .pc-announcement > a { font-size: 10px; }.pc-site .pc-ask-trigger, .pc-site .pc-ask-trigger strong, .pc-site .pc-bar-book { font-size: 11px; }
 }
+
+/* English navigation centered on the viewport, independently of the logo. */
+.pc-site .pc-header { display: grid; grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr); }
+.pc-site .pc-header > .pc-logo { grid-column: 1; justify-self: start; }
+.pc-site .pc-header > .pc-nav { grid-column: 2; justify-self: center; }
+.pc-site .pc-nav > a, .pc-site .pc-discover-trigger { flex-direction: row; align-items: center; min-height: 40px; }
+.pc-site .pc-discover-trigger { gap: 7px; }
+.pc-discover-chevron { font-size: 12px; }
+.pc-site .pc-nav .pc-nav-shop { gap: 10px; }
+.pc-site .pc-header .pc-menu-toggle { grid-column: 3; justify-self: end; }
+@media(max-width: 760px) {
+ .pc-site .pc-header { display: flex; justify-content: space-between; }
+ .pc-site .pc-header > .pc-nav { justify-self: auto; }
+ .pc-site .pc-nav > a, .pc-site .pc-discover-trigger { justify-content: space-between; }
+ .pc-site .pc-ask-trigger > span { display: none; }
+}
