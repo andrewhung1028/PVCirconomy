@@ -784,3 +784,8 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
 .pc-solutions-v2 .pc-solution-next > .pc-solution-inner { display: grid; align-content: center; }
 .pc-solutions-v2 .pc-solution-next .pc-end .pc-wrap { width: 100%; max-width: var(--pc-content-width); margin-inline: 0; }
 @media(max-width: 760px) { .pc-solutions-v2 > .pc-solution-screen > .pc-solution-inner { min-height: 0; }.pc-solutions-v2 .pc-solution-next > .pc-solution-inner { min-height: calc(var(--pc-screen-height) - var(--pc-section-pad-y) * 2); } }
+
+/* Overview has no side index: center its content against the full viewport. */
+.pc-site .pc-solutions-v2 #solutions-intro > .pc-hero-content { width: min(1440px, calc(100% - 64px)); margin-inline: auto; text-align: center; align-items: center; }
+.pc-site .pc-solutions-v2 #solutions-intro .pc-audience-links, .pc-site .pc-solutions-v2 #solutions-intro .pc-actions { margin-inline: auto; justify-content: center; }
+@media(max-width: 760px) { .pc-site .pc-solutions-v2 #solutions-intro > .pc-hero-content { width: calc(100% - 44px); margin-inline: auto; } }
