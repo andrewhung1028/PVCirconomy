@@ -2,8 +2,8 @@
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 const methods = [
-  { key: 'dropoff', label: 'Self-delivery', title: 'Your panels. Your delivery.', description: 'Review acceptance and packaging requirements, then request a delivery date. This preview uses an illustrative USD 10 per panel.', image: 'solar-circularity.png' },
-  { key: 'pickup', label: 'Collection', title: 'A clearer route from your site.', description: 'Share your location and site access needs. The preview adds USD 250 for collection; actual logistics require assessment.', image: 'solar-circularity.png' },
+  { key: 'dropoff', label: 'Drop-off', title: 'Your panels. Your delivery.', description: 'Review acceptance and packaging requirements, then request a delivery date. This preview uses an illustrative USD 10 per panel.', image: 'solar-circularity.png' },
+  { key: 'pickup', label: 'Pickup', title: 'A clearer route from your site.', description: 'Share your location and site access needs. The preview adds USD 250 for collection; actual logistics require assessment.', image: 'solar-circularity.png' },
   { key: 'project', label: 'Project support', title: 'A plan at project scale.', description: 'For repowering, commercial sites and larger volumes, define the scope, schedule and documentation before confirming a project quote.', image: 'circulator-poster.jpg' },
 ];
 export function RecyclingExplorer() {
