@@ -2,7 +2,7 @@ export type GuideReply = { text: string; links: { label: string; href: string }[
 export function guideReply(input: string): GuideReply {
   const q = input.toLowerCase();
   if (/price|cost|quote|fee|\d+\s*panels/.test(q)) return {
-    text: 'Recycling costs depend on panel quantity, model, condition and logistics. Demo rates are USD 10 per panel below 100 panels, USD 8 from 100 panels, and USD 6 for the reference 720-panel pickup load, plus USD 250 reference local transport. The pickup location is an assumption, not a detected location. These are not commercial quotes. Transport outside California is handled by Project Support.',
+    text: 'Recycling costs depend on panel quantity, model, condition and logistics. Demo rates are USD 10 per panel below 100 panels, USD 8 from 100 panels, and USD 6 for the reference 720-panel pickup load, plus USD 250 reference local transport. The pickup location is an assumption, not a detected location. These are not commercial quotes. Transport outside California requires manual review. Projects exceeding 1 MW may be assessed for Project Support, including on-site, near-site and integrated decommissioning coordination.',
     links: [{ label: 'Estimate recycling costs', href: '/shop?type=recycling' }, { label: 'Explore recycling services', href: '/services' }],
   };
   if (/material|glass|aluminum|copper|silicon/.test(q)) return {
