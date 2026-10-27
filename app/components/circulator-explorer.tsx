@@ -2,12 +2,16 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 export const solutionSections = [
-  ['solutions-intro', 'California true solar panel recycling'], ['whole-cycle', 'Meet PV Circonomy'], ['circulator', 'Explore PV Circulator'], ['affordable', 'Our most affordable starting point'], ['beyond-recycling', 'Beyond recycling'], ['connected', 'Always connected'], ['next-step', 'Put circularity into motion'], ['specs', 'PV Circulator specs'],
+  ['solutions-intro', 'Overview'], ['whole-cycle', 'Meet PV Circonomy'], ['circulator', 'PV Circulator'], ['affordable', 'Affordable Recycling'], ['beyond-recycling', 'Beyond Recycling'], ['connected', 'Always Connected'], ['next-step', 'Take the Next Step'], ['specs', 'Specifications'],
 ] as const;
 export function SolutionIndex() {
-  const [active, setActive] = useState('solutions-intro');
-  useEffect(() => { const observer = new IntersectionObserver(entries => { const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio); if (visible[0]) setActive(visible[0].target.id); }, { rootMargin: '-20% 0px -35% 0px', threshold: [0, .2, .5] }); solutionSections.forEach(([id]) => { const element = document.getElementById(id); if (element) observer.observe(element); }); return () => observer.disconnect(); }, []);
-  return <nav className="pc-section-index" aria-label="Solutions sections">{solutionSections.map(([id,label],i) => <a href={'#'+id} key={id} aria-label={label} aria-current={active === id ? 'location' : undefined} title={label}>{String(i+1).padStart(2,'0')}</a>)}</nav>;
+  const [active, setActive] = useState('solutions-intro'); const [open,setOpen]=useState(false); const toggle=useRef<HTMLButtonElement>(null);
+  useEffect(() => { const visibility=new Map<string,number>(); const observer = new IntersectionObserver(entries => { entries.forEach(entry=>visibility.set(entry.target.id,entry.isIntersecting?entry.intersectionRatio:0)); const visible=[...visibility.entries()].filter(([,ratio])=>ratio>0).sort((a,b)=>b[1]-a[1]); if(visible[0])setActive(visible[0][0]); }, { rootMargin: '-20% 0px -35% 0px', threshold: [0, .2, .5] }); solutionSections.forEach(([id]) => { const element = document.getElementById(id); if (element) observer.observe(element); }); return () => observer.disconnect(); }, []);
+  return <div className="pc-section-navigation" onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);toggle.current?.focus();}}}>
+    <button ref={toggle} className="pc-section-toggle" type="button" aria-expanded={open} aria-controls="pc-solutions-section-list" onClick={()=>setOpen(v=>!v)}>Sections <span aria-hidden="true">{open?'−':'+'}</span></button>
+    {open&&<button className="pc-section-nav-backdrop" type="button" tabIndex={-1} aria-label="Close section navigation" onClick={()=>setOpen(false)}/>}
+    <nav id="pc-solutions-section-list" className={'pc-section-index'+(open?' pc-section-index-open':'')} aria-label="Solutions sections">{solutionSections.map(([id,label]) => <a href={'#'+id} key={id} aria-current={active === id ? 'location' : undefined} onClick={()=>setOpen(false)}><span>{label}</span></a>)}</nav>
+  </div>;
 }
 const configurations = [
   { name: 'Economic', tag: 'Essential processing', description: 'A focused entry configuration for essential processing. Start with your feedstock and define the separation stages your operation needs.', features: ['Core infeed and frame removal', 'Essential separation configuration', 'Expandable feedstock options'] },
