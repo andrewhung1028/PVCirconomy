@@ -762,3 +762,17 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
  .pc-section-index-open { display: flex; }.pc-section-index a { font-size: 12px; padding-block: 10px; }
  .pc-section-nav-backdrop { display: block; position: fixed; inset: calc(var(--pc-header-height) + var(--pc-announcement-height)) 0 var(--pc-support-height); z-index: 29; border: 0; background: #0002; }
 }
+
+/* Solutions spacing baseline: the approved PV Circulator showroom composition. */
+.pc-solutions-v2 { --pc-content-width: 1440px; --pc-section-pad-y: 36px; --pc-section-pad-left: 205px; --pc-section-pad-right: 55px; --pc-standard-media-height: clamp(240px, 38svh, 500px); }
+.pc-solutions-v2 .pc-solution-screen { padding: var(--pc-section-pad-y) var(--pc-section-pad-right) var(--pc-section-pad-y) var(--pc-section-pad-left); }
+.pc-solutions-v2 .pc-solution-inner { width: min(var(--pc-content-width), 100%); }
+.pc-solutions-v2 .pc-machine-stage { height: var(--pc-standard-media-height); }
+@media(min-width: 1800px) { .pc-solutions-v2 { --pc-section-pad-y: 50px; --pc-section-pad-left: 220px; --pc-section-pad-right: 70px; } }
+@media(min-width: 1600px) and (max-width: 1799px) { .pc-solutions-v2 { --pc-section-pad-y: 50px; } }
+@media(min-width: 761px) and (max-width: 1100px) { .pc-solutions-v2 { --pc-section-pad-left: 165px; --pc-section-pad-right: 30px; } }
+@media(min-width: 761px) {
+ .pc-solutions-v2 .pc-meet-slide { height: calc(var(--pc-standard-media-height) + 96px); aspect-ratio: auto; min-height: 0; max-height: none; }
+ .pc-solutions-v2 .pc-meet-screen .pc-center-heading { margin-bottom: 24px; }
+}
+@media(max-width: 760px) { .pc-solutions-v2 { --pc-section-pad-y: 40px; --pc-section-pad-left: 22px; --pc-section-pad-right: 22px; --pc-standard-media-height: 260px; } }
