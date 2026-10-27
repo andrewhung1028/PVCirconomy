@@ -818,3 +818,8 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
  .pc-section-navigation-dark .pc-section-index a { color: #72757a; }.pc-section-navigation-dark .pc-section-index a[aria-current='location'], .pc-section-navigation-dark .pc-section-index a:hover { color: #171a20; }
  .pc-section-navigation-dark .pc-section-index a::before { background: #171a20; border-color: #171a20; }.pc-section-navigation-dark .pc-section-index a[aria-current='location']::before { background: transparent; border-color: #171a20; }
 }
+
+/* Align the service card links while keeping every word available. */
+@media(min-width: 761px) {
+ .pc-value-cards article > p { min-height: 4.95em; text-wrap: pretty; }
+}
