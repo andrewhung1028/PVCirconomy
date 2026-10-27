@@ -823,3 +823,18 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
 @media(min-width: 761px) {
  .pc-value-cards article > p { min-height: 4.95em; text-wrap: pretty; }
 }
+
+/* A small estimate up front; detailed panel, site and loading data at booking. */
+.pc-quick-estimate-row { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-top: 30px; text-align: left; }
+.pc-quick-estimate-fields { display: flex; flex-wrap: wrap; align-items: start; gap: 24px; }
+.pc-quick-estimate-fields label { display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: #5c5e62; }
+.pc-quick-estimate-fields input, .pc-quick-estimate-fields select { height: 46px; border: 1px solid #d0d1d2; border-radius: 4px; background: #fff; color: #171a20; padding: 10px 14px; font-size: 14px; }
+.pc-quick-estimate-fields input { width: 145px; }.pc-quick-estimate-fields select { max-width: 290px; }
+.pc-reference-location { display: flex; flex-direction: column; gap: 10px; font-size: 12px; color: #5c5e62; }.pc-reference-location strong { font-size: 14px; color: #171a20; font-weight: 500; padding-top: 12px; }.pc-reference-location small { font-size: 10px; }
+.pc-quick-estimate-row .pc-button { flex-shrink: 0; }.pc-quick-estimate-row .pc-button[aria-disabled='true'] { opacity: .4; cursor: default; }
+.pc-quote-breakdown { margin: 0 0 20px; }.pc-quote-breakdown > div { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-top: 1px solid #d0d1d2; font-size: 12px; }.pc-quote-breakdown dd { margin: 0; white-space: nowrap; }
+.pc-booking-fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 22px; }.pc-booking-fieldset legend { font-size: 22px; font-weight: 500; padding-bottom: 25px; }.pc-booking-fieldset + .pc-booking-fieldset { margin-top: 15px; }
+.pc-assumption-details { font-size: 12px; color: #5c5e62; border-top: 1px solid #d0d1d2; padding-top: 20px; }.pc-assumption-details summary { cursor: pointer; }.pc-assumption-details p { margin-top: 15px; }
+.pc-routing-note { font-size: 13px; padding: 16px; border-left: 2px solid #171a20; background: #f4f4f4; }
+@media(max-width: 1100px) { .pc-quick-estimate-row { align-items: start; flex-direction: column; }.pc-quick-estimate-row .pc-button { align-self: end; } }
+@media(max-width: 760px) { .pc-quick-estimate-fields { width: 100%; gap: 20px; }.pc-quick-estimate-fields label { flex: 1 1 100%; }.pc-quick-estimate-fields input, .pc-quick-estimate-fields select { width: 100%; max-width: none; }.pc-reference-location { width: 100%; }.pc-reference-location strong { padding-top: 0; }.pc-quick-estimate-row .pc-button { width: 100%; min-width: 0; }.pc-booking-fieldset legend { font-size: 20px; } }
