@@ -801,3 +801,20 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
 .pc-section-index a::before { margin-right: 4px; }
 .pc-section-index a[aria-current='location']::before { margin-right: 14px; }
 @media(min-width: 761px) and (max-width: 1100px) { .pc-section-index a[aria-current='location']::before { margin-right: 8px; } }
+
+/* Home shares the text/circle section index; keep its hero centered. */
+.pc-home-indexed { --pc-home-left: 205px; --pc-home-right: 55px; }
+.pc-home-indexed > .pc-section.pc-wrap, .pc-home-indexed > .pc-business-band > .pc-wrap, .pc-home-indexed > .pc-loop > .pc-wrap { width: min(1440px, calc(100% - var(--pc-home-left) - var(--pc-home-right))); margin-left: max(var(--pc-home-left), calc((100% - 1440px) / 2)); margin-right: var(--pc-home-right); }
+.pc-home-indexed > .pc-quickbar { max-width: none; padding-left: var(--pc-home-left); padding-right: var(--pc-home-right); }
+.pc-section-navigation-dark .pc-section-index a { color: #ffffffb8; }
+.pc-section-navigation-dark .pc-section-index a[aria-current='location'], .pc-section-navigation-dark .pc-section-index a:hover { color: #fff; }
+.pc-section-navigation-dark .pc-section-index a::before { background: #fff; border-color: #fff; }
+.pc-section-navigation-dark .pc-section-index a[aria-current='location']::before { background: transparent; border-color: #fff; }
+@media(min-width: 1800px) { .pc-home-indexed { --pc-home-left: 220px; --pc-home-right: 70px; } }
+@media(min-width: 761px) and (max-width: 1100px) { .pc-home-indexed { --pc-home-left: 165px; --pc-home-right: 30px; } }
+@media(max-width: 760px) {
+ .pc-home-indexed { --pc-home-left: 22px; --pc-home-right: 22px; }
+ .pc-home-indexed > .pc-section.pc-wrap, .pc-home-indexed > .pc-business-band > .pc-wrap, .pc-home-indexed > .pc-loop > .pc-wrap { margin-inline: 22px; }
+ .pc-section-navigation-dark .pc-section-index a { color: #72757a; }.pc-section-navigation-dark .pc-section-index a[aria-current='location'], .pc-section-navigation-dark .pc-section-index a:hover { color: #171a20; }
+ .pc-section-navigation-dark .pc-section-index a::before { background: #171a20; border-color: #171a20; }.pc-section-navigation-dark .pc-section-index a[aria-current='location']::before { background: transparent; border-color: #171a20; }
+}
