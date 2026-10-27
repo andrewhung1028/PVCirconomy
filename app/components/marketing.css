@@ -797,3 +797,7 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
 /* Section markers only: hollow current location, solid remaining locations. */
 .pc-section-index a::before { width: 6px; height: 6px; box-sizing: border-box; border: 1px solid #171a20; border-radius: 50%; background: #171a20; transition: none; }
 .pc-section-index a[aria-current='location']::before { width: 6px; height: 6px; border: 1px solid #171a20; background: transparent; }
+/* Retain the previous marker slots so label alignment does not move. */
+.pc-section-index a::before { margin-right: 4px; }
+.pc-section-index a[aria-current='location']::before { margin-right: 14px; }
+@media(min-width: 761px) and (max-width: 1100px) { .pc-section-index a[aria-current='location']::before { margin-right: 8px; } }
