@@ -776,3 +776,11 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
  .pc-solutions-v2 .pc-meet-screen .pc-center-heading { margin-bottom: 24px; }
 }
 @media(max-width: 760px) { .pc-solutions-v2 { --pc-section-pad-y: 40px; --pc-section-pad-left: 22px; --pc-section-pad-right: 22px; --pc-standard-media-height: 260px; } }
+
+/* Every Solutions screen after Overview shares the showroom content frame. */
+.pc-solutions-v2 { --pc-content-frame-height: calc(var(--pc-standard-media-height) + 400px); }
+.pc-solutions-v2 > .pc-solution-screen > .pc-solution-inner { max-width: var(--pc-content-width); width: 100%; min-height: min(var(--pc-content-frame-height), calc(var(--pc-screen-height) - var(--pc-section-pad-y) * 2)); margin-block: 0; align-self: center; }
+.pc-solutions-v2 > .pc-solution-screen > .pc-beyond-layout { align-content: center; }
+.pc-solutions-v2 .pc-solution-next > .pc-solution-inner { display: grid; align-content: center; }
+.pc-solutions-v2 .pc-solution-next .pc-end .pc-wrap { width: 100%; max-width: var(--pc-content-width); margin-inline: 0; }
+@media(max-width: 760px) { .pc-solutions-v2 > .pc-solution-screen > .pc-solution-inner { min-height: 0; }.pc-solutions-v2 .pc-solution-next > .pc-solution-inner { min-height: calc(var(--pc-screen-height) - var(--pc-section-pad-y) * 2); } }
