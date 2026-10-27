@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
-// Replacement artwork: desktop 2400×1350 (16:9); mobile 1200×900 (4:3).
+// Replacement artwork: desktop 2400×900 (8:3); mobile 1200×900 (4:3).
 // Keep text out of the artwork. Update image, mobileImage and position per slide.
 const slides = [
   { topic: 'Compliance', title: 'Built for the place you operate.', description: 'No heat. No process water. A dry physical approach designed around California’s recycling requirements.', image: 'circulator-process.jpg', mobileImage: 'circulator-process.jpg', alt: 'Placeholder: PV Circulator dry physical separation process', position: 'center', metrics: [['No', 'heat', 'Room-temperature separation'], ['No', 'process water', 'A dry physical process'], ['<1', 'kgCO₂ / panel', 'A lower recycling carbon footprint']] },
@@ -20,7 +20,7 @@ export function MeetCarousel() {
   useEffect(()=>{ const media=window.matchMedia('(prefers-reduced-motion: reduce)'); const stop=()=>{if(media.matches)setPlaying(false);}; media.addEventListener('change',stop); return()=>media.removeEventListener('change',stop); },[]);
   return <div ref={root} className="pc-meet-carousel" role="region" aria-roledescription="carousel" aria-label="PV Circonomy value" onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)} onFocus={()=>setFocused(true)} onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setFocused(false);}} onKeyDown={e=>{ if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();setPlaying(false);move(e.key==='ArrowRight'?1:-1);} }}>
     <div className="pc-meet-slide" role="group" aria-roledescription="slide" aria-label={`${active+1} of ${slides.length}: ${slide.topic}`} onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};}} onTouchEnd={e=>{if(!touch.current)return;const dx=e.changedTouches[0].clientX-touch.current.x;const dy=e.changedTouches[0].clientY-touch.current.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){setPlaying(false);move(dx<0?1:-1);}touch.current=null;}}>
-      <picture key={slide.image}><source media="(max-width: 760px)" srcSet={'/PVCirconomy/images/'+slide.mobileImage}/><img src={'/PVCirconomy/images/'+slide.image} alt={slide.alt} width={2400} height={1350} loading="lazy" style={{objectPosition:slide.position}}/></picture>
+      <picture key={slide.image}><source media="(max-width: 760px)" srcSet={'/PVCirconomy/images/'+slide.mobileImage}/><img src={'/PVCirconomy/images/'+slide.image} alt={slide.alt} width={2400} height={900} loading="lazy" style={{objectPosition:slide.position}}/></picture>
       <div className="pc-meet-slide-shade"/>
       <div className="pc-meet-slide-copy"><p className="pc-eyebrow">{String(active+1).padStart(2,'0')} / {slide.topic}</p><h3>{slide.title}</h3><p>{slide.description}</p></div>
       <button className="pc-meet-arrow pc-meet-arrow-prev" type="button" aria-label="Previous value slide" onClick={()=>{setPlaying(false);move(-1);}}>‹</button><button className="pc-meet-arrow pc-meet-arrow-next" type="button" aria-label="Next value slide" onClick={()=>{setPlaying(false);move(1);}}>›</button>
