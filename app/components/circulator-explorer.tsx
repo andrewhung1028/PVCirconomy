@@ -2,12 +2,13 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 export const solutionSections = [
-  ['solutions-intro', 'Overview'], ['whole-cycle', 'Meet PV Circonomy'], ['circulator', 'PV Circulator'], ['affordable', 'Affordable Recycling'], ['beyond-recycling', 'Beyond Recycling'], ['connected', 'Always Connected'], ['next-step', 'Take the Next Step'], ['specs', 'Specifications'],
+  ['solutions-intro', 'SOLUTIONS'], ['whole-cycle', 'FOR FUTURE'], ['circulator', 'FOR RECYCLER'], ['affordable', 'FOR UPSTREAM'], ['beyond-recycling', 'FOR DOWNSTREAM'], ['connected', 'FOR PUBLIC'], ['next-step', 'THE NEXT STEP'], ['specs', 'SPECIFICATIONS'],
 ] as const;
 export function SolutionIndex() {
   const [active, setActive] = useState('solutions-intro'); const [open,setOpen]=useState(false); const toggle=useRef<HTMLButtonElement>(null);
   useEffect(() => { const visibility=new Map<string,number>(); const observer = new IntersectionObserver(entries => { entries.forEach(entry=>visibility.set(entry.target.id,entry.isIntersecting?entry.intersectionRatio:0)); const visible=[...visibility.entries()].filter(([,ratio])=>ratio>0).sort((a,b)=>b[1]-a[1]); if(visible[0])setActive(visible[0][0]); }, { rootMargin: '-20% 0px -35% 0px', threshold: [0, .2, .5] }); solutionSections.forEach(([id]) => { const element = document.getElementById(id); if (element) observer.observe(element); }); return () => observer.disconnect(); }, []);
-  return <div className="pc-section-navigation" onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);toggle.current?.focus();}}}>
+  useEffect(() => { if (active === 'solutions-intro') setOpen(false); }, [active]);
+  return <div className="pc-section-navigation" hidden={active === 'solutions-intro'} onKeyDown={e=>{if(e.key==='Escape'){setOpen(false);toggle.current?.focus();}}}>
     <button ref={toggle} className="pc-section-toggle" type="button" aria-expanded={open} aria-controls="pc-solutions-section-list" onClick={()=>setOpen(v=>!v)}>Sections <span aria-hidden="true">{open?'−':'+'}</span></button>
     {open&&<button className="pc-section-nav-backdrop" type="button" tabIndex={-1} aria-label="Close section navigation" onClick={()=>setOpen(false)}/>}
     <nav id="pc-solutions-section-list" className={'pc-section-index'+(open?' pc-section-index-open':'')} aria-label="Solutions sections">{solutionSections.map(([id,label]) => <a href={'#'+id} key={id} aria-current={active === id ? 'location' : undefined} onClick={()=>setOpen(false)}><span>{label}</span></a>)}</nav>
