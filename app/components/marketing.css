@@ -762,3 +762,20 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
  .pc-section-index-open { display: flex; }.pc-section-index a { font-size: 12px; padding-block: 10px; }
  .pc-section-nav-backdrop { display: block; position: fixed; inset: calc(var(--pc-header-height) + var(--pc-announcement-height)) 0 var(--pc-support-height); z-index: 29; border: 0; background: #0002; }
 }
+
+/* Let Meet's imagery fill the screen instead of centering a short content block. */
+.pc-solutions-v2 .pc-meet-screen { justify-content: flex-start; padding-top: 28px; padding-bottom: 28px; }
+.pc-meet-screen > .pc-solution-inner { height: calc(var(--pc-screen-height) - 56px); min-height: 640px; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.pc-solutions-v2 .pc-meet-screen .pc-center-heading { margin-bottom: 22px; }
+.pc-meet-screen .pc-meet-carousel { min-height: 0; display: grid; grid-template-rows: minmax(300px, 1fr) 40px auto; gap: 10px; }
+.pc-meet-screen .pc-meet-slide { height: 100%; min-height: 0; max-height: none; aspect-ratio: auto; }
+.pc-meet-screen .pc-meet-controls { min-height: 40px; margin-top: 0; }
+.pc-meet-screen .pc-meet-metrics { margin-top: 0; }
+@media(max-width: 760px) {
+ .pc-solutions-v2 .pc-meet-screen { padding-top: 28px; padding-bottom: 30px; }
+ .pc-meet-screen > .pc-solution-inner { height: auto; min-height: 0; display: block; }
+ .pc-solutions-v2 .pc-meet-screen .pc-center-heading { margin-bottom: 22px; }
+ .pc-meet-screen .pc-meet-carousel { grid-template-rows: auto 38px auto; gap: 10px; }
+ .pc-meet-screen .pc-meet-slide { height: auto; aspect-ratio: 4 / 3; min-height: 320px; }
+ .pc-meet-screen .pc-meet-metrics { gap: 14px; }.pc-meet-screen .pc-meet-metrics article { padding-bottom: 14px; }
+}
