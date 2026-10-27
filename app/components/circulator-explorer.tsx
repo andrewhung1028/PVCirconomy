@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { solutionLabels, solutionSections } from './solution-sections';
-export function SolutionIndex({ sections = solutionSections, hideOnFirst = true, label = 'Solutions sections', navId = 'pc-solutions-section-list', darkSections = [] }: { sections?: readonly (readonly [string, string])[]; hideOnFirst?: boolean; label?: string; navId?: string; darkSections?: readonly string[] }) {
+export function SolutionIndex({ sections = solutionSections, hideOnFirst = false, label = 'Solutions sections', navId = 'pc-solutions-section-list', darkSections = ['solutions-intro'] }: { sections?: readonly (readonly [string, string])[]; hideOnFirst?: boolean; label?: string; navId?: string; darkSections?: readonly string[] }) {
   const [active, setActive] = useState<string>(sections[0][0]); const [open,setOpen]=useState(false); const toggle=useRef<HTMLButtonElement>(null);
   useEffect(() => { const visibility=new Map<string,number>(); const observer = new IntersectionObserver(entries => { entries.forEach(entry=>visibility.set(entry.target.id,entry.isIntersecting?entry.intersectionRatio:0)); const visible=[...visibility.entries()].filter(([,ratio])=>ratio>0).sort((a,b)=>b[1]-a[1]); if(visible[0])setActive(visible[0][0]); }, { rootMargin: '-20% 0px -35% 0px', threshold: [0, .2, .5] }); sections.forEach(([id]) => { const element = document.getElementById(id); if (element) observer.observe(element); }); return () => observer.disconnect(); }, [sections]);
   useEffect(() => { if (hideOnFirst && active === sections[0][0]) setOpen(false); }, [active, hideOnFirst, sections]);
