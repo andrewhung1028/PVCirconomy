@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 export const solutionSections = [
-  ['solutions-intro', 'SOLUTIONS'], ['whole-cycle', 'FOR FUTURE'], ['circulator', 'FOR RECYCLER'], ['affordable', 'FOR UPSTREAM'], ['beyond-recycling', 'FOR DOWNSTREAM'], ['connected', 'FOR PUBLIC'], ['next-step', 'THE NEXT STEP'], ['specs', 'SPECIFICATIONS'],
+  ['solutions-intro', 'solutions'], ['whole-cycle', 'for future'], ['circulator', 'for recycler'], ['affordable', 'for upstream'], ['beyond-recycling', 'for downstream'], ['connected', 'for public'], ['next-step', 'the next step'], ['specs', 'specifications'],
 ] as const;
 export function SolutionIndex() {
   const [active, setActive] = useState('solutions-intro'); const [open,setOpen]=useState(false); const toggle=useRef<HTMLButtonElement>(null);

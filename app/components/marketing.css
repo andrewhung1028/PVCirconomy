@@ -789,3 +789,7 @@ html:has(.pc-paged-solutions), html:has(.pc-has-announcement .pc-paged-solutions
 .pc-site .pc-solutions-v2 #solutions-intro > .pc-hero-content { width: min(1440px, calc(100% - 64px)); margin-inline: auto; text-align: center; align-items: center; }
 .pc-site .pc-solutions-v2 #solutions-intro .pc-audience-links, .pc-site .pc-solutions-v2 #solutions-intro .pc-actions { margin-inline: auto; justify-content: center; }
 @media(max-width: 760px) { .pc-site .pc-solutions-v2 #solutions-intro > .pc-hero-content { width: calc(100% - 44px); margin-inline: auto; } }
+
+/* Continue the alternating white/gray section backgrounds. */
+.pc-solutions-v2 #next-step, .pc-solutions-v2 #next-step .pc-end { background: #f4f4f4; }
+.pc-solutions-v2 #specs { background: #fff; }
