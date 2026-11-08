@@ -2,13 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import './journey.css';
 import './marketing.css';
+import { UrlGuard } from './context-links';
+import { products } from './marketing-data';
 import { RecyclingBooking } from './recycling-booking';
 import { Announcement, AssistantBar, useSiteSettings } from './site-utilities';
 
-const nav = [['Solutions', '/solutions'], ['Services', '/services'], ['Circular Products', '/circular-products'], ['Discover', '/discover']] as const;
-import { products } from './marketing-data';
+const nav = [['Recycle', '/services/solar-panel-recycling'], ['Equipment', '/equipment/pv-circulator'], ['Evidence', '/evidence'], ['RE+', '/replus'], ['Discover', '/discover']] as const;
+function navCurrent(path: string, url: string) {
+  if (url.startsWith('/equipment')) return path.startsWith('/equipment');
+  if (url.startsWith('/services/')) return path.startsWith('/services');
+  return path === url;
+}
 export function Shell({ children }: { children: ReactNode }) {
   const settings = useSiteSettings();
   const path = usePathname();
@@ -21,13 +28,15 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => { const onScroll = () => setScrolled(window.scrollY > 40); onScroll(); window.addEventListener('scroll', onScroll, { passive: true }); return () => window.removeEventListener('scroll', onScroll); }, []);
   function closeDiscover(restoreFocus = false) { setDiscoverOpen(false); if (restoreFocus) discoverTrigger.current?.focus(); }
   return <div className={'pc-site' + (path === '/' || path === '/solutions' ? ' pc-immersive' : '') + (settings.announcementEnabled ? ' pc-has-announcement' : '') + (settings.assistantEnabled ? ' pc-has-assistant' : '')}>
+    <aside className="pc-preview-banner" role="note"><strong>PREVIEW</strong><p>Not the live service. Production is unchanged. Anything you type stays in this tab and is not submitted, stored, or sent. No order, payment, pickup, or contact is created.</p></aside>
+    <Suspense fallback={null}><UrlGuard /></Suspense>
     <Announcement settings={settings}/>
     <a className="pc-skip" href="#pc-content">Skip to content</a>
     <header className={'pc-header' + (scrolled || open || discoverOpen ? ' pc-header-solid' : '')}
       onMouseLeave={() => { if (window.matchMedia('(hover: hover)').matches) closeDiscover(); }}
       onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) closeDiscover(); }}
       onKeyDown={event => { if (event.key === 'Escape') { if (discoverOpen) closeDiscover(true); else setOpen(false); } }}>
-      <Link href="/" aria-label="PV Circonomy home" className="pc-logo"><span className="pc-infinity-mark"><img src="/PVCirconomy/images/pv-circonomy-white.png" alt="PV Circonomy infinity brand icon" /></span></Link>
+      <Link href="/" aria-label="PV Circonomy home" className="pc-logo"><span className="pc-infinity-mark"><img src="/PVCirconomy/images/pv-circonomy-white.png" alt="PV Circonomy" /></span></Link>
       <button className="pc-menu-toggle" aria-expanded={open} aria-controls="pc-navigation" onClick={() => { setOpen(!open); closeDiscover(); }}>{open ? 'Close −' : 'Menu +'}</button>
       <nav id="pc-navigation" className={open ? 'pc-nav pc-nav-open' : 'pc-nav'} aria-label="Main navigation">
         {nav.map(([name, url]) => name === 'Discover' ? <div className="pc-discover-wrap" key={url}>
@@ -39,25 +48,24 @@ export function Shell({ children }: { children: ReactNode }) {
           </button>
           {discoverOpen && <div id="pc-discover-panel" className="pc-mega" aria-label="Discover navigation"><div className="pc-mega-inner">
             {[
-              { label: 'Resources', links: [['Explore Discover', '/discover'], ['PV Circulator brochure', '/2026_PV_Circulator_Solution_Brochure.pdf'], ['Solution overview', '/PV_Circulator_Solution_Overview.pdf'], ['Recycling FAQ', '/services#faq']] },
-              { label: 'Learn', links: [['Technology & video', '/solutions#circulator'], ['Business Case Calculator', '/business-case'], ['Methodology & assumptions', '/methodology'], ['Material passports', '/circular-products#passport']] },
-              { label: 'Company', links: [['About PV Circonomy', '/discover#company'], ['Our circular approach', '/solutions'], ['Partnerships & equipment', '/shop?type=equipment'], ['Contact & service requests', '/shop']] },
+              { label: 'Resources', links: [['Evidence index', '/evidence'], ['PV Circulator brochure', '/2026_PV_Circulator_Solution_Brochure.pdf'], ['Solution overview', '/PV_Circulator_Solution_Overview.pdf'], ['JB Tool status', '/equipment/jbtool']] },
+              { label: 'Learn', links: [['Published process', '/equipment/pv-circulator'], ['Business case assumptions', '/equipment/pv-circulator#business-case'], ['Methodology & assumptions', '/methodology'], ['Material categories', '/circular-products']] },
+              { label: 'Company', links: [['RE+ entry', '/replus'], ['Existing solutions page', '/solutions'], ['Service qualification', '/services/solar-panel-recycling'], ['About this preview', '/discover']] },
             ].map((group, i) => <section key={group.label}><h2>{group.label}</h2>{group.links.map(([label, href], j) => <Link key={href} href={href} ref={i === 0 && j === 0 ? firstDiscoverLink : undefined} onClick={() => { closeDiscover(); setOpen(false); }}>{label}</Link>)}</section>)}
           </div><Link className="pc-mega-all" href="/discover" onClick={() => { closeDiscover(); setOpen(false); }}>Explore Discover <Arrow /></Link></div>}
-        </div> : <Link href={url} key={url} aria-current={path === url ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>{name}</span></Link>)}
-        <Link href="/shop" className="pc-nav-shop" aria-current={path === '/shop' ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>Shop</span><Arrow /></Link>
+        </div> : <Link href={url} key={url} aria-current={navCurrent(path, url) ? 'page' : undefined} onMouseEnter={() => closeDiscover()}><span>{name}</span></Link>)}
       </nav>
     </header>
     {discoverOpen && <button className="pc-mega-backdrop" aria-label="Close Discover navigation" tabIndex={-1} onClick={() => closeDiscover(true)}/>}
     <main id="pc-content">{children}</main>
-    <footer className="pc-footer"><div className="pc-footer-top"><Link href="/" className="pc-logo"><img src="/PVCirconomy/images/pv-circonomy-logo.svg" alt="PV Circonomy" /></Link><p>A new life for solar.<br />A better use of resources.</p><Link href="/shop?type=recycling">Estimate & book recycling <Arrow /></Link></div><div className="pc-footer-bottom"><span>© {new Date().getFullYear()} PV Circonomy</span><span>English</span><Link href="/discover">About this preview</Link><Link href="/settings">System settings</Link></div></footer>
+    <footer className="pc-footer"><div className="pc-footer-top"><Link href="/" className="pc-logo"><img src="/PVCirconomy/images/pv-circonomy-logo.svg" alt="PV Circonomy" /></Link><p>A new life for solar.<br />A better use of resources.</p><Link href="/services/solar-panel-recycling">Check service options <Arrow /></Link></div><div className="pc-footer-bottom"><span>© {new Date().getFullYear()} PV Circonomy</span><span>English</span><Link href="/evidence">Evidence index</Link><Link href="/discover">About this preview</Link><Link href="/settings">System settings</Link></div></footer>
     {settings.assistantEnabled && <AssistantBar />}
   </div>;
 }
 export function Arrow() { return <svg className="pc-arrow" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 16 16 4M4 4h12v12" stroke="currentColor" strokeWidth="1.4" /></svg>; }
 export function Action({ href, children, secondary = false }: { href: string; children: ReactNode; secondary?: boolean }) { return <Link className={'pc-button' + (secondary ? ' pc-button-secondary' : '')} href={href}>{children}<Arrow /></Link>; }
 export function Intro({ label, title, description }: { label: string; title: string; description: string }) { return <section className="pc-intro pc-wrap"><p className="pc-eyebrow">{label}</p><h1>{title}</h1><p className="pc-lead">{description}</p></section>; }
-export function EndCTA({ label = 'THE NEXT STEP' }: { label?: string } = {}) { return <section className="pc-end"><div className="pc-wrap"><p className="pc-eyebrow">{label}</p><h2>Put circularity into motion.</h2><Action href="/shop?type=recycling">Estimate & book recycling</Action></div></section>; }
+export function EndCTA({ label = 'THE NEXT STEP' }: { label?: string } = {}) { return <section className="pc-end"><div className="pc-wrap"><p className="pc-eyebrow">{label}</p><h2>Start with the task in front of you.</h2><div className="pc-inline-links"><Action href="/services/solar-panel-recycling">Check service options</Action><Action href="/equipment/pv-circulator" secondary>Explore PV Circulator</Action></div></div></section>; }
 export function ProductGrid() { return <div className="pc-products">{products.map((p, i) => <article className="pc-product" key={p.name}><div className={'pc-material pc-material-' + i}><img src={'/PVCirconomy/images/material-' + p.name.toLowerCase() + '.svg'} alt={p.name + ' — illustrative recovered material'} loading="lazy" /><small>ILLUSTRATIVE MATERIAL CATEGORY</small></div><p className="pc-eyebrow">{p.tag}</p><h3>{p.name}</h3><p>{p.description}</p><Link className="pc-text-link" href={'/circular-products#' + p.name.toLowerCase()}>Explore material passport <Arrow /></Link><Link className="pc-text-link" href={'/shop?type=materials&material=' + p.name}>Request a quote <Arrow /></Link></article>)}</div>; }
 
 export function ShopForm() {

@@ -27,5 +27,6 @@ export function MeetCarousel() {
     </div>
     <div className="pc-meet-controls"><div className="pc-meet-dots" aria-label="Choose a value slide">{slides.map((item,i)=><button key={item.topic} type="button" aria-label={`Show slide ${i+1}: ${item.topic}`} aria-pressed={active===i} onClick={()=>{setPlaying(false);setActive(i);}}><span/></button>)}</div><button type="button" className="pc-meet-play" onClick={()=>setPlaying(v=>!v)} aria-label={playing?'Pause slideshow':'Start slideshow'}>{playing?'Ⅱ':'▷'} <span>{playing?'Pause':'Play'}</span></button></div>
     <div className="pc-impact-grid pc-meet-metrics" aria-live={playing?'off':'polite'} aria-atomic="true">{slide.metrics.map(([value,unit,label])=><article key={label}><strong>{value}{unit&&<span> {unit}</span>}</strong><h3>{label}</h3></article>)}</div>
+    <p className="pc-fine">Figures on these slides are company-published nominal claims. This website has not independently measured recovery, throughput, energy, or carbon, and they are not guarantees.</p>
   </div>;
 }

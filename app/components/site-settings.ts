@@ -3,9 +3,9 @@ export const SETTINGS_KEY = 'pvcirconomy:site-settings:v1';
 export const SETTINGS_EVENT = 'pvcirconomy-settings-change';
 export const defaultSettings: SiteSettings = {
   announcementEnabled: true,
-  announcementText: 'Give retired solar panels their next chapter.',
-  announcementLinkText: 'Estimate recycling costs',
-  announcementHref: '/shop?type=recycling',
+  announcementText: 'Preview only. A person reviews a project before any quote.',
+  announcementLinkText: 'See what is verified',
+  announcementHref: '/evidence',
   assistantEnabled: true,
 };
 export function safeHref(value: string) {

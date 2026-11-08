@@ -13,7 +13,8 @@ export default function Services() {
  return <Shell>
   <section id="services-overview" className="pc-services-overview">
    <div className="pc-intro pc-wrap"><p className="pc-eyebrow">SERVICES / FOR PANEL OWNERS & DECOMMISSIONERS</p><h1>Your panels. A clear next step.</h1><p className="pc-lead">Choose drop-off or pickup for routine recycling. For projects above 1 MW, explore a tailored recycling plan in California and beyond.</p></div>
-   <div className="pc-wrap pc-actions pc-intro-actions"><Action href="#recycling-options">Calculate a recycling estimate</Action><Action href="/shop?type=recycling" secondary>Book recycling</Action></div>
+   <div className="pc-wrap pc-actions pc-intro-actions"><Action href="/services/solar-panel-recycling">Check service options</Action><Action href="#recycling-options" secondary>View the illustrative calculator</Action></div>
+   <p className="pc-wrap pc-fine">Dollar figures in the older calculator are prototype assumptions, not a quote, a schedule, or an acceptance decision.</p>
    <figure className="pc-editorial pc-editorial-figure"><img className="pc-editorial-image" src="/PVCirconomy/images/solar-circularity.png" alt="Illustrative retired solar panels prepared for recycling" loading="lazy"/><figcaption>Illustrative solar circularity imagery</figcaption></figure>
   </section>
   <RecyclingExplorer/>
