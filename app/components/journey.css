@@ -5,7 +5,20 @@ html { scroll-padding-top: 220px; }
   html { scroll-padding-top: 240px; }
   .pc-error-summary, .pc-draft-result, .pc-journey-form :focus { scroll-margin-top: 240px; }
 }
-.pc-site { --pc-preview-height: 64px; }
+.pc-site { --pc-preview-height: 48px; }
+.pc-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; }
+.pc-steps button { min-height: 44px; border: 1px solid #222; background: #fff; padding: 8px 12px; }
+.pc-steps button[aria-current='step'] { background: #111; color: #fff; }
+.pc-wizard { padding-bottom: 140px; }
+.pc-total { font-size: clamp(32px, 4vw, 52px); letter-spacing: -.04em; }
+.pc-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+.pc-result-grid > * { border-top: 2px solid #141414; background: #f7f7f4; padding: 16px; }
+.pc-table-wrap { overflow-x: auto; margin-top: 18px; }
+.pc-model-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pc-model-table th, .pc-model-table td { border-bottom: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+.pc-model-table input, .pc-model-table select { width: 100%; min-height: 44px; font-size: 16px; }
+.pc-summary-text { white-space: pre-wrap; background: #f7f7f4; padding: 16px; }
+.pc-choice-card[aria-pressed='true'] { outline: 3px solid #146c00; }
 .pc-preview-banner strong { flex: none; background: #f5c518; color: #1a1400; font-size: 12px; font-weight: 700; letter-spacing: .08em; padding: 4px 8px; }
 .pc-preview-banner p { margin: 0; font-size: 14px; line-height: 1.35; }
 .pc-site > .pc-announcement { top: var(--pc-preview-height); }
@@ -69,7 +82,7 @@ html { scroll-padding-top: 220px; }
 .pc-summary-dl { display: grid; grid-template-columns: 11rem 1fr; gap: 6px 12px; margin: 0; }
 .pc-summary-dl dt { font-weight: 700; }
 .pc-locked-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.pc-locked-actions button, .pc-quiet-button { min-height: 48px; padding: 10px 12px; background: #fff; color: #141414; border: 1px solid #141414; font-size: 14px; }
+.pc-locked-actions button, .pc-quiet-button, a.pc-quiet-button { min-height: 48px; padding: 10px 12px; background: #fff; color: #141414; border: 1px solid #141414; font-size: 14px; display: inline-flex; align-items: center; text-decoration: none; }
 .pc-locked-actions button:disabled { color: #333; background: #eee; border-color: #666; opacity: 1; cursor: not-allowed; }
 .pc-journey .pc-button { min-height: 48px; font-size: 15px; }
 .pc-hook-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -89,7 +102,8 @@ html { scroll-padding-top: 220px; }
   .pc-site { --pc-preview-height: 92px; }
   .pc-preview-banner { align-items: flex-start; }
   .pc-preview-banner p { font-size: 13px; }
-  .pc-choice-grid, .pc-split, .pc-spec-grid, .pc-hook-grid, .pc-pair, .pc-summary-dl { grid-template-columns: 1fr; }
+  .pc-choice-grid, .pc-split, .pc-spec-grid, .pc-hook-grid, .pc-pair, .pc-summary-dl, .pc-result-grid { grid-template-columns: 1fr; }
+  .pc-site { --pc-preview-height: 72px; }
   .pc-site .pc-choice-hero h1, .pc-site .pc-journey h1 { max-width: none; font-size: 34px; }
   .pc-choice-hero .pc-lead { font-size: 16px; margin-top: 10px; }
   .pc-choice-grid { margin-top: 14px; gap: 8px; }

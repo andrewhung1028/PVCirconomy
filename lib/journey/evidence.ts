@@ -138,7 +138,7 @@ export const evidenceIndex: readonly EvidenceItem[] = [
     id: 'receiving-site',
     topic: 'Menifee planning location',
     kind: 'described-not-measured',
-    publicStatement: 'The current prototype uses Menifee, CA 92584 as a reference planning location for drop-off and a reference pickup example.',
+    publicStatement: 'Older planning notes mention Menifee, CA 92584. That is not an authorized receiving site and it is not offered as a delivery destination.',
     source: 'Repository recycling-estimate notes and the current services prototype.',
     nominalOrMeasured: 'description, not a measurement',
     independentlyVerified: false,
