@@ -6,7 +6,7 @@ The three conversion paths are recycling estimates and booking, PV Circulator an
 
 ## Preview limits
 
-Recycling prices are illustrative. Booking and RFQ forms validate locally without submitting, reserving, emailing or saving requests. Material passports demonstrate information structure, not verified batch records. The calculator uses its existing scenario assumptions.
+This branch is a review preview. GitHub Pages still publishes only from `main`. Forms on the recycling and equipment journeys validate in the browser. They do not submit, store personal details, call a CRM, or create a quote, order, or pickup. Nominal equipment figures already on the public site are labeled as company-published claims, not new measurements. The business-case calculator remains the separate site at https://businesscase.pvcirconomy.com/ and is not modified here.
 
 `/settings/` controls the announcement content, link and visibility, plus the bottom assistant entry. Settings persist in this browser and sync between same-origin tabs; they are not global admin settings. The bottom support panel is clearly labeled knowledge navigation, with OpenAI not connected. See `server/README.md` for the server-only API handoff.
 
