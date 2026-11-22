@@ -46,7 +46,7 @@ export function PublicHeader({
   const [accountStatus, setAccountStatus] = useState("");
   const [menu, setMenu] = useState(false);
   const [panel, setPanel] = useState<"equipment" | "company" | null>(null);
-  const [equipmentTopic, setEquipmentTopic] = useState<"solution" | "circulator" | "upcycling" | "easycycle">("circulator");
+  const [equipmentTopic, setEquipmentTopic] = useState<"solution" | "businesscase" | "circulator" | "upcycling" | "easycycle">("circulator");
   const [companyTopic, setCompanyTopic] = useState<"about" | "mission" | "approach" | "contact">("about");
   const header = useRef<HTMLElement>(null);
   const accountButton = useRef<HTMLButtonElement>(null);
@@ -120,7 +120,6 @@ export function PublicHeader({
 
       <div className="pv-header-right">
         <nav className="pv-topnav" aria-label="Company navigation">
-          <Link href="/business-case/">Business Case</Link>
           <Link
             href="/"
             onClick={(event) => {
@@ -196,6 +195,7 @@ export function PublicHeader({
               <nav className="pv-company-topics" aria-label="PV Circulator information">
                 {([
                   ["solution", "Our Solution", "/solutions/"],
+                  ["businesscase", "Business Case", "/business-case/"],
                   ["circulator", "PV Circulator", "/pv-circulator/"],
                   ["upcycling", "Material Upcycling", "/material-upcycling/"],
                   ["easycycle", "EasyCycle", "/easycycle/"],
@@ -213,12 +213,14 @@ export function PublicHeader({
                 ))}
               </nav>
               <div className="pv-company-content" aria-live="polite">
-                <h2>{({ solution: "Our Solution", circulator: "PV Circulator", upcycling: "Material Upcycling", easycycle: "EasyCycle" })[equipmentTopic]}</h2>
+                <h2>{({ solution: "Our Solution", businesscase: "Business Case", circulator: "PV Circulator", upcycling: "Material Upcycling", easycycle: "EasyCycle" })[equipmentTopic]}</h2>
                 {equipmentTopic === "solution" ? (
                   <>
                     <p>See how owners pay less, recyclers earn more, and recovered materials stay in circulation.</p>
                     <p>Follow the story from the coming decommissioning wave to PV Circulator, material upcycling and EasyCycle—and discover your role in the circular solar economy.</p>
                   </>
+                ) : equipmentTopic === "businesscase" ? (
+                  <><p>Model the economics of a PV recycling line for your region: processing fee, material revenue, operating cost and annual EBITDA for PV Circulator, shredding and hot-knife routes.</p><p>Results are estimates based on published operating assumptions; you can request a follow-up after running your case.</p></>
                 ) : equipmentTopic === "circulator" ? (
                   <>
                     <p>Automated, layer-by-layer PV recycling for cleaner material streams, lower downstream processing and more value from each panel.</p>
@@ -281,7 +283,6 @@ export function PublicHeader({
       {menu && (
         <div id="pv-account-menu" className="pv-header-panel pv-account-panel">
           <div className="pv-mobile-company">
-            <Link href="/business-case/" onClick={closeAll}>Business Case</Link>
             <Link href="/" onClick={() => goHome("recycling")}>Recycling</Link>
             <button type="button" onClick={() => { setMenu(false); setPanel("equipment"); }}>PV Circulator</button>
             <button type="button" className="pv-nav-disabled" disabled aria-disabled="true">Company <small>Coming soon</small></button>

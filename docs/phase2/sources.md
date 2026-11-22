@@ -1,0 +1,50 @@
+# Sources for Phase 2
+
+Every claim used in TASK-PHASE2.md, with its URL and location. Checked 2026-11-22 (Asia/Taipei). Pages are printed page numbers unless "PDF p." is given. Local copies are in `refs/`.
+
+## Lifetime and wave model
+| # | Claim | Source |
+|---|---|---|
+| L1 | "Industry observations suggest that some commercial- and utility-scale solar project owners and operators may find it advantageous to replace older PV modules with newer, more efficient modules every 10 to 12 years (NREL 2019; CPUC 2019)." | Curtis, Buchanan, Heath, Smith, Shaw, *Solar Photovoltaic Module Recycling: A Survey of U.S. Policies and Initiatives*, NREL/TP-6A20-74124, March 2021, p.8 (PDF p.19). https://docs.nrel.gov/docs/fy21osti/74124.pdf (local: andrew-lifetime-source.pdf). The box curl to nrel.gov returned "Request Rejected" (site block); the text was read from Andrew's local PDF. |
+| L2 | NREL 74124 also says the IRENA/IEA model is "based on a 30-year lifetime assumption" | Same report, p.1 (PDF p.12) |
+| L3 | Andrew's link https://www.sciencedirect.com/science/article/pii/S2542435119304155 is **a different paper**: Jean, Woodhouse & Bulović, "Accelerating Photovoltaic Market Entry with Module Replacement", *Joule* 3(11):2824–2841, Nov 2019, doi:10.1016/j.joule.2019.08.012. Its abstract says modules are "expected to operate for the system life of 30 years or more" and shows module replacement can reach a competitive LCOE "with an initial module lifetime of less than 15 years". It contains neither the 10–12-year quote nor an 18-year figure. | Crossref and Semantic Scholar metadata for the DOI. The ScienceDirect page timed out from the fetcher. |
+| L4 | IRENA/IEA-PVPS 2016 uses a 30-year average lifetime and 99.99% loss after 40 years (Table 4); shape factors α = 5.3759 regular, 2.4928 early (Table 5); early-loss supporting points 0.5% / 0.5% within 2 yrs / 2% at 10 yrs / 4% at 15 yrs | Weckend, Wade, Heath, *End-of-Life Management: Solar Photovoltaic Panels*, IRENA & IEA-PVPS, 2016, pp.29–30. https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2016/IRENA_IEAPVPS_End-of-Life_Solar_PV_Panels_2016.pdf |
+| L5 | IRENA 2016 Table 6 is **cumulative** waste by country. US: regular 6,500 / 13,000 / 170,000 / 1.7 M / 7.5 M t; early 24,000 / 85,000 / 1.0 M / 4.0 M / 10 M t (2016 / 2020 / 2030 / 2040 / 2050). US cumulative PV of 600 GW by 2050 (summary). | Same report, p.34 and Executive Summary |
+| L6 | The 25-year mean lifetime belongs to IRENA 2026: "shape factor (a) = 5.38, and average lifetime (T) = 25 years. Input data is based on IRENA's 1.5°C Scenario." | IRENA (2026), *End-of-life management for a circular economy: Solar PV panels*, ISBN 978-92-9260-760-9, p.21 note 5 (local /workspace/ca1116/irena_2026.pdf). https://www.irena.org/Publications |
+| L7 | Mass intensity: 2024 ≈ 60 t per MWp, 27% lower than 2014, expected −12% by 2035 vs 2024 | IRENA (2026) p.14 |
+| L8 | US solar PV cumulative capacity 2000–2025 (MW) | IRENA, IRENASTAT, "Electricity statistics by Country/area, Technology…", Country_ELECSTAT_2026_H2_PX (updated 2026-09-28). https://pxweb.irena.org/pxweb/en/IRENASTAT/ (API query in refs/irena_us_pv.csv) |
+| L9 | DOE context (optional on the page): lifespan "expected to be about 25–35 years" (p. i); Fig. 7 uses "a 30-year system lifespan"; 2050 annual US PV module waste 0.8–1.5 Mt (p.5–6) | DOE SETO, *Photovoltaics End-of-Life Action Plan*, March 2022. https://www.energy.gov/sites/default/files/2022-03/Solar-Energy-Technologies-Office-PV-End-of-Life-Action-Plan_0.pdf |
+
+## Silver
+| # | Claim | Source |
+|---|---|---|
+| S1 | "In 2024, the weight of silver (Ag) used for solar panels was around 13 grammes (g) per kW, less than half the consumption level in 2014." The PV industry used 29% of global industrial silver demand in 2024, up from 11% in 2014. | IRENA (2026) p.15 |
+| S2 | 2025 median cell-level silver use: ~10 mg/W TOPCon bifacial (M10/G12 average), 12.0 mg/W SHJ, 12.2 mg/W TBC. Expected reduction "down to… 6.3 mg/W for TOPCon and 4.3 mg/W for SHJ… within the next 10 years". | ITRPV 17th Edition (VDMA), June 2026, Results 2025, Cell §5.1, p.17 (PDF p.20). https://www.vdma.eu/documents/d/group-34568/en-press-release-itrpv-17-edition ; full PDF mirror https://www.qualenergia.it/wp-content/uploads/2026/06/ITRPV-17-Edition.pdf |
+| S3 | 706 GW of modules shipped in 2025 contained about 7,244 t of silver, assuming 8.9 mg/W PERC, 10.5 TOPCon, 11.9 SHJ, 12.2 xBC. "Overall silver consumption in 2025 was significantly below the 2024 consumption." | ITRPV 17th Ed. (same PDF, silver/cost section) |
+| S4 | Silver-content figures from the canvas (Hallam 2023: 65.1 / 51.8 mg/W in 2010, 19.5 mg/W in 2020) were **not re-verified** this turn. Do not publish them until checked. | doi:10.1002/pip.3661 (unverified) |
+
+## Regulation (TA3 block)
+| # | Claim | Source |
+|---|---|---|
+| R1 | A discarded solar panel is a solid waste. It is hazardous if it is listed or shows a characteristic. The most common reason is exceeding the TCLP limits for lead or cadmium. The generator must decide, by testing (TCLP) or by generator knowledge. | US EPA, "Solar Panel Frequent Questions" (last updated 18 Sep 2026). https://www.epa.gov/hw/solar-panel-frequent-questions |
+| R2 | "Currently, solar panels are not a federal universal waste… some states have added solar panels as state-only universal waste… EPA… has initiated a proposed rulemaking effort" | Same EPA FAQ. Rule: RIN 2050-AH32, "Improving Recycling and Management of Renewable Energy Wastes: Universal Waste Regulations for Solar Panels and Lithium Batteries". Fall 2025 agenda timetable: NPRM 08/2026, Final 08/2027. https://www.reginfo.gov/public/do/eAgendaViewRule?RIN=2050-AH32&pubId=202510. As of the FAQ date, no proposal had been published; say "rulemaking in progress", not "proposed". |
+| R3 | California: since 1 Jan 2021, end-of-life PV modules that are hazardous waste may be managed as universal waste (22 CCR ch. 23; SB 489 2015, H&SC §25259). Handlers must notify DTSC and file an annual report by 1 Feb. Outside California, a RCRA hazardous-waste determination applies. | DTSC, "Photovoltaic Modules – Universal Waste Management Regulations". https://dtsc.ca.gov/photovoltaic-modules-pv-modules-universal-waste-management-regulations/ |
+| R4 | EU WEEE Directive 2012/19/EU: PV panels are listed under Annex IV cat. 4 "Large equipment". From 15 Aug 2018 (Annex V Part 3), 85% shall be recovered and 80% prepared for re-use and recycled. | https://eur-lex.europa.eu/eli/dir/2012/19/oj (EUR-Lex blocked the box; text confirmed via https://www.legislation.gov.uk/eudr/2012/19/annexes and https://regelex.com/legislation/02012L0019-20240408/anx_V) |
+| R5 | State landfill ban, North Carolina: PV modules are banned from unlined C&D-debris and other unlined landfills **effective 1 Dec 2026** (S.L. 2023-137 §19; G.S. 130A-309.10). Non-recyclable modules go to an industrial or MSW landfill. **This is not a ban on all landfills.** | NC DEQ, https://www.deq.nc.gov/north-carolina-landfill-disposal-bans ; NCGA summary, https://www.ncleg.gov/Legislation/SummariesPublication/Summary/2023/24/H600-SMBR-81(sl)-v-8/ |
+| R6 | New Jersey P.L.2025 c.211 (approved 12 Jan 2026): owners/producers must remove and recycle or refurbish PV facilities after use. This starts only 180 days after NJDEP publishes a finding that recycling facilities are widely available. Not a landfill ban. | https://pub.njleg.state.nj.us/Bills/2024/PL25/211_.PDF |
+| R7 | Washington State: PV module stewardship/takeback law (RCW 70A.510). The sales-restriction date was delayed to 31 Jan 2031. Not a landfill ban. | WA Ecology, https://ecology.wa.gov/waste-toxics/reducing-recycling-waste/our-recycling-programs/solar-panels |
+| R8 | The canvas wording "state landfill bans" (plural) is **not supported**. Only NC has a (partial) ban among the states checked. Site wording must say "North Carolina restricts PV modules from unlined landfills from 1 Dec 2026". | R5–R7 |
+
+## Route comparison numbers (TA3 metrics)
+| # | Claim | Source |
+|---|---|---|
+| C1 | Landfill t/MW: PV Circulator 0.80, shredding 16.24, hot knife 0.53. Reproduced exactly from the live Business Case engine (`calculateBusinessCase`, seed master data, US-CA, 10,400 panels/month, 42.44 lb, 350 W): residualMetricTons ÷ annual MW (43.68). | Repo main 0e0d257, lib/business-case/calculator/engine.ts + lib/business-case/fallback.ts |
+| C2 | Process CO2e t/MW: 0.90 / 3.00 / 3.00 = kwhPerPanel (0.9 / 3 / 3, master data) × 2,857.14 panels/MW × 0.3497 kg/kWh | kWh/panel: master data Processing Solutions. Grid factor: EPA eGRID2023 rev2 US total output rate 770.884 lb CO2e/MWh = 0.3497 kg/kWh. https://www.epa.gov/egrid/summary-data |
+| C3 | EBITDA per MW, before depreciation (same engine and inputs, $0.20/lb): PV Circulator ≈ $55,261; shredding ≈ $26,335; hot knife ≈ $26,876. The fee contributes $24,251/MW to each. | Same engine run (/tmp/pm.cjs; reproduction steps in TASK-PHASE2.md §6) |
+| C4 | Canvas per-MW "operating profit" includes 5-year depreciation and refiner/Elkem silver basis, so it differs from C3. The public page uses C3 (engine) because the Elkem-based silver is unverified. | Canvas source |
+
+## Next.js
+| # | Claim | Source |
+|---|---|---|
+| N1 | next 16.4.0 is affected by: GHSA-2464-fhr4-w9xw (critical, RCE via Image Optimization with SVG, ≤16.4.0, fixed 16.4.1); GHSA-673q-mjm6-r5xr (critical, `use cache` typed arrays, fixed 16.4.1); GHSA-p3m5-59mp-jv5r (high, Server Actions DoS, fixed 16.4.1); plus 7 moderate advisories ≤16.4.4 fixed in 16.4.5 (e.g. GHSA-7qx7-33qx-rqx2, GHSA-vvgp-ww4w-46vf, GHSA-f3mh-rxg3-f5g2, GHSA-pc58-hwjq-p385, GHSA-rhh4-g77r-r9qj, GHSA-mfr8-8qww-v76h, GHSA-vc7v-qv4w-wrv8) | `npm audit` on repo 2026-11-22; GitHub Advisory API, e.g. https://github.com/advisories/GHSA-2464-fhr4-w9xw |
+| N2 | Latest stable `next` = 16.4.6 (published 2026-11-09T20:33Z = 2026-11-10 04:33 Asia/Taipei). Minimum fully patched = 16.4.5. Peer deps react ^18.2 \|\| ^19; engines node >=20.9. | `npm view next` |

@@ -1,3 +1,4 @@
+import {checkRegionUnit, checkMaterialUnit, REGION_UNIT_SUFFIXES, unitSuffix} from '../units';
 import type {
   CalcInput,
   MasterData,
@@ -86,8 +87,14 @@ export function calculateBusinessCase(
       x.active
   );
 
-  const fx =
-    fxRow?.localPerUSD || 1;
+  if (!fxRow || !Number.isFinite(fxRow.localPerUSD) || fxRow.localPerUSD <= 0) {
+    throw Error(`Missing active FX ${region.currency} for currency (${region.code})`);
+  }
+  for (const field of Object.keys(REGION_UNIT_SUFFIXES) as (keyof typeof REGION_UNIT_SUFFIXES)[]) {
+    checkRegionUnit(field, field === 'wageUnit' ? region.wageUnit ?? `${region.currency}/hour` : region[field], region.currency);
+  }
+  for (const material of data.materials.filter(m => m.active)) checkMaterialUnit(material.priceUnit);
+  const fx = fxRow.localPerUSD;
 
   const fxDate =
     fxRow?.effectiveDate || '';
@@ -136,10 +143,10 @@ export function calculateBusinessCase(
   ======================================================= */
 
   const feeUnit =
-    String(region.feeUnit || '').toLowerCase();
+    unitSuffix(region.feeUnit);
 
   const feeWeight =
-    feeUnit.includes('/kg')
+    feeUnit === '/kg'
       ? panelWeightLb * KG_PER_LB
       : panelWeightLb;
 
@@ -337,9 +344,7 @@ export function calculateBusinessCase(
         material.benchmarkPrice != null
       ) {
         const priceUnit =
-          String(
-            material.priceUnit || ''
-          ).toLowerCase();
+          unitSuffix(material.priceUnit);
 
         /*
           Junction Box and any other /lb benchmark:
@@ -347,7 +352,7 @@ export function calculateBusinessCase(
         */
 
         if (
-          priceUnit.includes('/lb')
+          priceUnit === '/lb'
         ) {
           revenue =
             recoveredT *
@@ -527,12 +532,10 @@ export function calculateBusinessCase(
     ===================================================== */
 
     const landfillUnit =
-      String(
-        region.landfillUnit || ''
-      ).toLowerCase();
+      unitSuffix(region.landfillUnit);
 
     const treatment =
-      landfillUnit.includes('short')
+      landfillUnit === '/short ton'
         ? residualMetricTons *
           SHORT_TON_PER_METRIC_TON *
           region.landfillCost
@@ -849,6 +852,7 @@ export function calculateBusinessCase(
     region,
 
     fx: {
+      currency: region.currency,
       localPerUSD:
         fx,
 

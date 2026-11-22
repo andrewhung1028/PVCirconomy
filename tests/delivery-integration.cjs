@@ -108,7 +108,7 @@ fs.writeFileSync(
 fs.mkdirSync(path.join(temp, "server/auth"), { recursive: true });
 fs.writeFileSync(
   path.join(temp, "server/auth/microsoft.js"),
-  'exports.authConfig=()=>global.__mailAuth||null;exports.companyEmail=e=>["pvcirconomy.com","tsgc.com.tw"].includes(e.split("@")[1]);exports.staffSession=async()=>global.__staff;exports.trustedOrigin=r=>r.headers.get("origin")===new URL(r.url).origin;',
+  'exports.authConfig=()=>global.__mailAuth||null;exports.companyEmail=e=>["pvcirconomy.com","tsgc.com.tw"].includes(e.split("@")[1]);exports.staffSession=async()=>global.__staff;exports.adminAccess=async()=>global.__staff?null:Response.json({error:"unauthorized"},{status:401});exports.trustedOrigin=r=>r.headers.get("origin")===new URL(r.url).origin;',
 );
 fs.symlinkSync(path.join(__dirname, "../data"), path.join(temp, "data"), "dir");
 const load = (p) => require(path.join(temp, p + ".js"));
@@ -588,6 +588,8 @@ const request = (route, body) =>
 
     const latestDelivery = await deliverySettings();
     const policy = {
+      residentialMaxPanels: 29,
+      residentialSurchargePct: 50,
       trailerMinimumPanels: 500,
       truckMaxWeightLb: 20000,
       trailerMaxWeightLb: 43000,

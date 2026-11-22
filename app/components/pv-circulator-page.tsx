@@ -5,6 +5,9 @@ import { useEffect, useRef, useState, type WheelEvent as ReactWheelEvent } from 
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
 
+import type { PublicRoute } from "../../lib/route-comparison";
+import { SHOW_COMPETITOR_PROFIT } from "../../lib/route-comparison/config";
+
 const sections = [
   ["pvcirculator", "PV Circulator"],
   ["performance", "Performance"],
@@ -12,6 +15,7 @@ const sections = [
   ["functions", "Functions"],
   ["layer-by-layer", "Layer by layer"],
   ["quality", "Quality"],
+  ["routes", "Profit"],
   ["capability", "Capability"],
   ["deployability", "Deployability"],
   ["configurations", "Configurations"],
@@ -214,7 +218,7 @@ function Specifications() {
     </div>
     <div className="pvc2-spec-actions">
       <div className="pvc2-version" aria-label="PV Circulator model version"><button type="button" disabled aria-label="PV Circulator 2 unavailable">02</button><button type="button" aria-current="true">03</button></div>
-      <div><Link className="pv-button" href="/contact/">Contact us</Link><a className="pv-button" href="https://businesscase.pvcirconomy.com/">Business case</a><Link className="pv-button pvc2-quote-button" href="/shop/?type=equipment">Request a quote <Arrow /></Link></div>
+      <div><Link className="pv-button" href="/contact/">Contact us</Link><a className="pv-button" href="/business-case/">Business case</a><Link className="pv-button pvc2-quote-button" href="/shop/?type=equipment">Request a quote <Arrow /></Link></div>
     </div>
     <div id="pvc2-spec-detail" role="tabpanel" className="pvc2-spec-detail">
       <div className="pvc2-spec-hero">
@@ -228,7 +232,28 @@ function Specifications() {
   </section>;
 }
 
-export function PVCirculatorPage() {
+function RouteSection({ routes }: { routes: PublicRoute[] }) {
+  const usd = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+  const ordered = ["CONVENTIONAL", "HOT_KNIFE", "PVCIRCULATOR"].map(code => routes.find(route => route.code === code));
+  const pvc = ordered[2];
+  const rows: { label: string; value: (route: PublicRoute) => string; financial?: boolean }[] = [
+    { label: "Material revenue per MW", value: route => usd(route.materialRevenuePerMw!), financial: true },
+    { label: "Landfilled residue t/MW", value: route => route.landfillTPerMw.toFixed(2) },
+    { label: "Process CO2e t/MW", value: route => route.co2eTPerMw.toFixed(2) },
+    { label: "Material recovery rate", value: route => `${(route.recoveryRate * 100).toFixed(1)}%` },
+    { label: "EBITDA per MW", value: route => usd(route.ebitdaPerMw!), financial: true },
+  ];
+  return <section id="routes" className="pv-screen pvc2-text-screen pvc2-routes" aria-labelledby="routes-title">
+    <header className="pvc2-section-heading"><h2 id="routes-title">Where the profit is.</h2><p>Per MW of retired panels in our California reference case (350 W modules, $0.20/lb processing fee, Business Case master data).</p></header>
+    {pvc?.ebitdaPerMw != null && <div className="pvc2-route-result"><strong>PV Circulator EBITDA per MW: {usd(pvc.ebitdaPerMw)}</strong><p>Material revenue {usd(pvc.materialRevenuePerMw!)} + processing fee {usd(pvc.feePerMw!)} − operating cost. Before depreciation.</p></div>}
+    {routes.length ? <div className="os-method-detail-table"><table><caption className="pv-sr-only">California reference case per MW of retired panels</caption><thead><tr><th scope="col">Item</th>{["Shredding", "Hot knife", "PV Circulator"].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{ordered.map((route, index) => <td key={index}>{!route ? "Unavailable" : row.financial && index !== 2 && !SHOW_COMPETITOR_PROFIT ? <span aria-label="Not published">—</span> : row.value(route)}</td>)}</tr>)}</tbody></table></div> : <p>Reference-case metrics are currently unavailable. Run your business case to explore available regions.</p>}
+    <p>Separating layers keeps silver concentrated and glass clean, so more of each panel is sold instead of landfilled.</p>
+    <div className="pvc2-route-actions"><Link className="pv-button" href="/business-case/">Run your business case <Arrow /></Link><Link className="pv-text-button" href="/shop/?type=equipment">Request equipment information</Link></div>
+    <p className="os-chart-source">Estimates from the PV Circonomy Business Case model with its published master data for California; your results depend on region, volume, fee and material prices. EBITDA excludes depreciation, financing and taxes.</p>
+  </section>;
+}
+
+export function PVCirculatorPage({ routes = [] }: { routes?: PublicRoute[] }) {
   const [active, setActive] = useState<(typeof sections)[number][0]>("pvcirculator");
   const paneNavigationLocked = useRef(false);
   useEffect(() => {
@@ -256,7 +281,7 @@ export function PVCirculatorPage() {
     window.setTimeout(() => { paneNavigationLocked.current = false; }, 750);
   };
 
-  const light = ["performance", "functions", "quality", "capability", "configurations", "specification"].includes(active);
+  const light = ["performance", "functions", "quality", "routes", "capability", "configurations", "specification"].includes(active);
 
   return <div className={`pv-review pvc2-page${light ? " pv-light-nav" : ""}`}>
     <a className="pv-skip" href="#pvcirculator">Skip to PV Circulator</a>
@@ -294,6 +319,7 @@ export function PVCirculatorPage() {
         <div className="pvc2-value-row"><article><strong>Cleaner separation</strong><p>Distinct streams at the source.</p></article><article><strong>Less secondary processing</strong><p>Less sorting and purification.</p></article><article><strong>More value per panel</strong><p>More routes to downstream buyers.</p></article></div>
       </section>
 
+      <RouteSection routes={routes} />
       <section id="capability" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="capability-title">
         <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality", true)}><div><h2 id="capability-title">One platform.<br />Intact, broken or glass-glass.</h2><p>PV Circulator separates intact modules layer by layer. The PLUS module extends the system to broken and glass-glass feedstock through crushing and material separation.</p></div></div>
         <div className="pvc2-split-scroll pvc2-capability-cards" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality")}><article className="pvc2-image-card"><img src="/images/pvc-feedstock-intact.jpg" alt="Intact solar panels ready for processing" /><div><span>PV CIRCULATOR</span><h3>Intact modules</h3><p>Automated layer-by-layer separation for framed and frameless glass-backsheet panels.</p></div></article><article className="pvc2-image-card"><img src="/images/pvc-feedstock-broken.jpg" alt="Broken solar panel feedstock" /><div><span>PLUS MODULE</span><h3>Broken &amp; glass-glass</h3><p>Integrated crushing and material separation expands feedstock compatibility.</p></div></article></div>
@@ -306,7 +332,7 @@ export function PVCirculatorPage() {
       </section>
 
       <section id="configurations" className="pv-screen pvc2-split pvc2-split-43" aria-labelledby="configurations-title">
-        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability", true)}><div><h2 id="configurations-title">Choose<br />the right fit.</h2><strong>Three configurations.<br />One goal: maximum material value.</strong><p>Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.</p><div className="pvc2-business-case"><strong>Evaluate the economics of your configuration.</strong><p>Explore processing costs, material recovery value and potential returns based on your operating conditions.</p><a className="pv-text-button" href="https://businesscase.pvcirconomy.com/">Calculate your business case <Arrow /></a></div></div></div>
+        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability", true)}><div><h2 id="configurations-title">Choose<br />the right fit.</h2><strong>Three configurations.<br />One goal: maximum material value.</strong><p>Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.</p><div className="pvc2-business-case"><strong>Evaluate the economics of your configuration.</strong><p>Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.</p><a className="pv-text-button" href="/business-case/">Calculate your business case <Arrow /></a></div></div></div>
         <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label="Comparison of PV Circulator configurations"><div className="pvc2-config-head" role="row"><span role="columnheader">Functions</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{lead}</small></span>)}</div>{configurationRows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{label}</span><ConfigurationValue value={economic} /><ConfigurationValue value={basic} /><ConfigurationValue value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>PLUS — One module. Every configuration.</strong><p>Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{label}</span><ConfigurationValue value /><ConfigurationValue value /><ConfigurationValue value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>Dust Control</span><span>Enclosed extraction and dedicated collection</span></div></div></div></div>
       </section>
 

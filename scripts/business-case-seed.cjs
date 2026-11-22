@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),ts=r
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bc-seed-'));
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{try{
-for(const f of ['server/business-case/workbook','lib/business-case/types','lib/business-case/fallback','lib/business-case/calculator/engine']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync(f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);}
+for(const f of ['server/business-case/workbook','lib/business-case/units','lib/business-case/types','lib/business-case/fallback','lib/business-case/calculator/engine']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync(f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);}
 const data=await require(path.join(dir,'server/business-case/workbook.js')).parseWorkbook(fs.readFileSync('data/business-case/seed-v1.xlsx'));
 const {payable,...fallback}=data;
 if(payable.length)throw Error('Fallback type must be extended to preserve nonempty Payable');

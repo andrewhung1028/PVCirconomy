@@ -36,6 +36,7 @@ const base = process.env.PV_TEST_BASE_URL || "http://localhost:3118";
       await solutionTopics.waitFor();
       assert.deepEqual(await solutionTopics.getByRole("link").allTextContents(), [
         "Our Solution",
+        "Business Case",
         "PV Circulator",
         "Material Upcycling",
         "EasyCycle",
@@ -59,7 +60,7 @@ const base = process.env.PV_TEST_BASE_URL || "http://localhost:3118";
       assert.deepEqual(await cards.locator("h3").allTextContents(), [
         "Traceable",
         "Measurable",
-        "Trustable",
+        "Trusted",
       ]);
       const media = await section.locator(".pv-tech-media").boundingBox();
       let previousRight = 0;

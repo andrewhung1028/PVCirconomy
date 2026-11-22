@@ -29,7 +29,8 @@ Watts：重量＝瓦數×結構功率係數÷1,000；面積＝重量÷結構面�
 地板容量＝max（方向 A，方向 B）；不乘堆疊層數。
 系統依每個棧板的實際長寬逐一排列，並同時檢查累計毛重。所需車數是可容納全部棧板的最少車數。混合尺寸不以總面積直接相除。
 
-5. Trailer 處理費資格
+5. Residential、Truck、Trailer 處理費資格
+Residential（${t.residentialMaxPanels+1} 片以下）：整張報價／訂單總片數為 1–${t.residentialMaxPanels} 片時，Truck 每片處理費加 ${t.residentialSurchargePct}%；運輸及取貨費不加價。所有項目合計判斷級距。
 Trailer 優惠最低交付片數＝${t.trailerMinimumPanels??'待設定'} 片。未達門檻時採 Truck 按片處理費；實際安排的車型不隨處理費率改變。
 
 6. 其他條件

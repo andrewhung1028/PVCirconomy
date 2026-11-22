@@ -29,6 +29,7 @@ export async function sendBusinessCaseEmail(
     `Reference: ${calculationId}`,
     `Operating region: ${result.region.region} (${result.region.code})`,
     `Panels per month: ${new Intl.NumberFormat('en-US').format(result.input.panelsPerMonth)}`,
+    `FX: ${result.fx.localPerUSD} ${result.region.currency}/USD | Effective: ${result.fx.effectiveDate || 'Not specified'}`,
     `Processing fee: ${result.input.processingFee} ${result.region.feeUnit}`, '',
   ];
   for (const solution of result.solutions || []) {

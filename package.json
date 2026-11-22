@@ -9,13 +9,14 @@
     "db:migrate": "node --env-file-if-exists=.env.local server/db/migrate.mjs",
     "typecheck": "tsc --noEmit",
     "test:business-case": "node tests/business-case.cjs && node tests/business-case-parity.cjs && node tests/business-case-store.cjs && node tests/business-case-auth.mjs",
-    "test:business-case:ui": "node tests/business-case-ui.cjs"
+    "test:business-case:ui": "node tests/business-case-ui.cjs",
+    "test:phase2": "node tests/phase2-checks.cjs && node tests/route-comparison.cjs && node tests/wave-data.cjs && node tests/phase2-ui.cjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
     "exceljs": "^4.4.0",
     "jose": "^6.2.17",
-    "next": "^16.4.0",
+    "next": "16.4.6",
     "pdf-lib": "^1.17.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

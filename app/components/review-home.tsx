@@ -1,4 +1,5 @@
 "use client";
+import {ResidentialNote} from './residential-note';
 import { useEffect, useState } from "react";
 import { DeliveryPlanner } from "./delivery-planner";
 import type { QuotationBundle } from "../../lib/quotation-types";
@@ -440,7 +441,7 @@ export function ReviewHome() {
             <details className="pv-details">
               <summary>Does the price include transport?</summary>
               <p>
-                No. Processing and transport are quoted separately. Truck
+                No. Processing and transport are quoted separately. <ResidentialNote/> Truck
                 processing rates are priced per accepted panel. Qualified
                 Trailer processing rates settle by measured weight, including
                 pallets and packaging; third-party scale tickets are accepted.

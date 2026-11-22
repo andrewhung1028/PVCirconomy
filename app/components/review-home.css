@@ -847,3 +847,47 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
     scrollbar-color:#8a8f8c transparent;
   }
 }
+
+/* Phase 2: engine-backed comparisons and the US retirement scenario. */
+.os-chart-source,.os-page .os-note-copy .os-chart-source{font-size:12px;line-height:1.6;color:#555d60}
+.os-chart-source a,.os-regulation-rules a{text-decoration:underline;text-underline-offset:3px}
+.os-regulation{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,80px);padding:110px max(35px,7vw) 65px;background:#f5f5f2;align-items:center}
+.os-regulation h2{font-size:clamp(32px,3.5vw,54px);line-height:1.06;letter-spacing:var(--pv-heading-tracking);margin:0 0 24px}
+.os-regulation p{font-size:14px;line-height:1.65;max-width:70ch}
+.os-regulation .os-chart-source{font-size:12px}
+.os-regulation-rules article{padding:18px 0;border-bottom:1px solid var(--pv-line)}
+.os-regulation-rules h3{font-size:18px;margin:0 0 8px;line-height:1.25}
+.os-regulation-rules p{margin:0 0 10px}
+.os-regulation-rules a{font-size:12px;display:inline-flex;gap:8px;align-items:center}
+.os-silver-trend{margin-top:28px;padding-top:24px;border-top:1px solid var(--pv-line)}
+.os-silver-trend h3{font-size:clamp(24px,2.4vw,36px);line-height:1.1;margin:0 0 18px}
+.os-silver-trend p{font-size:14px;line-height:1.65}
+.os-silver-trend .os-chart-source{font-size:12px}
+.os-economic-copy-body>.pv-text-button{margin-top:18px}
+.os-retirement-chart{width:100%;margin-top:28px;overflow:visible}
+.os-retirement-chart figcaption{display:block;font-size:12px;line-height:1.6;max-width:70ch}
+.os-retirement-chart .os-economic-legend{justify-content:flex-start;flex-wrap:wrap;margin-block:18px}
+.os-retirement-chart svg{max-height:none}
+.os-retirement-chart .is-early polyline,.os-retirement-chart polyline.is-early{stroke:var(--pv-yellow)}
+.os-retirement-chart .is-regular polyline,.os-retirement-chart polyline.is-regular{stroke:var(--pv-ink)}
+.os-retirement-chart .is-reference{opacity:.35;stroke-dasharray:4 4}
+.os-retirement-chart .is-early i{background:var(--pv-yellow)}
+.os-retirement-chart .is-regular i{background:var(--pv-ink)}
+.os-retirement-guide{stroke:#8a8f8c;stroke-width:.7;stroke-dasharray:2 3}
+.os-us-retirement h2{font-size:clamp(28px,3vw,46px)!important;max-width:26ch!important}
+.pvc2-routes{display:flex;flex-direction:column;justify-content:center;gap:22px;padding:110px max(35px,9vw) 65px;background:#f5f5f2}
+.pvc2-routes .pvc2-section-heading{padding:0;max-width:850px}
+.pvc2-routes .os-method-detail-table{width:100%;margin:0}
+.pvc2-route-result{padding-block:20px;border-block:1px solid var(--pv-line)}
+.pvc2-route-result strong{font-size:clamp(22px,2.5vw,36px);line-height:1.2}
+.pvc2-routes p{max-width:75ch;font-size:14px;line-height:1.65;margin:0}
+.pvc2-route-result p{margin-top:10px}
+.pvc2-routes .os-chart-source{font-size:12px}
+.pvc2-route-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+@media(max-width:760px){.os-regulation{grid-template-columns:1fr;padding:105px 28px 65px 35px;gap:30px}.os-regulation .os-method-detail-table{overflow-x:auto}.pvc2-routes{padding:105px 28px 65px 35px;gap:24px}.pvc2-routes .os-method-detail-table{overflow-x:auto}.pvc2-routes .os-method-detail-table table{min-width:0;font-size:10px}.pvc2-routes .os-method-detail-table :is(td,th){padding:10px 5px}.pvc2-route-actions{align-items:flex-start;flex-direction:column}.os-us-retirement h2{font-size:28px!important}.os-retirement-chart .os-economic-legend{gap:8px}.os-retirement-chart text{font-size:9px}}
+.os-page main>.os-regulation{padding:110px max(35px,7vw) 65px}
+.os-regulation .os-method-detail-table table{min-width:0;font-size:11px}
+.os-page .os-retirement-chart svg{width:100%;max-width:100%;max-height:none}
+@media(max-width:760px){.os-page main>.os-regulation{padding:105px 28px 65px 35px}.os-page .os-retirement-chart figcaption,.os-page .os-retirement-chart .os-economic-legend{min-width:0}.os-regulation .os-method-detail-table :is(td,th){padding:10px 5px;font-size:10px}}
+
+.os-lifetime-control{display:flex;align-items:center;gap:16px;margin-top:18px;font-size:14px;font-weight:800}.os-lifetime-control select{min-height:46px;padding:8px 12px;border:1px solid var(--pv-ink);border-radius:0;background:var(--pv-paper);color:var(--pv-ink);font:inherit}.os-lifetime-control select:focus-visible{outline:3px solid var(--pv-yellow);outline-offset:4px}.os-retirement-context table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;margin:24px 0}.os-retirement-context caption{text-align:left;margin-bottom:12px}.os-retirement-context :is(th,td){text-align:left;padding:10px 6px;border-bottom:1px solid currentColor}.os-retirement-context a{text-decoration:underline;text-underline-offset:3px}

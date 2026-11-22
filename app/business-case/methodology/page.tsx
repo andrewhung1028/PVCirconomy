@@ -37,6 +37,7 @@ export default function MethodologyPage() {
           <div className="methodologyContent">
             <h2>Start with your operating conditions.</h2>
             <p>The model annualizes a monthly processing scenario and applies regional cost assumptions. User inputs and maintained assumptions are treated separately.</p>
+            <p>Regional money inputs must use the region’s local currency, and results are shown in that currency; USD global assumptions use the master FX table.</p>
             <Table headers={['Input / assumption', 'How it is used', 'Source']} rows={[
               ['Operating region', 'Selects local wage, rent, electricity, disposal and currency assumptions.', 'User selection / regional data'],
               ['Panels per month', 'Determines annual feedstock volume and capacity demand.', 'User input'],

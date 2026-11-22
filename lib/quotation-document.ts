@@ -1,5 +1,7 @@
+import {normalizeTransportLimits} from './pickup';
 import {
   batchTotals,
+  lineQuote,
   describeCondition,
   estimatedLineArea,
   estimatedLineWeight,
@@ -56,7 +58,14 @@ export function quotationLineViews(
   lines: QuoteLine[],
   pricing: PricingSnapshot,
 ): { rows: QuotationLineView[]; subtotal: number; pending: number } {
-  const totals = batchTotals(lines, pricing.rules, pricing.transport);
+  // Old snapshots predate Residential. Preserve their original line pricing basis,
+  // including the historical Trailer-only quantity qualification.
+  const legacy = pricing.transport?.residentialMaxPanels === undefined;
+  const legacyLimits = {...normalizeTransportLimits(pricing.transport), residentialMaxPanels:0,
+    trailerMinimumPanels:pricing.transport ? pricing.transport.trailerMinimumPanels : 1};
+  const legacyQuantity = lines.filter(line=>line.scale==='trailer').reduce((n,line)=>n+Number(line.quantity),0);
+  const totals = legacy ? (()=>{const prices=lines.map(line=>lineQuote(line,pricing.rules,legacyLimits,line.scale==='trailer'?legacyQuantity:Number(line.quantity)));return {prices,subtotal:prices.reduce((n,price)=>n+(price.total??0),0),pending:prices.filter(price=>price.total===null).length}})()
+    : batchTotals(lines, pricing.rules, pricing.transport);
   return {
     subtotal: totals.subtotal,
     pending: totals.pending,
@@ -76,7 +85,7 @@ export function quotationLineViews(
       const specifications = [
         watts ? `${watts.watts} W${watts.estimated ? " estimated" : ""}` : "Rated watts pending",
         describeCondition(line),
-        shipmentLabels[line.scale],
+        price.processingScale === "residential" ? "Residential · per panel" : price.processingScale === "truck" ? "Truck · per panel" : shipmentLabels[line.scale],
         weight ? `${weight.kg.toLocaleString("en-US", { maximumFractionDigits: 3 })} kg / panel${weight.estimated ? " estimated" : ""}` : "Weight pending",
         area !== null ? `${area.toLocaleString("en-US", { maximumFractionDigits: 4 })} m² / panel` : "",
         price.qualificationNote || "",

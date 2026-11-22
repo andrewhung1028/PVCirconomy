@@ -69,3 +69,7 @@ Existing example prices apply to glass-intact modules with frames and junction b
 ## Reinitialization Scope
 
 This refresh preserves the confirmed users, service/equipment roles, original assets and comp-first workflow preference. Refresh technical capability descriptions from implementation evidence rather than resetting earlier product decisions. Regulatory claims still require source documentation before expanded public claims.
+
+## Residential processing tier (2026-11-22)
+
+Tier order: Residential, Truck, Trailer. Whole-batch quantity across all lines determines eligibility. Residential defaults to 1–29 panels at Truck processing rate +50%; both values are editable under delivery administration transport settings (`residentialMaxPanels`, `residentialSurchargePct`). From 30 panels, existing Truck / Trailer logic applies, with Trailer gated by `trailerMinimumPanels`. The surcharge affects processing only, never transport or pickup services. Quotations show the applied basis. Saved order totals remain unchanged. Public tier copy loads current settings rather than hard-coding the threshold or percentage.

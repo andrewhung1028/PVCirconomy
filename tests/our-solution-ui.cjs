@@ -19,7 +19,7 @@ const base = process.env.PV_TEST_BASE_URL || "http://localhost:3127";
       );
       assert.equal(
         await page.locator("#os-title").innerText(),
-        "Panel owners pay less.\nRecyclers earn more.",
+        "Owners pay less.\nRecyclers earn more.\nMaterials stay in circulation.",
       );
       assert.deepEqual(
         await page.locator("#pathways article>span").allTextContents(),

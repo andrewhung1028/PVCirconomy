@@ -1,3 +1,4 @@
+import {ResidentialNote} from '../components/residential-note';
 import { Action, Shell } from '../components/marketing';
 export const metadata = { title: 'Recycling services | PV Circonomy' };
 const questions = [
@@ -15,7 +16,7 @@ export default function Services() {
    <div className="pc-wrap pc-actions pc-intro-actions"><Action href="/recycling-estimate">Calculate a recycling estimate</Action><Action href="/shop?type=recycling" secondary>Review inquiry options</Action></div>
    <figure className="pc-editorial pc-editorial-figure"><img className="pc-editorial-image" src="/images/solar-circularity.png" alt="Illustrative retired solar panels prepared for recycling" loading="lazy"/><figcaption>Illustrative solar circularity imagery</figcaption></figure>
   </section>
-  <section id="recycling-options" className="pc-section pc-wrap"><h2>Transparent processing costs.</h2><p>Truck shipments are priced per panel. Trailer shipments settle on scale weight, including pallets and packaging. Transport is quoted separately. Complete model and volume tiers are still being configured.</p><div className="pc-actions"><Action href="/recycling-estimate">Explore recycling estimates</Action></div></section>
+  <section id="recycling-options" className="pc-section pc-wrap"><h2>Transparent processing costs.</h2><p><ResidentialNote/> Truck shipments are priced per panel. Trailer shipments settle on scale weight, including pallets and packaging. Transport is quoted separately. Complete model and volume tiers are still being configured.</p><div className="pc-actions"><Action href="/recycling-estimate">Explore recycling estimates</Action></div></section>
   <section id="faq" className="pc-section pc-wrap pc-faq"><p className="pc-eyebrow">BEFORE YOU BOOK</p><h2>A few useful answers.</h2>{questions.map(([question,answer])=><details key={question}><summary>{question}<span>+</span></summary><p>{answer}</p></details>)}</section>
  </Shell>;
 }

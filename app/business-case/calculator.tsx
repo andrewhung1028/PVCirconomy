@@ -1,5 +1,4 @@
 'use client';
-import {PublicHeader} from '../components/public-header';
 
 import {
   FormEvent,
@@ -646,7 +645,6 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
       {/* HEADER */}
 
-      <div className="pv-review"><PublicHeader solid assistant={false} /></div>
       <p className="pageShell" role="status">{currentSource}</p>
 
       {/* HERO */}
@@ -715,7 +713,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
             </label>
             <label className="field">
               <span className="fieldLabel">Operating region</span>
-              <select value={region} onChange={(e) => { setRegion(e.target.value); setResult(null); }}>
+              <select disabled={countryRegions.length === 1 && countryRegions[0].region === country} value={region} onChange={(e) => { setRegion(e.target.value); setResult(null); }}>
                 {countryRegions.map((x: any) => (
                   <option key={x.code} value={x.code}>{x.region}</option>
                 ))}
@@ -745,7 +743,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
               <span className="fieldLabel">Processing / tipping fee
                 {reg?.feeUnit && <small>{reg.feeUnit}</small>}
               </span>
-              <input type="number" min="0" step="0.01" value={fee}
+              <input type="number" min="0" step="any" value={fee}
                 onChange={(e) => { setFee(Number(e.target.value)); setResult(null); }} />
             </label>
             <label className="field">

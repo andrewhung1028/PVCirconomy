@@ -36,7 +36,7 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   line('OPERATING BASIS',12,true);
   line(`Region: ${result.region.region} (${result.region.code}) | Currency: ${currency}`);
   line(`Processing fee: ${number(result.input.processingFee,4)} ${result.region.feeUnit}`);
-  line(`Panel weight: ${number(result.input.panelWeightLb,2)} lb | Annual panels: ${number(result.input.annualPanels)}`);
+  line(`Panel weight: ${result.region.feeUnit.endsWith('/kg') ? `${number(result.input.panelWeightLb * 0.45359237,2)} kg (${number(result.input.panelWeightLb,2)} lb)` : `${number(result.input.panelWeightLb,2)} lb`} | Annual panels: ${number(result.input.annualPanels)}`);
   line(`Operating days/month: ${number(result.input.operatingDaysPerMonth,2)} | Hours/shift: ${number(result.input.operatingHoursPerDay,2)}`);
   line(`FX: ${number(result.fx.localPerUSD,6)} ${currency}/USD | Effective: ${result.fx.effectiveDate || 'Not specified'}`,9);
   if(compare) {
