@@ -23,4 +23,5 @@ const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(errors.length,0,errors.join('\n'));await page.close();console.log(`Passed: ${width}px calculator and admin upload/diff/publish/restore, no overflow or JavaScript errors.`);
  }
  await require('./business-case-eu-ui.cjs')({browser,base});
+ await require('./business-case-race-ui.cjs')({browser,base});
  }finally{if(browser)await browser.close();server.kill('SIGTERM');}})().catch(e=>{console.error(e);process.exitCode=1;});

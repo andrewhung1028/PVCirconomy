@@ -5,8 +5,11 @@ import {
   FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
+
+const CALCULATE_TIMEOUT_MS = 20000;
 
 /* =========================================================
    FORMATTERS
@@ -172,12 +175,28 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
   const [opexOpen, setOpexOpen] =
     useState(false);
 
+  // Only the latest Calculate request may update the page. Changing an input
+  // cancels an in-flight request so a slow or stale response cannot leave the
+  // button stuck on CALCULATING… or show results for a different region.
+  const calcSeq = useRef(0);
+  const calcAbort = useRef<AbortController | null>(null);
+
+  function invalidateCalc() {
+    calcSeq.current += 1;
+    calcAbort.current?.abort();
+    calcAbort.current = null;
+    setBusy(false);
+    setResult(null);
+  }
+
+  useEffect(() => () => calcAbort.current?.abort(), []);
+
   /* =======================================================
      LOAD MASTER DATA
   ======================================================= */
 
   useEffect(() => {
-    fetch('/api/calculator-data')
+    fetch('/api/calculator-data/')
       .then((r) => r.json())
       .then((d) => {
         setData(d);
@@ -260,7 +279,15 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
       x.country === nextCountry && x.active !== false
     );
     setRegion(nextRegion?.code || '');
-    setResult(null);
+    if (nextRegion?.defaultFee != null) setFee(Number(nextRegion.defaultFee));
+    invalidateCalc();
+  }
+
+  function changeRegion(nextCode: string) {
+    setRegion(nextCode);
+    const next = (data?.regions || []).find((x: any) => x.code === nextCode);
+    if (next?.defaultFee != null) setFee(Number(next.defaultFee));
+    invalidateCalc();
   }
 
   const pvSolution = useMemo(
@@ -342,6 +369,13 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
   ======================================================= */
 
   async function calc() {
+    calcAbort.current?.abort();
+    const seq = ++calcSeq.current;
+    const controller = new AbortController();
+    calcAbort.current = controller;
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, CALCULATE_TIMEOUT_MS);
+    const current = () => seq === calcSeq.current;
     setBusy(true);
     setResult(null);
     setMsg('');
@@ -350,9 +384,10 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
     try {
       const r = await fetch(
-        '/api/calculate',
+        '/api/calculate/',
         {
           method: 'POST',
+          signal: controller.signal,
           headers: {
             'Content-Type':
               'application/json',
@@ -370,6 +405,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
       );
 
       const j = await r.json();
+      if (!current()) return;
 
       if (!r.ok) {
         setMsg(
@@ -393,11 +429,16 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
           });
       }, 150);
     } catch {
+      if (!current()) return;
       setMsg(
-        'Calculation failed.'
+        timedOut ? 'Calculation timed out. Please try again.' : 'Calculation failed.'
       );
     } finally {
-      setBusy(false);
+      clearTimeout(timer);
+      if (current()) {
+        calcAbort.current = null;
+        setBusy(false);
+      }
     }
   }
 
@@ -714,7 +755,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
             </label>
             <label className="field">
               <span className="fieldLabel">Operating region</span>
-              <select disabled={countryRegions.length === 1 && countryRegions[0].region === country} value={region} onChange={(e) => { setRegion(e.target.value); setResult(null); }}>
+              <select disabled={countryRegions.length === 1 && countryRegions[0].region === country} value={region} onChange={(e) => changeRegion(e.target.value)}>
                 {countryRegions.map((x: any) => (
                   <option key={x.code} value={x.code}>{x.region}</option>
                 ))}
@@ -732,7 +773,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                   const next = e.target.valueAsNumber;
                   if (Number.isFinite(next)) {
                     setPanels(Math.max(0, next));
-                    setResult(null);
+                    invalidateCalc();
                   }
                 }}
               />
@@ -745,11 +786,11 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                 {reg?.feeUnit && <small>{reg.feeUnit}</small>}
               </span>
               <input type="number" min="0" step="any" value={fee}
-                onChange={(e) => { setFee(Number(e.target.value)); setResult(null); }} />
+                onChange={(e) => { setFee(Number(e.target.value)); invalidateCalc(); }} />
             </label>
             <label className="field">
               <span className="fieldLabel">Compare PV Circulator with</span>
-              <select value={compare} onChange={(e) => { setCompare(e.target.value); setResult(null); }}>
+              <select value={compare} onChange={(e) => { setCompare(e.target.value); invalidateCalc(); }}>
                 {data?.solutions?.filter((x: any) =>
                   x.code !== 'PVCIRCULATOR' && x.active !== false
                 ).map((x: any) => (
