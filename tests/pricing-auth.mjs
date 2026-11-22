@@ -10,7 +10,7 @@ try{
  const deliveryGet=await fetch(base+'/api/admin/delivery/');assert.equal(deliveryGet.status,401);assert.equal((await fetch(base+'/api/admin/delivery/',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,401);
  const get=await fetch(base+'/api/admin/pricing/');assert.equal(get.status,401);
  assert.equal((await fetch(base+'/api/admin/pricing/',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,401);
- async function cookie(extra={}){return 'pv_staff_session='+await new SignJWT({kind:'staff-session',role:'staff',tenant,oid:'test-user',email:'staff@pvcirconomy.com',...extra}).setProtectedHeader({alg:'HS256'}).setIssuer('pv-circonomy').setAudience('pv-staff').setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(signing))}
+ async function cookie(extra={}){return 'pv_staff_session='+await new SignJWT({kind:'staff-session',role:'staff',tenant,oid:'test-user',email:'andrew@tsgc.com.tw',...extra}).setProtectedHeader({alg:'HS256'}).setIssuer('pv-circonomy').setAudience('pv-staff').setIssuedAt().setExpirationTime('1h').sign(new TextEncoder().encode(signing))}
  for(const extra of[{role:'customer'},{tenant:'other'},{email:'staff@evil.com'},{email:'staff@pvcirconomy.com.evil.com'}])assert.equal((await fetch(base+'/api/admin/pricing/',{headers:{Cookie:await cookie(extra)}})).status,401);
  for(const email of['staff@pvcirconomy.com','staff@tsgc.com.tw'])assert.equal((await fetch(base+'/api/auth/session/',{headers:{Cookie:await cookie({email})}}).then(r=>r.json())).user.email,email);
  const staff=await cookie();assert.equal((await fetch(base+'/api/admin/pricing/',{method:'POST',headers:{Cookie:staff,Origin:'https://evil.example','Content-Type':'application/json'},body:'{}'})).status,403);

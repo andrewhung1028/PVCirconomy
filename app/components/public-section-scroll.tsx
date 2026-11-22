@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const INTERNAL_ROUTES = ["/admin", "/settings"];
+const INTERNAL_ROUTES = ["/admin", "/settings", "/business-case"];
 
 export function PublicSectionScroll() {
   const pathname = usePathname();

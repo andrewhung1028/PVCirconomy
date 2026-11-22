@@ -120,6 +120,7 @@ export function PublicHeader({
 
       <div className="pv-header-right">
         <nav className="pv-topnav" aria-label="Company navigation">
+          <Link href="/business-case/">Business Case</Link>
           <Link
             href="/"
             onClick={(event) => {
@@ -280,6 +281,7 @@ export function PublicHeader({
       {menu && (
         <div id="pv-account-menu" className="pv-header-panel pv-account-panel">
           <div className="pv-mobile-company">
+            <Link href="/business-case/" onClick={closeAll}>Business Case</Link>
             <Link href="/" onClick={() => goHome("recycling")}>Recycling</Link>
             <button type="button" onClick={() => { setMenu(false); setPanel("equipment"); }}>PV Circulator</button>
             <button type="button" className="pv-nav-disabled" disabled aria-disabled="true">Company <small>Coming soon</small></button>

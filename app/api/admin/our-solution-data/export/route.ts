@@ -1,10 +1,11 @@
+import {adminAccess} from "../../../../../server/auth/microsoft";
 import { staffSession } from "../../../../../server/auth/microsoft";
 import { activeOurSolutionData, ourSolutionVersion } from "../../../../../server/our-solution/store";
 import { createOurSolutionWorkbook } from "../../../../../server/our-solution/workbook";
 
 export const runtime = "nodejs";
 
-export async function GET(request: Request) {
+export async function GET(request: Request) {const denied=await adminAccess("our-solution-data","GET");if(denied)return denied;
   if (!await staffSession()) return Response.json({ error: "unauthorized" }, { status: 401 });
   try {
     const url = new URL(request.url);

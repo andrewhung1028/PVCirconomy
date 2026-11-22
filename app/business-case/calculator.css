@@ -1,0 +1,1878 @@
+.bc-calculator {
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+& {
+  scroll-behavior: smooth;
+}
+
+& {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+& {
+  background: #ffffff;
+  color: #111111;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site {
+  width: 100%;
+  overflow: hidden;
+}
+
+.pageShell {
+  width: calc(100% - 128px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 30;
+
+  width: 100%;
+  height: 86px;
+
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.headerInner {
+  height: 86px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerContact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #ffffff;
+  border-radius: 30px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.2s ease;
+}
+
+.headerContact:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.brandLogo {
+  display: block;
+  width: 180px;
+  position: relative;
+  z-index: 31;
+}
+
+.brandLogo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.navTitle {
+  display: none !important;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+  position: relative;
+
+  width: 100%;
+  height: 1000px;
+  min-height: 1000px;
+
+  display: flex;
+  align-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  background: #111111;
+  color: #ffffff;
+}
+
+.heroVideo {
+  position: absolute;
+  inset: 0;
+
+  z-index: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center center;
+
+  opacity: 1;
+
+  pointer-events: none;
+}
+
+.hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.90) 0%,
+      rgba(0, 0, 0, 0.82) 18%,
+      rgba(0, 0, 0, 0.60) 38%,
+      rgba(0, 0, 0, 0.30) 56%,
+      rgba(0, 0, 0, 0.10) 75%,
+      rgba(0, 0, 0, 0.00) 100%
+    );
+}
+
+.hero::after {
+  content: none !important;
+  display: none !important;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 5;
+}
+
+.eyebrow,
+.sectionEyebrow,
+.scheduleLabel,
+.fieldLabel,
+.solutionLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+
+.hero .eyebrow {
+  margin: 0 0 30px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 940px;
+
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(
+    76px,
+    7.5vw,
+    118px
+  );
+
+  line-height: 0.92;
+
+  font-weight: 650;
+
+  letter-spacing: -0.06em;
+}
+
+.heroLede {
+  max-width: 650px;
+
+  margin: 46px 0 0;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.82
+  );
+
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+
+/* =========================================================
+   COMMON SECTION
+========================================================= */
+
+.section {
+  width: 100%;
+  padding: 120px 0;
+}
+
+.sectionIntro,
+.businessIntro,
+.comparisonIntro {
+  max-width: 900px;
+}
+
+.sectionEyebrow {
+  margin: 0 0 26px;
+
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.sectionEyebrow.light {
+  color: #ffffff;
+}
+
+.sectionIntro h2,
+.businessIntro h2,
+.comparisonIntro h2,
+.followIntro h2 {
+  margin: 0;
+
+  font-size: clamp(
+    48px,
+    5vw,
+    76px
+  );
+
+  line-height: 0.98;
+
+  font-weight: 450;
+
+  letter-spacing: -0.055em;
+}
+
+.sectionDescription {
+  max-width: 780px;
+
+  margin: 28px 0 0;
+
+  color: #666666;
+
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.lightText {
+  color: rgba(
+    255,
+    255,
+    255,
+    0.68
+  );
+}
+
+
+/* =========================================================
+   YOUR OPERATION
+========================================================= */
+
+.operationSection {
+  padding-top: 62px;
+  padding-bottom: 100px;
+
+  background: #ffffff;
+}
+
+.operationSection .sectionIntro {
+  margin-bottom: 70px;
+}
+
+.operationTopRow {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 34px;
+
+  margin-bottom: 52px;
+}
+
+.operationBottomRow {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(250px, 0.72fr);
+
+  gap: 34px;
+
+  align-items: end;
+}
+
+.field {
+  display: block;
+  min-width: 0;
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 13px;
+
+  color: #111111;
+
+  font-size: 12px;
+}
+
+.fieldLabel small {
+  color: #777777;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  height: 64px;
+
+  padding: 0 4px;
+
+  border: 0;
+  border-bottom:
+    1px solid #9c9c9c;
+
+  border-radius: 0;
+
+  outline: none;
+
+  background: transparent;
+  color: #111111;
+
+  font-size: 21px;
+
+  appearance: auto;
+}
+
+.field input:focus,
+.field select:focus {
+  border-bottom-color: #111111;
+}
+
+.calculateButton {
+  height: 64px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 0 24px;
+
+  border: 0;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0.06em;
+
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.calculateButton:hover {
+  background: #43b900;
+}
+
+.calculateButton:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+
+/* =========================================================
+   SCHEDULE
+========================================================= */
+
+.schedule {
+  margin-top: 76px;
+  padding-top: 26px;
+
+  border-top:
+    1px solid #111111;
+}
+
+.scheduleLabel {
+  margin: 0 0 18px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.scheduleMain {
+  display: flex;
+  align-items: baseline;
+  gap: 26px;
+}
+
+.scheduleMain strong {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.scheduleMain span {
+  color: #666666;
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.scheduleTrack {
+  width: 100%;
+  height: 4px;
+
+  margin-top: 30px;
+
+  background: #dddddd;
+
+  overflow: hidden;
+}
+
+.scheduleProgress {
+  height: 100%;
+
+  background: #43b900;
+
+  transition:
+    width 0.35s ease;
+}
+
+.dataSource {
+  margin: 22px 0 0;
+
+  color: #999999;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   SCHEDULE INSIGHT
+========================================================= */
+
+.scheduleInsight {
+  margin-top: 22px;
+  max-width: 820px;
+}
+
+.scheduleInsight strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.scheduleInsight p {
+  margin: 8px 0 0;
+  color: #666666;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   BUSINESS CASE
+========================================================= */
+
+.businessSection {
+  background: #f1f1f1;
+}
+
+.businessIntro {
+  margin-bottom: 92px;
+}
+
+.businessTableWrap {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.businessTable {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  background: transparent;
+}
+
+.businessTable th,
+.businessTable td {
+  padding: 23px 18px;
+
+  border-bottom:
+    1px solid #cfcfcf;
+}
+
+.businessTable th:first-child,
+.businessTable td:first-child {
+  padding-left: 0;
+
+  text-align: left;
+}
+
+.businessTable th:not(:first-child),
+.businessTable td:not(:first-child) {
+  text-align: right;
+}
+
+.businessTable th {
+  color: #666666;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+}
+
+.businessTable td {
+  font-size: 17px;
+}
+
+.businessTable tbody tr:first-child td {
+  border-top:
+    1px solid #111111;
+}
+
+.tableExpandButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+  color: inherit;
+
+  font-size: inherit;
+}
+
+.tableExpandIcon {
+  width: 12px;
+
+  font-size: 19px;
+  font-weight: 300;
+}
+
+.strongRow td,
+.ebitdaRow td {
+  font-weight: 700;
+}
+
+.ebitdaRow td {
+  padding-top: 28px;
+  padding-bottom: 28px;
+
+  border-bottom:
+    1px solid #111111;
+}
+
+.detailRow td {
+  padding-top: 18px;
+  padding-bottom: 18px;
+
+  color: #666666;
+
+  font-size: 14px;
+}
+
+.detailRow td:first-child {
+  padding-left: 28px;
+}
+
+.opexDetailName,
+.materialDetailName {
+  text-transform: uppercase;
+}
+
+.positive {
+  color: #178943 !important;
+  font-weight: 700;
+}
+
+.negative {
+  color: #d63a2f !important;
+}
+
+
+/* =========================================================
+   COMPARISON
+========================================================= */
+
+.comparisonSection {
+  background: #000000;
+  color: #ffffff;
+}
+
+.comparisonIntro {
+  margin-bottom: 72px;
+}
+
+.comparisonKpis {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 1px;
+
+  margin-bottom: 56px;
+
+  background: #3a3a3a;
+}
+
+.comparisonKpi {
+  min-height: 190px;
+
+  padding: 30px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #1b1b1b;
+}
+
+.comparisonKpi span {
+  color: #aaaaaa;
+
+  font-size: 13px;
+}
+
+.comparisonKpi strong {
+  margin-top: 22px;
+
+  color: #ffffff;
+
+  font-size: 32px;
+  line-height: 1;
+
+  letter-spacing: -0.035em;
+}
+
+.comparisonKpi small {
+  margin-top: auto;
+
+  padding-top: 24px;
+
+  color: #888888;
+
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   SOLUTION COMPARISON CARDS
+========================================================= */
+
+.solutionCompare {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  align-items: stretch;
+
+  border:
+    1px solid #4c4c4c;
+}
+
+.solutionCard {
+  min-height: 630px;
+
+  padding: 48px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.solutionPrimary {
+  background: #ffffff;
+  color: #000000;
+}
+
+.solutionCompareCard {
+  background: #171717;
+  color: #ffffff;
+
+  border-left:
+    1px solid #666666;
+}
+
+.solutionCardTop {
+  min-height: 255px;
+}
+
+.solutionLabel {
+  margin: 0 0 32px;
+
+  font-size: 10px;
+}
+
+.solutionCard h3 {
+  margin: 0;
+
+  max-width: 570px;
+
+  font-size: clamp(
+    38px,
+    3.5vw,
+    58px
+  );
+
+  line-height: 0.98;
+
+  font-weight: 400;
+
+  letter-spacing: -0.05em;
+}
+
+.solutionMetrics {
+  margin-top: auto;
+}
+
+.solutionMetrics > div {
+  min-height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  border-bottom:
+    1px solid rgba(
+      128,
+      128,
+      128,
+      0.4
+    );
+}
+
+.solutionMetrics span {
+  color: #666666;
+
+  font-size: 13px;
+}
+
+.solutionMetrics strong {
+  font-size: 15px;
+
+  text-align: right;
+}
+
+.solutionCompareCard
+.solutionMetrics span {
+  color: #aaaaaa;
+}
+
+
+/* =========================================================
+   DECISION SUMMARY
+========================================================= */
+
+.decisionSummary {
+  margin-top: 60px;
+
+  padding-top: 44px;
+
+  border-top:
+    1px solid #555555;
+}
+
+.decisionSummary > p:first-child {
+  margin: 0 0 20px;
+
+  color: #999999;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 0.14em;
+}
+
+.decisionSummary h3 {
+  max-width: 980px;
+
+  margin: 0;
+
+  font-size: clamp(
+    36px,
+    4vw,
+    58px
+  );
+
+  line-height: 1;
+
+  font-weight: 400;
+
+  letter-spacing: -0.045em;
+}
+
+.decisionSummary > p:not(:first-child) {
+  max-width: 850px;
+
+  margin: 26px 0 0;
+
+  color: #bbbbbb;
+
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+
+.operationSupport {
+  margin-top: 30px;
+
+  padding: 38px;
+
+  display: grid;
+
+  grid-template-columns:
+    0.7fr 1.3fr;
+
+  gap: 60px;
+
+  align-items: center;
+
+  background: #111111;
+  color: #ffffff;
+}
+
+.operationSupport span {
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.13em;
+}
+
+.operationSupport h3 {
+  margin: 12px 0 0;
+
+  font-size: 30px;
+}
+
+.operationSupport p {
+  margin: 0;
+
+  color: #bbbbbb;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   SOLUTION
+========================================================= */
+
+.solutionSection {
+  background: #eeeeee;
+}
+
+.brochureActions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+
+  margin-top: 52px;
+  margin-bottom: 32px;
+}
+
+.buttonDark {
+  min-height: 58px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 36px;
+
+  padding: 0 26px;
+
+  background: #111111;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.buttonText {
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brochureFrame {
+  width: 100%;
+  height: 900px;
+
+  overflow: hidden;
+
+  background: #222222;
+}
+
+.brochureFrame iframe {
+  width: 100%;
+  height: 100%;
+
+  border: 0;
+}
+
+
+/* =========================================================
+   FOLLOW UP
+========================================================= */
+
+.followSection {
+  padding: 110px 0;
+
+  background: #111111;
+  color: #ffffff;
+}
+
+.followIntro {
+  max-width: 820px;
+
+  margin-bottom: 60px;
+}
+
+.followIntro > p:last-child {
+  max-width: 720px;
+
+  margin: 28px 0 0;
+
+  color: #aaaaaa;
+
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.followGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 30px;
+}
+
+.followForm label {
+  display: block;
+}
+
+.followForm label > span {
+  display: block;
+
+  margin-bottom: 11px;
+
+  color: #bbbbbb;
+
+  font-size: 11px;
+}
+
+.followForm input,
+.followForm select {
+  width: 100%;
+  height: 62px;
+
+  padding: 0 18px;
+
+  border:
+    1px solid #4b4b4b;
+
+  border-radius: 0;
+
+  outline: 0;
+
+  background: #1d1d1d;
+  color: #ffffff;
+
+  font-size: 16px;
+}
+
+.followFull {
+  margin-top: 30px;
+}
+
+.formDisclaimer {
+  max-width: 850px;
+
+  margin: 28px 0;
+
+  color: #888888;
+
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.followSubmit {
+  min-height: 60px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 36px;
+
+  padding: 0 26px;
+
+  border: 0;
+
+  background: #ffffff;
+  color: #111111;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+  position: fixed;
+
+  right: 24px;
+  bottom: 24px;
+
+  z-index: 100;
+
+  max-width: 420px;
+
+  padding: 18px 22px;
+
+  border: 0;
+
+  background: #43b900;
+  color: #ffffff;
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+  padding: 38px 0;
+
+  background: #080808;
+  color: #777777;
+}
+
+.footerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  font-size: 10px;
+}
+
+.footerInner div {
+  display: flex;
+  gap: 24px;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .pageShell {
+    width: calc(100% - 72px);
+  }
+
+  .hero {
+    height: 900px;
+    min-height: 900px;
+  }
+
+  .hero h1 {
+    font-size: clamp(
+      64px,
+      8vw,
+      94px
+    );
+  }
+
+  .operationBottomRow {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .calculateButton {
+    grid-column:
+      1 / -1;
+  }
+
+  .comparisonKpis {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .solutionCard {
+    padding: 38px;
+  }
+
+  .beyondGrid {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .beyondGrid article:last-child {
+    grid-column:
+      1 / -1;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 760px) {
+
+  .pageShell {
+    width: calc(100% - 40px);
+  }
+
+  .header,
+  .headerInner {
+    height: 70px;
+  }
+
+  .brandLogo {
+    width: 150px;
+  }
+
+  .hero {
+    height: 760px;
+    min-height: 760px;
+  }
+
+  .heroVideo {
+    object-position:
+      62% center;
+  }
+
+  .hero::before {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.78) 48%,
+        rgba(0, 0, 0, 0.30) 100%
+      );
+  }
+
+  .hero h1 {
+    font-size: clamp(
+      50px,
+      14vw,
+      72px
+    );
+
+    line-height: 0.94;
+  }
+
+  .heroLede {
+    max-width: 92%;
+
+    margin-top: 32px;
+
+    font-size: 15px;
+  }
+
+  .section {
+    padding: 80px 0;
+  }
+
+  .operationSection {
+    padding-top: 46px;
+  }
+
+  .sectionIntro h2,
+  .businessIntro h2,
+  .comparisonIntro h2,
+  .followIntro h2 {
+    font-size: 46px;
+  }
+
+  .operationTopRow,
+  .operationBottomRow {
+    grid-template-columns:
+      1fr;
+
+    gap: 38px;
+  }
+
+  .operationTopRow {
+    margin-bottom: 38px;
+  }
+
+  .calculateButton {
+    grid-column: auto;
+  }
+
+  .scheduleMain {
+    display: block;
+  }
+
+  .scheduleMain span {
+    display: block;
+
+    margin-top: 10px;
+  }
+
+  .businessTable {
+    min-width: 760px;
+  }
+
+  .comparisonKpis {
+    grid-template-columns:
+      1fr;
+  }
+
+  .solutionCompare {
+    grid-template-columns:
+      1fr;
+  }
+
+  .solutionCompareCard {
+    border-left: 0;
+
+    border-top:
+      1px solid #666666;
+  }
+
+  .solutionCard {
+    min-height: 570px;
+
+    padding: 30px;
+  }
+
+  .solutionCardTop {
+    min-height: 220px;
+  }
+
+  .solutionCard h3 {
+    font-size: 40px;
+  }
+
+  .beyondGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .beyondGrid article:last-child {
+    grid-column: auto;
+  }
+
+  .operationSupport {
+    grid-template-columns:
+      1fr;
+
+    gap: 30px;
+  }
+
+  .brochureFrame {
+    height: 650px;
+  }
+
+  .followGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .footerInner {
+    display: block;
+  }
+
+  .footerInner > span {
+    display: block;
+
+    margin-top: 18px;
+  }
+
+}
+
+/* =========================================================
+   BEYOND PROCESSING — READABLE 3 + 3 GRID
+========================================================= */
+
+.beyondSection,
+.beyondSection .pageShell {
+  background: #ffffff;
+  color: #111111;
+}
+
+.beyondSection .sectionDescription {
+  max-width: 690px;
+  line-height: 1.45;
+}
+
+.beyondGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 54px;
+  background: #ffffff;
+  border-top: 1px solid #111111;
+  border-bottom: 1px solid #111111;
+}
+
+.beyondGrid article {
+  grid-column: span 1;
+  min-width: 0;
+  min-height: 260px;
+  padding: 30px 34px 34px;
+  background: #ffffff;
+  color: #111111;
+  border-right: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
+}
+
+.beyondGrid article:nth-child(3n) {
+  border-right: 0;
+}
+
+.beyondGrid article:nth-child(n+4) {
+  border-bottom: 0;
+}
+
+
+.beyondGrid article > span {
+  display: block;
+  margin-bottom: 22px;
+  color: #555555;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.beyondGrid article h3 {
+  max-width: 340px;
+  margin: 0 0 18px;
+  color: #111111;
+  font-size: clamp(25px, 2.1vw, 31px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.beyondGrid article p {
+  max-width: 360px;
+  margin: 0;
+  color: #555555;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   FROM EQUIPMENT TO OPERATION
+========================================================= */
+
+.operationSupport {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  align-items: center;
+
+  background: #ffffff;
+  color: #111111;
+
+  border-top: 1px solid #111111;
+  border-bottom: 1px solid #111111;
+
+  margin-top: 48px;
+  padding: 30px 0;
+
+  gap: 30px;
+}
+
+/* Left block */
+
+.operationSupport > div {
+  padding: 0;
+}
+
+.operationSupport span {
+  display: block;
+
+  color: #111111;
+
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  margin-bottom: 15px;
+}
+
+.operationSupport h3 {
+  color: #111111;
+
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 500;
+
+  letter-spacing: -0.035em;
+
+  margin: 0;
+}
+
+/* Right description */
+
+.operationSupport > p {
+  color: #666666;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  margin: 0;
+
+  max-width: 720px;
+}
+
+
+/* =========================================================
+   BEYOND PROCESSING — RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .beyondGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .beyondGrid article,
+  .beyondGrid article:nth-child(n+4) {
+    grid-column: span 1;
+    min-height: 245px;
+    border-right: 1px solid #dddddd;
+    border-bottom: 1px solid #dddddd;
+  }
+
+  .beyondGrid article:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .beyondGrid article:nth-child(n+4) {
+    border-bottom: 1px solid #dddddd;
+  }
+
+  .beyondGrid article:nth-child(5),
+  .beyondGrid article:nth-child(6) {
+    border-bottom: 0;
+  }
+
+  .operationSupport {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .beyondGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .beyondGrid article,
+  .beyondGrid article:nth-child(n+4),
+  .beyondGrid article:last-child {
+    grid-column: 1 / -1;
+    min-height: auto;
+    padding: 28px 0;
+    border-right: 0;
+    border-bottom: 1px solid #dddddd;
+  }
+
+  .beyondGrid article:last-child {
+    border-bottom: 0;
+  }
+
+  .beyondGrid article p {
+    max-width: none;
+  }
+
+  .operationSupport {
+    padding: 28px 0;
+  }
+}
+/* =========================================================
+   COMPARISON — PURE BLACK BACKGROUNDS
+========================================================= */
+
+/* Four KPI blocks */
+.comparisonKpis {
+  background: #000000;
+}
+
+.comparisonKpi {
+  background: #000000;
+}
+
+/* Conventional comparison card */
+.solutionCard:not(.solutionPrimary) {
+  background: #000000;
+  color: #ffffff;
+}
+
+/* Keep Conventional text white / gray */
+.solutionCard:not(.solutionPrimary) .solutionLabel,
+.solutionCard:not(.solutionPrimary) h3,
+.solutionCard:not(.solutionPrimary) .solutionMetrics strong {
+  color: #ffffff;
+}
+
+.solutionCard:not(.solutionPrimary) .solutionMetrics span {
+  color: #9a9a9a;
+}
+
+/* Keep divider lines visible */
+.solutionCard:not(.solutionPrimary) .solutionMetrics > div {
+  border-color: #333333;
+}
+
+/* =========================================================
+   COMPARISON KPI — BLACK + DIVIDERS + LARGE VALUES
+========================================================= */
+
+.comparisonKpis {
+  background: #000;
+  border-top: 1px solid #555;
+  border-bottom: 1px solid #555;
+}
+
+.comparisonKpi {
+  background: #000;
+  border-right: 1px solid #555;
+}
+
+/* 最後一格不需要右側線 */
+.comparisonKpi:last-child {
+  border-right: 0;
+}
+
+/* KPI 數字統一放大
+   包含 $773,245 / 47% / $7.12 / 95%
+*/
+.comparisonKpi strong {
+  display: block;
+  font-size: clamp(48px, 4vw, 68px);
+  line-height: 0.95;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+
+/* 標題 */
+.comparisonKpi > span {
+  color: #a0a0a0;
+}
+
+/* 下方說明 */
+.comparisonKpi small {
+  color: #777;
+}
+/* =========================================================
+   OPERATION — ALIGN ALL FIELD WIDTHS
+========================================================= */
+
+/* Top row: Country | Operating Region | Panels / Month */
+.operationTopRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 34px;
+  width: 100%;
+}
+
+.operationTopRow .field {
+  width: 100%;
+}
+
+/* Bottom row: Processing Fee | Compare With | Calculate */
+.operationBottomRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 34px;
+  align-items: end;
+  width: 100%;
+}
+
+.operationBottomRow .field {
+  width: 100%;
+}
+
+/* All input/select fields use full column width */
+.operationTopRow input,
+.operationTopRow select,
+.operationBottomRow input,
+.operationBottomRow select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Calculate button exactly same column width */
+.calculateButton {
+  width: 100%;
+}
+
+
+/* =========================================================
+   PROCESSING SCHEDULE — 3X THICKER STATUS BAR
+========================================================= */
+
+.scheduleTrack {
+  position: relative;
+  width: 100%;
+  height: 12px;        /* 原本約 4px → +200% = 3 倍 */
+  background: #dedede;
+  overflow: hidden;
+}
+
+.scheduleProgress {
+  height: 100%;
+  background: #43b900;
+  transition: width 0.35s ease;
+}
+
+
+/* Processing schedule: concise detail below status bar */
+.scheduleMain { justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+.scheduleMain span { font-size: 16px; font-weight: 700; color: #111; }
+.scheduleProgressWarning { background: #e5b522; }
+.scheduleProgressCritical { background: #d92d20; }
+.scheduleInsight { max-width: 100%; margin-top: 16px; }
+.scheduleInsight p { margin: 0; color: #666; font-size: 14px; line-height: 1.6; }
+.scheduleInsight p strong { display: inline; font-size: inherit; font-weight: 600; color: #222; }
+
+
+/* BUSINESS CASE — METHODOLOGY LINK */
+.methodologyLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.075em;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 6px;
+  transition: color 180ms ease;
+}
+.methodologyLink:hover, .methodologyLink:focus-visible { color: #328c00; }
+.methodologyLink span { font-size: 18px; line-height: 1; }
+
+/* STANDALONE METHODOLOGY PAGE */
+.methodologyPage { background: #f6f6f6; min-height: 100vh; color: #141414; }
+.methodologyShell { width: min(1080px, calc(100% - 64px)); margin: 0 auto; }
+.methodologyTop { background: #111; color: #fff; }
+.methodologyTopInner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.methodologyBrand { display: inline-flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+.methodologyBrand img { display: block; width: auto; height: 30px; max-width: 180px; object-fit: contain; }
+.methodologyBack { color: #fff; text-decoration: none; font-size: 12px; font-weight: 500; letter-spacing: .05em; }
+.methodologyBack:hover { color: #8edc62; }
+.methodologyHero { padding: 108px 0 92px; border-bottom: 1px solid #d1d1d1; }
+.methodologyEyebrow { font-size: 13px; font-weight: 500; letter-spacing: .16em; margin: 0 0 28px; }
+.methodologyHero h1 { font-size: clamp(48px, 6vw, 76px); font-weight: 450; letter-spacing: -.055em; line-height: 1.02; margin: 0 0 28px; }
+.methodologyLead { max-width: 780px; color: #555; font-size: 18px; line-height: 1.4; margin: 0; }
+.methodologySection { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px; padding: 72px 0; border-bottom: 1px solid #d1d1d1; }
+.methodologySectionLabel { margin: 0; font-size: 12px; letter-spacing: .13em; font-weight: 600; text-transform: uppercase; }
+.methodologyContent h2 { margin: 0 0 20px; font-size: clamp(26px, 3vw, 38px); font-weight: 500; letter-spacing: -.04em; line-height: 1.12; }
+.methodologyContent h3 { font-size: 17px; margin: 28px 0 10px; font-weight: 600; }
+.methodologyContent p { font-size: 15px; color: #515151; line-height: 1.4; margin: 0 0 14px; }
+.methodologyFormula { background: #e9e9e9; border-left: 3px solid #43b900; padding: 18px 22px; font-size: 15px; font-weight: 600; line-height: 1.6; margin: 16px 0 22px; overflow-wrap: anywhere; }
+.methodologyTableWrap { overflow-x: auto; margin: 24px 0; }
+.methodologyTable { border-collapse: collapse; width: 100%; font-size: 14px; }
+.methodologyTable th { font-size: 12px; letter-spacing: .06em; text-align: left; text-transform: uppercase; color: #555; }
+.methodologyTable th, .methodologyTable td { border-bottom: 1px solid #d2d2d2; padding: 9px 12px 9px 0; vertical-align: top; line-height: 1.4; }
+.methodologyTable td:first-child { font-weight: 600; min-width: 175px; }
+.methodologyNote { font-size: 13px !important; color: #666 !important; line-height: 1.4 !important; }
+.methodologyFooter { background: #111; color: #fff; padding: 34px 0; }
+.methodologyFooterInner { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 12px; }
+@media (max-width: 760px) {
+  .methodologyShell { width: min(100% - 36px, 1080px); }
+  .methodologyHero { padding: 74px 0 58px; }
+  .methodologySection { grid-template-columns: 1fr; gap: 22px; padding: 52px 0; }
+  .methodologyLead { font-size: 16px; }
+  .methodologyFooterInner { flex-direction: column; align-items: flex-start; }
+}
+
+/* =========================================================
+   V17 — BUSINESS SUMMARY / COMPARISON AS SEPARATE SECTIONS
+========================================================= */
+.businessSummarySection {
+  background: #000;
+  color: #fff;
+}
+.businessSummarySection .decisionSummary {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.businessSummarySection .decisionSummary > .sectionEyebrow {
+  margin: 0 0 26px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+}
+.businessSummarySection .decisionSummary h2 {
+  max-width: 1080px;
+  margin: 0;
+  font-size: clamp(42px, 4.6vw, 68px);
+  font-weight: 450;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+}
+.businessSummarySection .decisionSummary > p:not(:first-child) {
+  max-width: 900px;
+  margin: 28px 0 0;
+  color: #bcbcbc;
+  font-size: 17px;
+  line-height: 1.45;
+}
+.businessSummarySection .decisionSummary .summaryLead strong,
+.businessSummarySection .decisionSummary .summaryPayback strong {
+  color: #fff;
+  font-weight: 650;
+}
+.comparisonSection {
+  background: #f1f1f1;
+  color: #111;
+}
+.comparisonSection .sectionEyebrow.light {
+  color: #111;
+}
+.comparisonSection .sectionDescription.lightText {
+  color: #666;
+}
+.comparisonSection .comparisonKpis {
+  background: transparent;
+  border-top-color: #c5c5c5;
+  border-bottom-color: #c5c5c5;
+}
+.comparisonSection .comparisonKpi {
+  background: transparent;
+  border-right-color: #c5c5c5;
+}
+.comparisonSection .comparisonKpi > span,
+.comparisonSection .comparisonKpi small {
+  color: #666;
+}
+.comparisonSection .comparisonKpi strong {
+  color: #111;
+}
+.comparisonSection .solutionCompare {
+  border-color: #c5c5c5;
+}
+.comparisonSection .solutionCompareCard,
+.comparisonSection .solutionCard:not(.solutionPrimary) {
+  background: #e5e5e5;
+  color: #111;
+  border-left-color: #c5c5c5;
+}
+.comparisonSection .solutionCard:not(.solutionPrimary) .solutionLabel,
+.comparisonSection .solutionCard:not(.solutionPrimary) h3,
+.comparisonSection .solutionCard:not(.solutionPrimary) .solutionMetrics strong {
+  color: #111;
+}
+.comparisonSection .solutionCard:not(.solutionPrimary) .solutionMetrics span {
+  color: #666;
+}
+.comparisonSection .solutionCard:not(.solutionPrimary) .solutionMetrics > div {
+  border-color: #c5c5c5;
+}
+
+}
+.bc-calculator {padding-top:80px;}

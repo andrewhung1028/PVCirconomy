@@ -1,3 +1,4 @@
+import {adminAccess} from "../../../../../server/auth/microsoft";
 import { staffSession, trustedOrigin } from "../../../../../server/auth/microsoft";
 import { activeOurSolutionData } from "../../../../../server/our-solution/store";
 import { diffOurSolutionData } from "../../../../../lib/our-solution-data";
@@ -6,7 +7,7 @@ import { parseOurSolutionWorkbook } from "../../../../../server/our-solution/wor
 export const runtime = "nodejs";
 const reply = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
-export async function POST(request: Request) {
+export async function POST(request: Request) {const denied=await adminAccess("our-solution-data","POST");if(denied)return denied;
   if (!await staffSession()) return reply({ error: "unauthorized" }, 401);
   if (!trustedOrigin(request)) return reply({ error: "invalid_origin" }, 403);
   try {

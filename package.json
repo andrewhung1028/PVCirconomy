@@ -7,21 +7,27 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "node --env-file-if-exists=.env.local server/db/migrate.mjs"
+    "db:migrate": "node --env-file-if-exists=.env.local server/db/migrate.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:business-case": "node tests/business-case.cjs && node tests/business-case-store.cjs && node tests/business-case-auth.mjs",
+    "test:business-case:ui": "node tests/business-case-ui.cjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
     "exceljs": "^4.4.0",
     "jose": "^6.2.17",
     "next": "^16.4.0",
+    "pdf-lib": "^1.17.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.17",
     "@types/node": "^22.7.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "pg": "^8.23.1",
+    "playwright": "^1.65.1",
     "typescript": "^5.6.2"
   },
   "engines": {

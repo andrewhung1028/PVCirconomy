@@ -49,6 +49,7 @@ function PickupTable({ details }: { details: PickupDetails }) {
 }
 
 export function OrdersAdmin() {
+  const [canEdit,setCanEdit]=useState(false);
   const [user, setUser] = useState(false);
   const [configured, setConfigured] = useState(false);
   const [ready, setReady] = useState(false);
@@ -65,7 +66,7 @@ export function OrdersAdmin() {
   useEffect(() => {
     fetch("/api/auth/session/", { cache: "no-store" })
       .then((response) => response.json())
-      .then((session) => { setUser(session.user?.role === "staff"); setConfigured(session.configured); setReady(true); })
+      .then((session) => { setUser(session.user?.role === "staff"); setCanEdit(session.user?.adminRole === "admin"); setConfigured(session.configured); setReady(true); })
       .catch(() => { setMessage("無法確認登入狀態，請重新整理。"); setReady(true); });
   }, []);
   useEffect(() => {
@@ -96,7 +97,7 @@ export function OrdersAdmin() {
     <AdminNavigation active="orders" />
     <div className="pa-heading"><h1>訂單管理</h1><p>查看回收訂單申請、交付時段與客戶資料。待確認訂單已占用容量；確認後保留，拒絕後釋放。</p></div>
     {!ready ? <p>載入中…</p> : !user ? <section className="pa-login"><h2>Log in</h2>{configured ? <a className="pa-primary" href="/api/auth/microsoft/login/">Log in with Microsoft</a> : <p>Microsoft 公司登入尚未設定完成。</p>}</section> : <>
-      <CommunicationSettings />
+      {canEdit && <CommunicationSettings />}
       <form className="pa-order-filters" onSubmit={(event) => { event.preventDefault(); setPage(1); setSearch(query); setRevision((value) => value + 1); }}>
         <label>訂單狀態<select value={filter} disabled={busy} onChange={(event) => { setFilter(event.target.value); setPage(1); }}>{Object.entries(statuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label>搜尋訂單<input value={query} maxLength={160} onChange={(event) => setQuery(event.target.value)} placeholder="訂單編號、報價編號、姓名、公司或 Email" /></label>
@@ -116,7 +117,7 @@ export function OrdersAdmin() {
           {order.pickup_details && <details><summary>取貨包裝與搬運資料</summary><PickupTable details={order.pickup_details} /></details>}
           {order.freight_breakdown && <details><summary>運費與附加服務明細</summary><div className="pa-document-table-wrap"><table className="pa-key-table"><tbody><tr><th scope="row">基本運費</th><td>{money(order.freight_breakdown.baseAmount ?? null)}</td></tr>{order.freight_breakdown.services?.map((item) => <tr key={item.label}><th scope="row">{item.label}</th><td>{money(item.amount)}</td></tr>)}</tbody></table></div>{order.freight_breakdown.pending?.length ? <div className="pa-pending"><strong>待確認</strong><ul>{order.freight_breakdown.pending.map((item) => <li key={item}>{item}</li>)}</ul></div> : null}</details>}
           <details><summary>查看表格報價單</summary><QuotationDocument document={order.quotation} lines={order.lines} pricing={order.pricing_snapshot} processingTotal={order.processing_total} contact={{ name: order.contact.name || "—", email: order.contact.email || "—", company: order.contact.company, phone: order.contact.phone }} /></details>
-          {order.status === "pending" && <div className="pa-actions"><button className="pa-primary" disabled={busy} onClick={() => review(order.id, "confirmed")}>確認訂單</button><button disabled={busy} onClick={() => review(order.id, "rejected")}>拒絕並釋放容量</button></div>}
+          {canEdit && order.status === "pending" && <div className="pa-actions"><button className="pa-primary" disabled={busy} onClick={() => review(order.id, "confirmed")}>確認訂單</button><button disabled={busy} onClick={() => review(order.id, "rejected")}>拒絕並釋放容量</button></div>}
         </article>)}
       </section>
       <div className="pa-actions"><button disabled={busy || page === 1} onClick={() => setPage((value) => value - 1)}>上一頁</button><span>第 {page} / {Math.max(1, Math.ceil(total / 25))} 頁</span><button disabled={busy || page * 25 >= total} onClick={() => setPage((value) => value + 1)}>下一頁</button></div>
