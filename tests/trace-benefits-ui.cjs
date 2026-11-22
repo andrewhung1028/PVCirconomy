@@ -38,7 +38,7 @@ const base = process.env.PV_TEST_BASE_URL || "http://localhost:3118";
         "Our Solution",
         "Business Case",
         "PV Circulator",
-        "Material Upcycling",
+        "Upcycling",
         "EasyCycle",
       ]);
       const topicBoxes = await solutionTopics.getByRole("link").evaluateAll((links) =>

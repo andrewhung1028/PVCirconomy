@@ -178,7 +178,7 @@ export function PublicHeader({
       </div>
 
       {panel && (
-        <div id="pv-company-panel" className="pv-header-panel">
+        <div id="pv-company-panel" className={`pv-header-panel${panel === "equipment" ? " is-equipment" : ""}`}>
           <button
             className="pv-panel-close"
             type="button"
@@ -197,7 +197,7 @@ export function PublicHeader({
                   ["solution", "Our Solution", "/solutions/"],
                   ["businesscase", "Business Case", "/business-case/"],
                   ["circulator", "PV Circulator", "/pv-circulator/"],
-                  ["upcycling", "Material Upcycling", "/material-upcycling/"],
+                  ["upcycling", "Upcycling", "/material-upcycling/"],
                   ["easycycle", "EasyCycle", "/easycycle/"],
                 ] as const).map(([id, label, href]) => (
                   <Link
@@ -213,7 +213,7 @@ export function PublicHeader({
                 ))}
               </nav>
               <div className="pv-company-content" aria-live="polite">
-                <h2>{({ solution: "Our Solution", businesscase: "Business Case", circulator: "PV Circulator", upcycling: "Material Upcycling", easycycle: "EasyCycle" })[equipmentTopic]}</h2>
+                <h2>{({ solution: "Our Solution", businesscase: "Business Case", circulator: "PV Circulator", upcycling: "Upcycling", easycycle: "EasyCycle" })[equipmentTopic]}</h2>
                 {equipmentTopic === "solution" ? (
                   <>
                     <p>See how owners pay less, recyclers earn more, and recovered materials stay in circulation.</p>

@@ -6,7 +6,7 @@ import { PublicHeader } from "./public-header";
 import "./review-home.css";
 
 import type { PublicRoute } from "../../lib/route-comparison";
-import { SHOW_COMPETITOR_PROFIT } from "../../lib/route-comparison/config";
+import { REFERENCE_CASE, SHOW_COMPETITOR_PROFIT } from "../../lib/route-comparison/config";
 
 const sections = [
   ["pvcirculator", "PV Circulator"],
@@ -244,7 +244,7 @@ function RouteSection({ routes }: { routes: PublicRoute[] }) {
     { label: "EBITDA per MW", value: route => usd(route.ebitdaPerMw!), financial: true },
   ];
   return <section id="routes" className="pv-screen pvc2-text-screen pvc2-routes" aria-labelledby="routes-title">
-    <header className="pvc2-section-heading"><h2 id="routes-title">Where the profit is.</h2><p>Per MW of retired panels in our California reference case (350 W modules, $0.20/lb processing fee, Business Case master data).</p></header>
+    <header className="pvc2-section-heading"><h2 id="routes-title">Where the profit is.</h2><p>Per MW of retired panels in our California reference case ({REFERENCE_CASE.panelWatts} W modules at {REFERENCE_CASE.panelWeightLb} lb each, ${REFERENCE_CASE.processingFee.toFixed(2)}/lb processing fee, Business Case master data).</p></header>
     {pvc?.ebitdaPerMw != null && <div className="pvc2-route-result"><strong>PV Circulator EBITDA per MW: {usd(pvc.ebitdaPerMw)}</strong><p>Material revenue {usd(pvc.materialRevenuePerMw!)} + processing fee {usd(pvc.feePerMw!)} − operating cost. Before depreciation.</p></div>}
     {routes.length ? <div className="os-method-detail-table"><table><caption className="pv-sr-only">California reference case per MW of retired panels</caption><thead><tr><th scope="col">Item</th>{["Shredding", "Hot knife", "PV Circulator"].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{ordered.map((route, index) => <td key={index}>{!route ? "Unavailable" : row.financial && index !== 2 && !SHOW_COMPETITOR_PROFIT ? <span aria-label="Not published">—</span> : row.value(route)}</td>)}</tr>)}</tbody></table></div> : <p>Reference-case metrics are currently unavailable. Run your business case to explore available regions.</p>}
     <p>Separating layers keeps silver concentrated and glass clean, so more of each panel is sold instead of landfilled.</p>

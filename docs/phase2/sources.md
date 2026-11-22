@@ -38,9 +38,9 @@ Every claim used in TASK-PHASE2.md, with its URL and location. Checked 2026-11-2
 ## Route comparison numbers (TA3 metrics)
 | # | Claim | Source |
 |---|---|---|
-| C1 | Landfill t/MW: PV Circulator 0.80, shredding 16.24, hot knife 0.53. Reproduced exactly from the live Business Case engine (`calculateBusinessCase`, seed master data, US-CA, 10,400 panels/month, 42.44 lb, 350 W): residualMetricTons ÷ annual MW (43.68). | Repo main 0e0d257, lib/business-case/calculator/engine.ts + lib/business-case/fallback.ts |
+| C1 | Landfill t/MW: PV Circulator 0.85, shredding 17.21, hot knife 0.57 (45 lb reference panel since Andrew t519u; previously 0.80 / 16.24 / 0.53 at 42.44 lb). Reproduced from the Business Case engine (`calculateBusinessCase`, published master v1, US-CA, 10,400 panels/month, 45 lb, 350 W): residualMetricTons ÷ annual MW (43.68). | Repo main 0e0d257, lib/business-case/calculator/engine.ts + lib/business-case/fallback.ts |
 | C2 | Process CO2e t/MW: 0.90 / 3.00 / 3.00 = kwhPerPanel (0.9 / 3 / 3, master data) × 2,857.14 panels/MW × 0.3497 kg/kWh | kWh/panel: master data Processing Solutions. Grid factor: EPA eGRID2023 rev2 US total output rate 770.884 lb CO2e/MWh = 0.3497 kg/kWh. https://www.epa.gov/egrid/summary-data |
-| C3 | EBITDA per MW, before depreciation (same engine and inputs, $0.20/lb): PV Circulator ≈ $55,261; shredding ≈ $26,335; hot knife ≈ $26,876. The fee contributes $24,251/MW to each. | Same engine run (/tmp/pm.cjs; reproduction steps in TASK-PHASE2.md §6) |
+| C3 | EBITDA per MW, before depreciation (same engine and inputs, $0.20/lb): PV Circulator ≈ $59,221; shredding ≈ $29,050; hot knife ≈ $29,810. The fee contributes $25,714/MW to each (45 lb; previously $55,261 / $26,335 / $26,876 and $24,251 at 42.44 lb). | Same engine run (/tmp/pm.cjs; reproduction steps in TASK-PHASE2.md §6) |
 | C4 | Canvas per-MW "operating profit" includes 5-year depreciation and refiner/Elkem silver basis, so it differs from C3. The public page uses C3 (engine) because the Elkem-based silver is unverified. | Canvas source |
 
 ## Next.js

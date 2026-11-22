@@ -126,8 +126,11 @@ export function calculateBusinessCase(
      INPUT BASIS
   ======================================================= */
 
+  // Panel weight: explicit input, else the master's optional PANEL_WEIGHT_LB OPEX row (v3+), else the v1 default.
+  const masterWeightRow = op.find((x) => String(x.parameter ?? '').trim().toUpperCase() === 'PANEL_WEIGHT_LB');
+  const masterWeight = masterWeightRow && Number.isFinite(Number(masterWeightRow.value)) && Number(masterWeightRow.value) > 0 ? Number(masterWeightRow.value) : undefined;
   const panelWeightLb =
-    input.panelWeightLb || 44.09;
+    input.panelWeightLb || masterWeight || 44.09;
 
   const annualPanels =
     input.panelsPerMonth * 12;
