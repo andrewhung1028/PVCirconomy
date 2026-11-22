@@ -110,6 +110,30 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Recycling-style section navigation shared by every public route. */
+html.pv-public-section-scroll {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+html.pv-public-section-scroll [data-pv-snap-section] {
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  html.pv-public-section-scroll {
+    scroll-snap-type: y proximity;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.pv-public-section-scroll {
+    scroll-snap-type: y proximity;
+    scroll-behavior: auto;
+  }
+}
+
 html, body {
   margin: 0;
   padding: 0;

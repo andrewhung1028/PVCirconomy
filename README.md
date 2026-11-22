@@ -12,6 +12,6 @@ Recycling prices are illustrative. Booking and RFQ forms validate locally withou
 
 ## Development
 
-Use Node.js 24, `npm ci`, then `npm run dev`. The application base path is `/PVCirconomy/`. `npm run build` exports to `out/`.
+Use Node.js 24, `npm ci`, then `npm run dev`. The application base path is `/`. `npm run build` prepares a Next.js server build; use `npm start` for production. The quote page is `/recycling-estimate/`.
 
-The GitHub Pages workflow deploys the static export on a push to main. Live site: https://andrewhung1028.github.io/PVCirconomy/.
+The application is prepared for Vercel hosting with Neon PostgreSQL. GitHub Pages automatic deployment is retired. The previous public static draft remains at https://andrewhung1028.github.io/ until separately replaced. See `docs/vercel-neon-setup.md` for connection, schema initialization and deployment instructions. No deployment is performed by these changes.

@@ -113,7 +113,7 @@ export default function MethodologyPage() {
           </div>
         </section>
       </div>
-      <footer className="methodologyFooter"><div className="methodologyShell methodologyFooterInner"><span>© PV Circonomy · Business Case Calculator</span><a className="methodologyBack" href="/PVCirconomy/business-case">RETURN TO CALCULATOR ↗</a></div></footer>
+      <footer className="methodologyFooter"><div className="methodologyShell methodologyFooterInner"><span>© PV Circonomy · Business Case Calculator</span><a className="methodologyBack" href="/business-case">RETURN TO CALCULATOR ↗</a></div></footer>
     </div></Shell>
   );
 }

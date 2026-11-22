@@ -576,7 +576,7 @@ export default function Page() {
           playsInline
         >
           <source
-            src="/PVCirconomy/videos/pv-circulator-operation.mp4"
+            src="/videos/pv-circulator-operation.mp4"
             type="video/mp4"
           />
         </video>
@@ -766,7 +766,7 @@ export default function Page() {
 
                   <a
                     className="methodologyLink"
-                    href="/PVCirconomy/methodology"
+                    href="/methodology"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Read the Business Case calculation methodology (opens in a new tab)"
@@ -1589,7 +1589,7 @@ export default function Page() {
 
                   <a
                     className="buttonDark"
-                    href="/PVCirconomy/2026_PV_Circulator_Solution_Brochure.pdf"
+                    href="/2026_PV_Circulator_Solution_Brochure.pdf"
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -1599,7 +1599,7 @@ export default function Page() {
 
                   <a
                     className="buttonText"
-                    href="/PVCirconomy/2026_PV_Circulator_Solution_Brochure.pdf"
+                    href="/2026_PV_Circulator_Solution_Brochure.pdf"
                     download
                   >
                     SAVE PDF
@@ -1609,7 +1609,7 @@ export default function Page() {
 
                 <div className="brochureFrame">
                   <iframe
-                    src="/PVCirconomy/2026_PV_Circulator_Solution_Brochure.pdf"
+                    src="/2026_PV_Circulator_Solution_Brochure.pdf"
                     title="2026 PV Circulator Solution Brochure"
                   />
                 </div>

@@ -1,0 +1,11 @@
+{
+  "source": "PV_Module_Dimensions_v2.numbers",
+  "sha256": "119520fa9406b4d4ffe40e9e1c01b4cad3b53833810379a8399be6a7cbc1146c",
+  "rowCount": 22531,
+  "sourceDate": "2026-11-13",
+  "units": {
+    "dimensions": "mm",
+    "weight": "kg",
+    "power": "W"
+  }
+}

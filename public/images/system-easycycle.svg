@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-labelledby="title desc">
+  <title id="title">EasyCycle digital recycling passport</title>
+  <desc id="desc">A mobile recycling passport connects verified recycling results with a secure digital record.</desc>
+  <rect width="960" height="720" fill="#fff"/>
+  <g fill="#fff" stroke="#b7c1c6" stroke-width="4">
+    <rect x="332" y="70" width="296" height="590" rx="48"/>
+    <rect x="358" y="112" width="244" height="500" rx="10" fill="#f7f8f6"/>
+  </g>
+  <rect x="438" y="88" width="84" height="8" rx="4" fill="#d7dcde"/>
+  <circle cx="542" cy="92" r="5" fill="#d7dcde"/>
+  <g font-family="Arial, sans-serif" fill="#171a1c">
+    <text x="480" y="190" text-anchor="middle" font-size="14" font-weight="700">RECYCLING PASSPORT</text>
+    <text x="480" y="214" text-anchor="middle" font-size="12">PV PANEL RECOVERY RECORD</text>
+    <text x="384" y="272" font-size="11">Recovery rate</text><text x="532" y="272" font-size="11" font-weight="700">99.3%</text>
+    <text x="384" y="310" font-size="11">Energy use</text><text x="532" y="310" font-size="11" font-weight="700">Verified</text>
+    <text x="384" y="348" font-size="11">Material routes</text><text x="532" y="348" font-size="11" font-weight="700">Recorded</text>
+    <text x="384" y="386" font-size="11">Carbon record</text><text x="532" y="386" font-size="11" font-weight="700">Available</text>
+  </g>
+  <g fill="none" stroke="#58b3b6" stroke-width="3" stroke-dasharray="9 7">
+    <rect x="40" y="248" width="248" height="154" rx="12"/>
+    <path d="M288 330h44"/><circle cx="332" cy="330" r="5" fill="#58b3b6" stroke="none"/>
+    <rect x="670" y="142" width="250" height="170" rx="12"/>
+    <path d="M628 236h42"/><circle cx="628" cy="236" r="5" fill="#58b3b6" stroke="none"/>
+  </g>
+  <g font-family="Arial, sans-serif" fill="#171a1c">
+    <text x="64" y="284" font-size="20" font-weight="700">Recycling Passport</text>
+    <text x="64" y="320" font-size="16">Recovery, energy and</text><text x="64" y="342" font-size="16">material outcomes stay</text><text x="64" y="364" font-size="16">with the panel record.</text>
+    <text x="694" y="180" font-size="20" font-weight="700">Secure digital record</text>
+    <text x="694" y="216" font-size="16">Evidence remains traceable,</text><text x="694" y="238" font-size="16">portable and ready for</text><text x="694" y="260" font-size="16">reporting or exchange.</text>
+  </g>
+  <path d="M398 478h164" stroke="#d7dcde" stroke-width="2"/><path d="M398 500h130" stroke="#d7dcde" stroke-width="2"/>
+  <text x="480" y="572" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#58b3b6">EasyCycle</text>
+</svg>

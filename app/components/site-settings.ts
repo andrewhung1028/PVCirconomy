@@ -2,10 +2,10 @@ export type SiteSettings = { announcementEnabled: boolean; announcementText: str
 export const SETTINGS_KEY = 'pvcirconomy:site-settings:v1';
 export const SETTINGS_EVENT = 'pvcirconomy-settings-change';
 export const defaultSettings: SiteSettings = {
-  announcementEnabled: true,
+  announcementEnabled: false,
   announcementText: 'Give retired solar panels their next chapter.',
   announcementLinkText: 'Estimate recycling costs',
-  announcementHref: '/shop?type=recycling',
+  announcementHref: '/recycling-estimate',
   assistantEnabled: true,
 };
 export function safeHref(value: string) {
@@ -30,4 +30,4 @@ export function saveSettings(settings: SiteSettings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(sanitizeSettings(settings)));
   window.dispatchEvent(new Event(SETTINGS_EVENT));
 }
-export function siteHref(path: string) { return path.startsWith('/') ? '/PVCirconomy' + path : path; }
+export function siteHref(path: string) { return path.startsWith('/') ? '' + path : path; }

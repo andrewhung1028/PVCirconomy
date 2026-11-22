@@ -8,6 +8,11 @@
 # Vercel
 .vercel
 
+# Local agent and design-review workspaces
+.agents
+.codex
+.impeccable
+
 # Environment variables
 .env*
 

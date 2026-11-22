@@ -1,0 +1,3 @@
+export const reply=(body:object,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
+export function sameOrigin(request:Request){try{return new URL(request.headers.get('origin')||'').origin===new URL(request.url).origin}catch{return false}}
+export async function jsonBody(request:Request,max=262144){if(!request.headers.get('content-type')?.includes('application/json'))throw Error('invalid_content_type');const reader=request.body?.getReader();if(!reader)throw Error('invalid_body');const chunks=[];let size=0;while(true){const item=await reader.read();if(item.done)break;size+=item.value.length;if(size>max){await reader.cancel();throw Error('request_too_large')}chunks.push(item.value)}return JSON.parse(Buffer.concat(chunks).toString('utf8'))}

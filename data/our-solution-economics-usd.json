@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "currency": "USD",
+    "sourceSite": "https://businesscase.pvcirconomy.com/",
+    "calculatorDataApi": "https://businesscase.pvcirconomy.com/api/calculator-data",
+    "calculationApi": "https://businesscase.pvcirconomy.com/api/calculate",
+    "sourceSystem": "sharepoint",
+    "extractedAt": "2026-11-16",
+    "fxEffectiveDate": "2026-10-02T08:00:00Z",
+    "note": "Illustrative business-case scenario; not a quotation or guarantee."
+  },
+  "scenario": {
+    "regionCode": "US-CA",
+    "region": "California",
+    "country": "United States",
+    "panelsPerMonth": 5000,
+    "annualPanels": 60000,
+    "panelWeightLb": 44.09,
+    "annualInputMetricTons": 1199.933255598,
+    "processingFeeUsdPerLb": 0,
+    "operatingDaysPerMonth": 21.67,
+    "operatingHoursPerDay": 8
+  },
+  "solutions": [
+    {
+      "code": "CONVENTIONAL",
+      "label": "Conventional",
+      "annualMaterialRevenue": 477161.5554362981,
+      "annualOpex": 776718.6707469089,
+      "annualEbitda": -299557.1153106108,
+      "capexUsd": 500000,
+      "recoveryRate": 0.704825,
+      "residualMetricTons": 354.19029872113964,
+      "materialRevenue": {
+        "silver": 50861.0909317302,
+        "aluminumAndCopper": 409899.1350046515,
+        "other": 16401.32949991644
+      },
+      "opexPerPanel": {
+        "electricity": 0.6459,
+        "laborAndBurden": 8.739146944,
+        "facility": 1.7916666666666667,
+        "other": 1.7685975684484825,
+        "total": 12.945311179115148
+      }
+    },
+    {
+      "code": "HOT_KNIFE",
+      "label": "Hot Knife",
+      "annualMaterialRevenue": 532991.3569913068,
+      "annualOpex": 839869.3546500892,
+      "annualEbitda": -306877.9976587824,
+      "capexUsd": 1333333,
+      "recoveryRate": 0.9902900000000001,
+      "residualMetricTons": 11.651351911856548,
+      "materialRevenue": {
+        "silver": 125881.20005603222,
+        "aluminumAndCopper": 330665.6072451409,
+        "other": 76444.54969013363
+      },
+      "opexPerPanel": {
+        "electricity": 0.6459,
+        "laborAndBurden": 8.739146944,
+        "facility": 1.7916666666666667,
+        "other": 2.821108966834821,
+        "total": 13.997822577501486
+      }
+    },
+    {
+      "code": "PVCIRCULATOR",
+      "label": "PV Circulator",
+      "annualMaterialRevenue": 904228.2405229501,
+      "annualOpex": 433734.086332795,
+      "annualEbitda": 470494.1541901551,
+      "capexUsd": 1000000,
+      "recoveryRate": 0.98545,
+      "residualMetricTons": 17.459028868950867,
+      "materialRevenue": {
+        "silver": 362385.2728885776,
+        "aluminumAndCopper": 419220.72650577035,
+        "other": 122622.24112860207
+      },
+      "opexPerPanel": {
+        "electricity": 0.19376999999999997,
+        "laborAndBurden": 5.2434881664000015,
+        "facility": 0.35833333333333334,
+        "other": 1.4333099391465811,
+        "total": 7.228901438879916
+      }
+    }
+  ],
+  "feeSensitivity": {
+    "feeUsdPerLb": [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+    "annualEbitdaUsdThousands": {
+      "CONVENTIONAL": [-299.6, -167.3, -35.0, 97.3, 229.5, 361.8, 494.1],
+      "HOT_KNIFE": [-306.9, -174.6, -42.3, 89.9, 222.2, 354.5, 486.7],
+      "PVCIRCULATOR": [470.5, 602.8, 735.0, 867.3, 999.6, 1131.8, 1264.1]
+    }
+  },
+  "silverSensitivity": {
+    "changePercent": [-30, -15, 0, 15, 30],
+    "annualEbitdaUsdThousands": {
+      "CONVENTIONAL": [-314.8, -307.2, -299.6, -291.9, -284.3],
+      "HOT_KNIFE": [-344.6, -325.8, -306.9, -288.0, -269.1],
+      "PVCIRCULATOR": [361.8, 416.1, 470.5, 524.9, 579.2]
+    }
+  }
+}
