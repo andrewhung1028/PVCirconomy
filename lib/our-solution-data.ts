@@ -1,4 +1,6 @@
 import seedData from "../data/our-solution-economics-usd.json";
+import seedMarketCapacity from "../data/our-solution-market-capacity.json";
+import { validateMarketCapacity, type MarketCapacityRow } from "./market-capacity";
 
 export const solutionCodes = ["CONVENTIONAL", "HOT_KNIFE", "PVCIRCULATOR"] as const;
 export type SolutionCode = (typeof solutionCodes)[number];
@@ -46,9 +48,17 @@ export type OurSolutionEconomics = {
     changePercent: number[];
     annualEbitdaUsdThousands: Record<SolutionCode, number[]>;
   };
+  /** Market Capacity sheet. Optional so versions published before it existed stay valid; they use the seeded rows. */
+  marketCapacity?: MarketCapacityRow[];
 };
 
-export const seededOurSolutionData = seedData as OurSolutionEconomics;
+export const seededMarketCapacity = seedMarketCapacity as MarketCapacityRow[];
+export const seededOurSolutionData = { ...(seedData as OurSolutionEconomics), marketCapacity: seededMarketCapacity };
+
+/** Market capacity rows for a published version; versions without the sheet fall back to the seeded rows (identical to the pre-sheet chart). */
+export function marketCapacityOf(data: OurSolutionEconomics): MarketCapacityRow[] {
+  return data.marketCapacity?.length ? data.marketCapacity : seededMarketCapacity;
+}
 
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const cleanText = (value: unknown, max = 240): value is string => typeof value === "string" && value.trim().length > 0 && value.length <= max && !value.includes("\0");
@@ -84,6 +94,7 @@ export function validateOurSolutionData(value: unknown): { valid: true; data: Ou
     if (!fee?.annualEbitdaUsdThousands?.[code] || fee.annualEbitdaUsdThousands[code].length !== 7 || !fee.annualEbitdaUsdThousands[code].every(finite)) errors.push(`${code} 處理費敏感度資料不完整。`);
     if (!silver?.annualEbitdaUsdThousands?.[code] || silver.annualEbitdaUsdThousands[code].length !== 5 || !silver.annualEbitdaUsdThousands[code].every(finite)) errors.push(`${code} 白銀敏感度資料不完整。`);
   }
+  if (data.marketCapacity !== undefined) errors.push(...validateMarketCapacity(data.marketCapacity));
   return errors.length ? { valid: false, errors: [...new Set(errors)] } : { valid: true, data: value as OurSolutionEconomics };
 }
 
@@ -104,6 +115,14 @@ export function diffOurSolutionData(before: OurSolutionEconomics, after: OurSolu
   for (const code of solutionCodes) {
     after.feeSensitivity.annualEbitdaUsdThousands[code].forEach((value, index) => compare(`feeSensitivity.${code}.${index}`, `Fee sensitivity · ${code} · ${after.feeSensitivity.feeUsdPerLb[index]}`, before.feeSensitivity.annualEbitdaUsdThousands[code][index], value));
     after.silverSensitivity.annualEbitdaUsdThousands[code].forEach((value, index) => compare(`silverSensitivity.${code}.${index}`, `Silver sensitivity · ${code} · ${after.silverSensitivity.changePercent[index]}%`, before.silverSensitivity.annualEbitdaUsdThousands[code][index], value));
+  }
+  const capacity = (data: OurSolutionEconomics) => new Map(marketCapacityOf(data).map((row) => [`${row.market} · ${row.year}`, row]));
+  const capacityBefore = capacity(before), capacityAfter = capacity(after);
+  for (const key of new Set([...capacityBefore.keys(), ...capacityAfter.keys()])) {
+    const a = capacityBefore.get(key), b = capacityAfter.get(key);
+    compare(`marketCapacity.${key}.gw`, `Market Capacity · ${key} · GW`, a?.gw ?? "", b?.gw ?? "");
+    compare(`marketCapacity.${key}.source`, `Market Capacity · ${key} · 出處`, a ? `${a.source}${a.sourceYear ? ` (${a.sourceYear})` : ""}` : "", b ? `${b.source}${b.sourceYear ? ` (${b.sourceYear})` : ""}` : "");
+    compare(`marketCapacity.${key}.note`, `Market Capacity · ${key} · 備註`, a?.note ?? "", b?.note ?? "");
   }
   return rows;
 }

@@ -7,6 +7,9 @@ import { loadMasterData } from "../../lib/business-case/master-data";
 import { routeEnvironmentalMetrics } from "../../lib/route-comparison";
 import { breakevenFees } from "../../lib/business-case/breakeven";
 import type { BreakevenView } from "../components/our-solution";
+import { marketCapacityOf } from "../../lib/our-solution-data";
+import { capacityTrend, usCumulativeMw } from "../../lib/market-capacity";
+import { computeRetirementWave } from "../../lib/us-retirement-wave";
 
 const manrope = Manrope({ subsets: ["latin"], weight: ["300", "800"] });
 
@@ -27,5 +30,8 @@ export default async function SolutionsPage() {
     const result = breakevenFees(master, { regionCode: economics.data.scenario.regionCode, panelsPerMonth: economics.data.scenario.panelsPerMonth }, ["CONVENTIONAL", "HOT_KNIFE", "PVCIRCULATOR"].filter(code => master.solutions.some(s => s.code === code && s.active)));
     breakeven = { region: result.region, feeUnit: result.feeUnit, currency: result.currency, panelsPerMonth: result.panelsPerMonth, panelWeightLb: result.panelWeightLb, source: master.source, fees: result.fees.map(({ code, breakevenFee }) => ({ code, breakevenFee })) };
   } catch (error) { console.warn("Breakeven fees unavailable:", (error as Error).message); }
-  return <div className={manrope.className}><OurSolution economicsData={{ ...economics.data, solutions: economics.data.solutions.map(({ residualMetricTons, ...solution }) => solution), meta: { ...economics.data.meta, sourceSite: "/business-case/", calculatorDataApi: "/api/calculator-data/", calculationApi: "/api/calculate/" } }} routeMetrics={routeMetrics} breakeven={breakeven} /></div>;
+  // Installed-capacity chart and US retirement curve share the published Market Capacity sheet.
+  const capacityRows = marketCapacityOf(economics.data);
+  const { marketCapacity: _marketCapacity, ...economicsView } = economics.data;
+  return <div className={manrope.className}><OurSolution capacityTrend={capacityTrend(capacityRows)} retirementWave={computeRetirementWave(usCumulativeMw(capacityRows))} economicsData={{ ...economicsView, solutions: economicsView.solutions.map(({ residualMetricTons, ...solution }) => solution), meta: { ...economicsView.meta, sourceSite: "/business-case/", calculatorDataApi: "/api/calculator-data/", calculationApi: "/api/calculate/" } }} routeMetrics={routeMetrics} breakeven={breakeven} /></div>;
 }

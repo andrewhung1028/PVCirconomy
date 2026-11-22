@@ -1,5 +1,8 @@
 import ExcelJS from "exceljs";
-import { solutionCodes, validateOurSolutionData, type OurSolutionEconomics, type SolutionCode } from "../../lib/our-solution-data";
+import { marketCapacityOf, solutionCodes, validateOurSolutionData, type OurSolutionEconomics, type SolutionCode } from "../../lib/our-solution-data";
+import { capacityMarkets, type CapacityMarket, type MarketCapacityRow } from "../../lib/market-capacity";
+
+const capacityHeaders = ["市場", "年份", "累積裝置量 GW", "出處", "出處年份", "備註"];
 
 const editableSheets = ["Scenario", "Annual Summary", "Website Values", "Fee Sensitivity", "Silver Sensitivity"] as const;
 const allSheets = ["Instructions", ...editableSheets, "Material Revenue"] as const;
@@ -108,6 +111,23 @@ export async function parseOurSolutionWorkbook(buffer: Buffer, base: OurSolution
     data.silverSensitivity.changePercent.push(number(silver.getCell(row, 1)) * 100);
     solutionCodes.forEach((code, index) => data.silverSensitivity.annualEbitdaUsdThousands[code].push(number(silver.getCell(row, index + 2))));
   }
+  // Market Capacity is optional on import so workbooks downloaded before the sheet existed still work; they keep the current rows.
+  const capacity = workbook.getWorksheet("Market Capacity");
+  if (capacity) {
+    headers(capacity, capacityHeaders);
+    const rows: MarketCapacityRow[] = [];
+    for (let index = 2; index <= capacity.actualRowCount; index++) {
+      const row = capacity.getRow(index);
+      if ([1, 2, 3, 4, 5, 6].every((column) => value(row.getCell(column)) === "")) continue;
+      const market = text(row.getCell(1));
+      if (!capacityMarkets.includes(market as CapacityMarket)) throw Error(`欄位 ${row.getCell(1).address} 市場必須是 ${capacityMarkets.join("、")} 之一。`);
+      const sourceYear = value(row.getCell(5));
+      if (sourceYear !== "" && typeof sourceYear !== "number") throw Error(`欄位 ${row.getCell(5).address} 出處年份必須是數字或空白。`);
+      const note = value(row.getCell(6));
+      rows.push({ market: market as CapacityMarket, year: number(row.getCell(2)), gw: number(row.getCell(3)), source: text(row.getCell(4)), sourceYear: sourceYear === "" ? null : sourceYear, note: String(note).trim() });
+    }
+    data.marketCapacity = rows;
+  }
   const checked = validateOurSolutionData(data);
   if (!checked.valid) throw Error(checked.errors.join("\n"));
   return checked.data;
@@ -130,7 +150,7 @@ export async function createOurSolutionWorkbook(data: OurSolutionEconomics, blan
   const numeric = (next: number) => blank ? null : next;
   const instructions = workbook.addWorksheet("Instructions");
   addHeader(instructions, ["PV Circonomy · Our Solution USD data workbook", "Value"]);
-  [["Purpose", "Single reviewable source for the Our Solution USD charts and tables."], ["Source", data.meta.sourceSite], ["Scenario", `${data.scenario.region} · ${data.scenario.panelsPerMonth.toLocaleString()} panels/month`], ["Currency", "USD"], ["Editing", "Edit value cells only. Do not rename sheets, field keys, units or solution codes."], ["Import workflow", "Upload → validate → preview differences → publish. Uploading never changes the live website."], ["Disclosure", data.meta.note]].forEach((row) => instructions.addRow(row));
+  [["Purpose", "Single reviewable source for the Our Solution USD charts and tables."], ["Source", data.meta.sourceSite], ["Scenario", `${data.scenario.region} · ${data.scenario.panelsPerMonth.toLocaleString()} panels/month`], ["Currency", "USD"], ["Editing", "Edit value cells only. Do not rename sheets, field keys, units or solution codes."], ["Import workflow", "Upload → validate → preview differences → publish. Uploading never changes the live website."], ["Market Capacity", "Cumulative installed capacity (GW) by market and year. Every year is stored; Other markets must equal World minus the six markets. United States 2000–2050 also drives the US retirement curve. 出處「待補」= source still to be added."], ["Disclosure", data.meta.note]].forEach((row) => instructions.addRow(row));
   widths(instructions, [24, 110]);
 
   const scenario = workbook.addWorksheet("Scenario");
@@ -167,6 +187,12 @@ export async function createOurSolutionWorkbook(data: OurSolutionEconomics, blan
   addHeader(silver, ["silver_price_change_percent", "CONVENTIONAL_ebitda_usd_thousands", "HOT_KNIFE_ebitda_usd_thousands", "PVCIRCULATOR_ebitda_usd_thousands"]);
   data.silverSensitivity.changePercent.forEach((amount, index) => silver.addRow([numeric(amount / 100), ...solutionCodes.map((code) => numeric(data.silverSensitivity.annualEbitdaUsdThousands[code][index]))]));
   widths(silver, [30, 38, 38, 40]); for (let row = 2; row <= silver.rowCount; row++) silver.getCell(row, 1).numFmt = "0%";
+
+  const capacity = workbook.addWorksheet("Market Capacity");
+  addHeader(capacity, capacityHeaders);
+  marketCapacityOf(data).forEach((row) => capacity.addRow([row.market, row.year, numeric(row.gw), row.source, row.sourceYear, row.note]));
+  widths(capacity, [18, 10, 20, 22, 12, 70]);
+  for (let row = 2; row <= capacity.rowCount; row++) capacity.getCell(row, 3).numFmt = "#,##0.000";
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }

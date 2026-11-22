@@ -896,3 +896,4 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 
 /* PV Circulator menu: five tabs on one line on desktop (t520u). */
 @media(min-width:761px){.pv-header-panel.is-equipment{width:min(600px,calc(100vw - 32px))}.pv-header-panel.is-equipment .pv-company-topics{flex-wrap:nowrap;gap:4px 20px}.pv-header-panel.is-equipment .pv-company-topics a{white-space:nowrap}}
+.os-retirement-chart g.is-main polyline{stroke-width:3.2}.os-retirement-chart g.is-comparison polyline{stroke-width:1.4;opacity:.7}.os-retirement-chart .is-main i{height:4px}

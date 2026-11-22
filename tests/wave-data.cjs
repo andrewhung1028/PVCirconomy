@@ -1,34 +1,46 @@
-const assert=require('node:assert/strict'),wave=require('../data/us-retirement-wave.json');
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+const {capacity,wave:model,rows,seedWave:wave}=require('./helpers/market-capacity.cjs')();
+
+// Model rules (t524u). 1) no waste in the installation year; 2) retired capacity is replaced and replacements retire again.
+{
+ const one=new Map([[2000,100]]);for(let y=2001;y<=2060;y++)one.set(y,100);
+ const s=model.retirementSeries(one,18,model.WEIBULL_ALPHA.early);
+ assert.equal(s.mass.get(2000),0);assert.equal(s.retiredMw.get(2000),0);assert.ok(s.retiredMw.get(2001)>0);
+ const F=(a)=>a<=0?0:1-Math.exp(-((a/18)**model.WEIBULL_ALPHA.early));
+ assert.ok(Math.abs(s.retiredMw.get(2001)-100*F(1))<1e-9,'age-1 retirement = F(1)');
+ // Flat cumulative after 2000: every year's additions equal its retirements; brute-force recursion check.
+ const added={2000:100},retired={};
+ for(let t=2001;t<=2060;t++){retired[t]=0;for(let v=2000;v<t;v++)retired[t]+=added[v]*(F(t-v)-F(t-v-1));added[t]=retired[t];}
+ for(let t=2001;t<=2060;t++){assert.ok(Math.abs(s.added.get(t)-added[t])<1e-6);assert.ok(Math.abs(s.retiredMw.get(t)-retired[t])<1e-6);}
+ const totalRetired=[...s.retiredMw.values()].reduce((a,b)=>a+b,0);assert.ok(totalRetired>100,'replacements retire again');
+ const mass=[...s.mass.entries()].find(([y])=>y===2010)[1];let expected=0;for(let v=2000;v<2010;v++)expected+=added[v]*(F(2010-v)-F(2010-v-1))*model.tonnesPerMw(v);assert.ok(Math.abs(mass-expected)<1e-6,'mass uses vintage t/MW');
+}
+assert.deepEqual(capacity.validateMarketCapacity(rows),[]);
 assert.deepEqual(wave.years,Array.from({length:35},(_,i)=>2016+i));
 for(const key of ['early_T18','regular_T18','early_T25','regular_T25','early_T15','regular_T15','early_T12','regular_T12']){assert.equal(wave[key].length,35);assert.ok(wave[key].every(x=>Number.isFinite(x)&&x>=0));}
-for(const [threshold,early,regular] of [[100000,2021,2025],[500000,2029,2031],[1000000,2035,2036]]){assert.equal(wave.years[wave.early_T18.findIndex(x=>x>=threshold)],early);assert.equal(wave.years[wave.regular_T18.findIndex(x=>x>=threshold)],regular);}
-assert.equal(wave.early_T18[wave.years.indexOf(2030)],629067);assert.equal(wave.regular_T18[wave.years.indexOf(2030)],429602);
-console.log('T6 data: 35 years, eight complete series, threshold years and exact 2030 values passed.');
-// Render the actual chart function with React, without requiring a browser or changing its source.
-const fs=require('node:fs'),ts=require('typescript'),React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+for(const [threshold,early,regular] of [[100000,2022,2026],[500000,2030,2032],[1000000,2035,2037]]){assert.equal(wave.crossings.early_T18[threshold],early);assert.equal(wave.crossings.regular_T18[threshold],regular);}
+assert.equal(wave.early_T18[wave.years.indexOf(2030)],566702);assert.equal(wave.regular_T18[wave.years.indexOf(2030)],353645);
+assert.deepEqual(model.LIFETIMES,[25,18,15,12]);assert.equal(model.DEFAULT_LIFETIME,18);assert.deepEqual(model.WEIBULL_ALPHA,{regular:5.3759,early:2.4928});
+for(const lifetime of model.LIFETIMES)for(const loss of ['early','regular'])for(const threshold of [100000,500000,1000000]){const i=wave[`${loss}_T${lifetime}`].findIndex(x=>x>=threshold);if(wave.years[i]>2016)assert.equal(wave.crossings[`${loss}_T${lifetime}`][threshold],wave.years[i]);}
+console.log('T6 data: model rules (age ≥ 1, replacement recursion), Market Capacity seed, 35 years × 8 series, thresholds and pinned 2030 values passed.');
+
+// Render the actual chart and panel functions with React.
 const source=ts.createSourceFile('our-solution.tsx',fs.readFileSync('app/components/our-solution.tsx','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-const chart=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='RetirementLineChart');assert.ok(chart);
-const js=ts.transpileModule('export '+chart.getText(source),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
-const renderedModule={exports:{}};new Function('require','module','exports','retirementWave',js)(require,renderedModule,renderedModule.exports,wave);
-const html=renderToStaticMarkup(React.createElement(renderedModule.exports.RetirementLineChart,{lifetime:18,onLifetimeChange:()=>{}}));
-assert.equal((html.match(/<svg\b/g)||[]).length,1);assert.ok(html.includes('role="img"'));const lines=html.match(/<polyline\b[^>]*>/g)||[];assert.equal(lines.length,4);assert.equal(lines.filter(line=>line.includes('is-reference')).length,2);assert.equal(lines.filter(line=>!line.includes('is-reference')).length,2);assert.ok(html.includes('IRENA 2026: 25 yrs'));
-for(const label of ['100 kt/yr','1 Mt/yr','Early-loss scenario','Regular-loss scenario','0.63m t','0.43m t'])assert.ok(html.includes(label),label);
-console.log('T6 React render: SVG role/series aria, two basis lines, two 25-year references, guide labels and 2030 values passed.');
-
-assert.deepEqual(wave.meta.lifetimes,[25,18,15,12]);
-for(const lifetime of wave.meta.lifetimes)for(const loss of ['early','regular'])for(const threshold of [100000,500000,1000000])assert.equal(wave.crossings[`${loss}_T${lifetime}`][threshold],wave.years[wave[`${loss}_T${lifetime}`].findIndex(x=>x>=threshold)]);
-const {execFileSync}=require('node:child_process');const before=fs.readFileSync('data/us-retirement-wave.json','utf8');execFileSync('python3',['scripts/wave.py']);assert.equal(fs.readFileSync('data/us-retirement-wave.json','utf8'),before);
-console.log('All lifetime thresholds and reproducible model generation passed.');
-
-const context=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='RetirementContext');
-const contextJs=ts.transpileModule('export '+context.getText(source),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
-const contextModule={exports:{}};new Function('require','module','exports','retirementWave',contextJs)(require,contextModule,contextModule.exports,wave);
+const compile=name=>{const node=source.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(node,name);const js=ts.transpileModule('export '+node.getText(source),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;const m={exports:{}};new Function('require','module','exports',js)(require,m,m.exports);return m.exports[name];};
+const Chart=compile('RetirementLineChart'),Context=compile('RetirementContext');
+const html=renderToStaticMarkup(React.createElement(Chart,{lifetime:18,onLifetimeChange:()=>{},wave}));
+assert.equal((html.match(/<svg\b/g)||[]).length,1);assert.ok(html.includes('role="img"'));const lines=html.match(/<polyline\b[^>]*>/g)||[];assert.equal(lines.length,4);assert.equal(lines.filter(line=>line.includes('is-reference')).length,2);
+for(const label of ['100 kt/yr','1 Mt/yr','Early-loss scenario','Regular-loss scenario','0.57m t','0.35m t'])assert.ok(html.includes(label),label);
 for(const lifetime of [25,18,15,12]){
- const chartHtml=renderToStaticMarkup(React.createElement(renderedModule.exports.RetirementLineChart,{lifetime,onLifetimeChange:()=>{}}));
- const panelHtml=renderToStaticMarkup(React.createElement(contextModule.exports.RetirementContext,{lifetime}));
+ const chartHtml=renderToStaticMarkup(React.createElement(Chart,{lifetime,onLifetimeChange:()=>{},wave}));
+ const panelHtml=renderToStaticMarkup(React.createElement(Context,{lifetime,wave}));
  assert.ok(chartHtml.includes(`value="${lifetime}" selected=""`));assert.ok(chartHtml.includes(`${lifetime}-year EoL lifetime`));
  assert.equal((chartHtml.match(/<polyline\b/g)||[]).length,lifetime===25?2:4);
- assert.ok(!chartHtml.includes('NaN'));assert.ok(panelHtml.includes('Scenario, not a forecast'));
+ assert.ok(!chartHtml.includes('NaN'));
+ // Every plotted point stays inside the chart area (dynamic ceiling).
+ for(const pts of chartHtml.match(/points="[^"]*"/g))for(const pair of pts.slice(8,-1).split(' ')){const y=Number(pair.split(',')[1]);assert.ok(y>=22&&y<=202,`y ${y} for T${lifetime}`);}
+ assert.ok(panelHtml.includes('Scenario, not a forecast'));assert.ok(panelHtml.includes('Default: 18-year lifetime, IRENA early-loss scenario'));assert.ok(panelHtml.includes('Early loss (main)'));assert.ok(chartHtml.includes('class="is-early is-main"'));assert.ok(chartHtml.includes('IRENA early-loss scenario'));assert.ok(!panelHtml.includes('held at the 2025 level'));
+ assert.ok(panelHtml.includes('no waste in the year they are installed'));assert.ok(panelHtml.includes('Retired panels are replaced'));
  for(const loss of ['early','regular'])for(const threshold of [100000,500000,1000000])assert.ok(panelHtml.includes(String(wave.crossings[`${loss}_T${lifetime}`][threshold])));
 }
 // Execute StoryDeck's actual timer effect with fake time and visibility.

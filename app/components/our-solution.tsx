@@ -4,7 +4,10 @@ import Link from "next/link";
 import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 import { PublicHeader } from "./public-header";
 import { ProcessPlaylist } from "./pv-circulator-page";
-import retirementWave from "../../data/us-retirement-wave.json";
+import { capacityTrend as buildCapacityTrend, usCumulativeMw, type CapacityTrendPoint } from "../../lib/market-capacity";
+import { computeRetirementWave, type RetirementWave } from "../../lib/us-retirement-wave";
+import seedMarketCapacity from "../../data/our-solution-market-capacity.json";
+import type { MarketCapacityRow } from "../../lib/market-capacity";
 import type { RouteEnvironmentalMetric } from "../../lib/route-comparison";
 import economicsUsd from "../../data/our-solution-economics-usd.json";
 import type { OurSolutionEconomics } from "../../lib/our-solution-data";
@@ -236,16 +239,10 @@ type AudienceTopic = keyof typeof audienceTopics;
 const trendRegions = ["Europe", "United States", "Japan", "Taiwan", "Australia", "China", "Other markets"] as const;
 type TrendPoint = { year: string; total: number; totalLabel: string; values: readonly number[] };
 
-const installationStart = [361.49691, 260.89131, 98.366494, 16.100058, 43.946566, 951.13452] as const;
-const installationEnd = [1940, 3200, 524, 80, 1900, 5500] as const;
-const installationTrend: TrendPoint[] = Array.from({ length: 26 }, (_, index) => {
-  const year = 2025 + index;
-  const progress = index / 25;
-  const total = 2185.4493 * Math.pow(20059 / 2185.4493, progress);
-  const namedMarkets = installationStart.map((start, market) => start * Math.pow(installationEnd[market] / start, progress));
-  const otherMarkets = Math.max(0, total - namedMarkets.reduce((sum, value) => sum + value, 0));
-  return { year: String(year), total, totalLabel: total < 10000 ? `${(total / 1000).toFixed(1)} TW` : `${(total / 1000).toFixed(1)} TW`, values: [...namedMarkets, otherMarkets] };
-});
+// Defaults for callers without published data; /solutions passes values computed from the published Market Capacity sheet.
+const seededCapacityRows = seedMarketCapacity as MarketCapacityRow[];
+const defaultCapacityTrend: CapacityTrendPoint[] = buildCapacityTrend(seededCapacityRows);
+const defaultRetirementWave: RetirementWave = computeRetirementWave(usCumulativeMw(seededCapacityRows));
 
 
 const pressureSeries = [
@@ -415,23 +412,27 @@ function ValueSection() {
 
 type EconomicSeries = { label: string; values: number[]; className: string };
 
-function RetirementLineChart({ lifetime, onLifetimeChange }: { lifetime: 25 | 18 | 15 | 12; onLifetimeChange: (value: 25 | 18 | 15 | 12) => void }) {
+function RetirementLineChart({ lifetime, onLifetimeChange, wave: retirementWave }: { lifetime: 25 | 18 | 15 | 12; onLifetimeChange: (value: 25 | 18 | 15 | 12) => void; wave: RetirementWave }) {
   const SHOW_LIFETIME_REFERENCE = lifetime !== 25;
   const x = (year: number) => 48 + (year - 2016) / 34 * 500;
-  const ceiling = 4e6;
+  const peak = Math.max(...retirementWave[`early_T${lifetime}`], ...retirementWave[`regular_T${lifetime}`], ...(SHOW_LIFETIME_REFERENCE ? [...retirementWave.early_T25, ...retirementWave.regular_T25] : []));
+  const tickStep = peak > 5e6 ? 2 : 1;
+  const ceilingMt = Math.max(4, Math.ceil(peak / 1e6 / tickStep) * tickStep);
+  const ceiling = ceilingMt * 1e6;
+  const ticks = Array.from({ length: ceilingMt / tickStep + 1 }, (_, index) => index * tickStep);
   const y = (value: number) => 202 - value / ceiling * 180;
   const basis = [
-    { label: "Early-loss scenario", values: retirementWave[`early_T${lifetime}`], className: "is-early" },
-    { label: "Regular-loss scenario", values: retirementWave[`regular_T${lifetime}`], className: "is-regular" },
+    { label: "Early-loss scenario (IRENA, main)", values: retirementWave[`early_T${lifetime}`], className: "is-early is-main" },
+    { label: "Regular-loss scenario (comparison)", values: retirementWave[`regular_T${lifetime}`], className: "is-regular is-comparison" },
   ];
   const references = [retirementWave.early_T25, retirementWave.regular_T25];
   const points = (values: number[]) => retirementWave.years.map((year, i) => `${x(year)},${y(values[i])}`).join(" ");
   const ariaLabel = basis.map(series => `${series.label}: ${retirementWave.years.flatMap((year, i) => year % 5 === 0 ? [`${year}: ${series.values[i].toLocaleString("en-US")} tonnes`] : []).join("; ")}`).join(". ");
-  return <figure className="os-economic-chart os-retirement-chart"><figcaption>Annual end-of-life PV panel mass, United States, 2016–2050 (modelled scenario, {lifetime}-year EoL lifetime).</figcaption>
+  return <figure className="os-economic-chart os-retirement-chart"><figcaption>Annual end-of-life PV panel mass, United States, 2016–2050: IRENA early-loss scenario, {lifetime}-year EoL lifetime (modelled; regular-loss shown for comparison).</figcaption>
     <div className="os-economic-legend">{basis.map(series => <span className={series.className} key={series.label}><i />{series.label}</span>)}{SHOW_LIFETIME_REFERENCE && <span className="is-reference"><i />IRENA 2026: 25 yrs</span>}</div>
     <svg viewBox="0 0 600 240" role="img" aria-label={ariaLabel}>
       <text x="48" y="12">million t</text>
-      {[0, 1, 2, 3, 4].map(tick => <g key={tick}><line className="os-economic-grid" x1="48" x2="548" y1={y(tick * 1e6)} y2={y(tick * 1e6)} /><text x="40" y={y(tick * 1e6) + 3} textAnchor="end">{tick.toFixed(1)}</text></g>)}
+      {ticks.map(tick => <g key={tick}><line className="os-economic-grid" x1="48" x2="548" y1={y(tick * 1e6)} y2={y(tick * 1e6)} /><text x="40" y={y(tick * 1e6) + 3} textAnchor="end">{tick.toFixed(1)}</text></g>)}
       {[2020, 2025, 2030, 2035, 2040, 2045, 2050].map(year => <text className="os-economic-axis-label" key={year} x={x(year)} y="225" textAnchor="middle">{year}</text>)}
       {[{ value: 1e5, label: "100 kt/yr" }, { value: 1e6, label: "1 Mt/yr" }].map(guide => <g key={guide.value}><line className="os-retirement-guide" x1="48" x2="548" y1={y(guide.value)} y2={y(guide.value)} /><text x="552" y={y(guide.value) + 3}>{guide.label}</text></g>)}
       {SHOW_LIFETIME_REFERENCE && references.map((values, i) => <polyline className={`is-reference ${i === 0 ? "is-early" : "is-regular"}`} key={i} points={points(values)} />)}
@@ -443,7 +444,7 @@ function RetirementLineChart({ lifetime, onLifetimeChange }: { lifetime: 25 | 18
   </figure>;
 }
 
-function RetirementContext({ lifetime }: { lifetime: 25 | 18 | 15 | 12 }) {
+function RetirementContext({ lifetime, wave: retirementWave }: { lifetime: 25 | 18 | 15 | 12; wave: RetirementWave }) {
   const sources = {
     25: <>IRENA 2026 (25-year lifetime).</>,
     18: <>PV Circonomy conservative assumption (default).</>,
@@ -451,9 +452,10 @@ function RetirementContext({ lifetime }: { lifetime: 25 | 18 | 15 | 12 }) {
     12: <><a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124 p.8</a> (repowering every 10–12 years, upper bound).</>,
   };
   return <div className="os-retirement-context" aria-live="polite">
-    <p><strong>{lifetime}-year EoL lifetime.</strong> {sources[lifetime]}</p>
-    <table><caption>First year annual retirements cross each threshold</caption><thead><tr><th scope="col">Annual mass</th><th scope="col">Early loss</th><th scope="col">Regular loss</th></tr></thead><tbody>{[100000, 500000, 1000000].map(threshold => <tr key={threshold}><th scope="row">{threshold === 1000000 ? "1 Mt" : `${threshold / 1000} kt`}</th><td>{retirementWave.crossings[`early_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td><td>{retirementWave.crossings[`regular_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td></tr>)}</tbody></table>
-    <p className="os-chart-source">Scenario, not a forecast. IRENA Weibull shape factors: early loss 2.4928; regular loss 5.3759. US installations after 2025 are held at the 2025 level. Capacity inputs: IRENA statistics 2000–2025, without AC-to-DC correction. Panel mass per MW: IRENA 2026. Faint reference lines use IRENA 2026’s 25-year lifetime. Threshold years depend on these assumptions.</p>
+    <p><strong>{lifetime}-year EoL lifetime, IRENA early-loss scenario.</strong> {sources[lifetime]}</p>
+    <p>Default: 18-year lifetime, IRENA early-loss scenario. In {retirementWave.years[retirementWave.years.length - 1]}, early-loss retirements reach {(retirementWave[`early_T${lifetime}`][retirementWave.years.length - 1] / 1e6).toFixed(2)} million t; regular loss, for comparison, {(retirementWave[`regular_T${lifetime}`][retirementWave.years.length - 1] / 1e6).toFixed(2)} million t.</p>
+    <table><caption>First year annual retirements cross each threshold (early loss is the main scenario)</caption><thead><tr><th scope="col">Annual mass</th><th scope="col">Early loss (main)</th><th scope="col">Regular loss (comparison)</th></tr></thead><tbody>{[100000, 500000, 1000000].map(threshold => <tr key={threshold}><th scope="row">{threshold === 1000000 ? "1 Mt" : `${threshold / 1000} kt`}</th><td>{retirementWave.crossings[`early_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td><td>{retirementWave.crossings[`regular_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td></tr>)}</tbody></table>
+    <p className="os-chart-source">Scenario, not a forecast. IRENA Weibull shape factors: early loss 2.4928; regular loss 5.3759. Installed capacity: Market Capacity sheet (IRENA statistics 2000–2025, without AC-to-DC correction; 2026–2050 grows to 3.2 TW, the same path as the installed-capacity chart). Panels produce no waste in the year they are installed. Retired panels are replaced, so annual installations = net capacity growth + retired capacity, and replacement panels retire again. Panel mass per MW: IRENA 2026. Faint reference lines use IRENA 2026’s 25-year lifetime. Threshold years depend on these assumptions.</p>
   </div>;
 }
 
@@ -589,7 +591,9 @@ function MaterialsSection() {
   </section>;
 }
 
-export function OurSolution({ economicsData = economicsUsd as OurSolutionView, routeMetrics = [], breakeven = null }: { economicsData?: OurSolutionView; routeMetrics?: RouteEnvironmentalMetric[]; breakeven?: BreakevenView }) {
+export function OurSolution({ economicsData = economicsUsd as OurSolutionView, routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave }: { economicsData?: OurSolutionView; routeMetrics?: RouteEnvironmentalMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave }) {
+  const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
+  const capacityFirst = capacityTrend[0], capacityLast = capacityTrend[capacityTrend.length - 1];
   const [active, setActive] = useState<SectionId>("overview");
   const [stake, setStake] = useState<StakeTopic>("cost");
   const [audience, setAudience] = useState<AudienceTopic>("owner");
@@ -616,8 +620,8 @@ export function OurSolution({ economicsData = economicsUsd as OurSolutionView, r
 
   const [waveLifetime, setWaveLifetime] = useState<25 | 18 | 15 | 12>(18);
   const waveSlides: DeckSlide[] = [
-    { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from 2.2 TW to 20.1 TW by 2050.</h2><StackedTrendChart data={installationTrend} max={20059} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Today’s installations define tomorrow’s retirement geography.", note: <p>Every annual column represents the infrastructure already being built toward a much larger retirement market. The market mix shows where future collection and processing capacity will be needed.</p> },
-    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-market-slide os-us-retirement"><h2>When will US solar panels reach end of life?</h2><RetirementLineChart lifetime={waveLifetime} onLifetimeChange={setWaveLifetime} /></div>, noteTitle: "The retirement scenario you choose.", note: <RetirementContext lifetime={waveLifetime} /> },
+    { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from {capacityFirst.totalLabel} to {capacityLast.totalLabel} by {capacityLast.year}.</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Today’s installations define tomorrow’s retirement geography.", note: <p>Every annual column represents the infrastructure already being built toward a much larger retirement market. The market mix shows where future collection and processing capacity will be needed.</p> },
+    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-market-slide os-us-retirement"><h2>When will US solar panels reach end of life?</h2><RetirementLineChart lifetime={waveLifetime} onLifetimeChange={setWaveLifetime} wave={retirementWave} /></div>, noteTitle: "The retirement scenario you choose.", note: <RetirementContext lifetime={waveLifetime} wave={retirementWave} /> },
     { label: "Per-capita processing pressure", navigationLabel: "Per-capita pressure", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>Per-capita processing pressure rises unevenly through 2050.</h2><PressureTrendChart /></div>, noteTitle: "Processing pressure grows at a different pace in every market.", note: <p>Our projection shows Australia rising to 79.3 kg per person by 2050, far above the other markets. The long view strengthens the case for regional and deployable capacity rather than planning from a single global endpoint.</p> },
   ];
 

@@ -36,7 +36,7 @@ const log=fs.openSync('/tmp/phase2-server.log','a');const server=spawn(process.e
   const selector=deck.getByLabel('EoL lifetime',{exact:true});assert.equal(await selector.inputValue(),'18');
   assert.equal(await deck.getByRole('button',{name:/Show slide/}).count(),3);
   for(const lifetime of [25,18,15,12]){
-   await selector.selectOption(String(lifetime));const wave=require('../data/us-retirement-wave.json');
+   await selector.selectOption(String(lifetime));const wave=require('./helpers/market-capacity.cjs')().seedWave;
    const context=deck.locator('.os-retirement-context');assert.ok((await context.innerText()).includes(`${lifetime}-year`));
    for(const loss of ['early','regular'])for(const threshold of [100000,500000,1000000])assert.ok((await context.innerText()).includes(String(wave.crossings[`${loss}_T${lifetime}`][threshold])));
    const source={25:'IRENA 2026',18:'PV Circonomy conservative assumption',15:'Jean, Woodhouse & Bulović',12:'NREL/TP-6A20-74124 p.8'}[lifetime];assert.ok((await context.innerText()).includes(source));
