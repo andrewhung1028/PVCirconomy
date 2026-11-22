@@ -1,4 +1,5 @@
 'use client';
+import {solutionLabel} from '../../lib/business-case/solution-labels';
 
 import {
   FormEvent,
@@ -752,7 +753,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                 {data?.solutions?.filter((x: any) =>
                   x.code !== 'PVCIRCULATOR' && x.active !== false
                 ).map((x: any) => (
-                  <option key={x.code} value={x.code}>{x.name}</option>
+                  <option key={x.code} value={x.code}>{solutionLabel(x.code, x.name)}</option>
                 ))}
               </select>
             </label>
@@ -871,7 +872,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                         </th>
 
                         <th>
-                          {compareResult.name}
+                          {solutionLabel(compareResult.code, compareResult.name)}
                         </th>
 
                         <th>
@@ -1273,7 +1274,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                   <p className="summaryLead">
                     At {number(panels)} panels/month, PV Circulator delivers an estimated{' '}
                     <strong>{money(ebitdaAdvantage, currency)} more annual EBITDA</strong>{' '}
-                    than {compareResult.name}—turning cleaner recovery into stronger economics.
+                    than {solutionLabel(compareResult.code, compareResult.name)}—turning cleaner recovery into stronger economics.
                   </p>
                   {pvResult.simplePaybackYears > 0 && (
                     <p className="summaryPayback">
@@ -1297,7 +1298,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                   </p>
 
                   <h2>
-                    PV Circulator vs.{' '}{compareResult.name}.
+                    PV Circulator vs.{' '}{solutionLabel(compareResult.code, compareResult.name)}.
                   </h2>
 
                   <p className="sectionDescription lightText">
@@ -1343,7 +1344,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     </strong>
 
                     <small>
-                      vs. {compareResult.name}
+                      vs. {solutionLabel(compareResult.code, compareResult.name)}
                     </small>
                   </div>
 
@@ -1475,7 +1476,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     <div className="solutionCardTop">
 
                       <p className="solutionLabel">
-                        {compareResult.name}
+                        {solutionLabel(compareResult.code, compareResult.name)}
                       </p>
 
                       <h3>

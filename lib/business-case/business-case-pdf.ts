@@ -1,5 +1,6 @@
 import {resolveReportTimeZone, reportDate} from './report-time';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import {solutionLabel} from './solution-labels';
 
 /** Build the complete annual case from the exact submitted result snapshot. */
 export async function createBusinessCasePdf(result: any, reference: string, timeZone = 'UTC', generatedAt = new Date()) {
@@ -30,7 +31,7 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   line(`${money(primary.annualEbitda)} in annual EBITDA.`,25,true);
   line('See what your recycling operation could achieve.',15);
   line(`At ${number(result.input.panelsPerMonth)} panels/month:`,11);
-  if(compare) line(`${money(primary.annualEbitda-compare.annualEbitda)} more annual EBITDA than ${compare.name}.`,12,true);
+  if(compare) line(`${money(primary.annualEbitda-compare.annualEbitda)} more annual EBITDA than ${solutionLabel(compare.code, compare.name)}.`,12,true);
   line(`Estimated standalone simple payback: ${primary.simplePaybackYears>0?primary.simplePaybackYears.toFixed(1)+' years':'Not achieved'}.`);
   y-=16;
   line('OPERATING BASIS',12,true);
@@ -40,7 +41,7 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   line(`Operating days/month: ${number(result.input.operatingDaysPerMonth,2)} | Hours/shift: ${number(result.input.operatingHoursPerDay,2)}`);
   line(`FX: ${number(result.fx.localPerUSD,6)} ${currency}/USD | Effective: ${result.fx.effectiveDate || 'Not specified'}`,9);
   if(compare) {
-    y-=16;line(`${primary.name} vs. ${compare.name}`,13,true);
+    y-=16;line(`${solutionLabel(primary.code, primary.name)} vs. ${solutionLabel(compare.code, compare.name)}`,13,true);
     const annualPanels=result.input.annualPanels;
     line(`Annual EBITDA advantage: ${money(primary.annualEbitda-compare.annualEbitda)}`);
     line(`Operating cost reduction: ${compare.annualOpex?number((1-primary.annualOpex/compare.annualOpex)*100)+'%':'N/A'}`);
@@ -53,7 +54,7 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   line('See where the economics come from.',13);
   line('Same panel volume and processing fee for both approaches.',9);
   line(`Amounts in ${currency}; all material and OPEX details expanded.`,9);
-  const header=()=>{text('ANNUAL RESULTS',40,8,true);text(compare?.name || 'Comparison',250,8,true);text(primary.name,360,8,true);text('PV ADVANTAGE',470,8,true);y-=24;};
+  const header=()=>{text('ANNUAL RESULTS',40,8,true);text(compare ? solutionLabel(compare.code, compare.name) : 'Comparison',250,8,true);text(solutionLabel(primary.code, primary.name),360,8,true);text('PV ADVANTAGE',470,8,true);y-=24;};
   header();
   const row=(label:string,p:number|undefined,c:number|undefined,heavy=false,cost=false)=>{
     if(y<65){newPage();line('ANNUAL BUSINESS CASE - CONTINUED',15,true);header();}
@@ -76,7 +77,7 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   y-=14;line('ASSUMPTIONS AND LIMITATIONS',9,true);
   line('Illustrative estimates; not a quotation or guarantee. Simple payback uses',8);
   line('equipment CAPEX / annual EBITDA and excludes financing, tax and depreciation.',8);
-  for(const solution of result.solutions){if(solution.incompleteMaterials?.length){if(y<65)newPage();line(`Incomplete recovery assumptions (${solution.name}): ${solution.incompleteMaterials.join(', ')}`,8);}}
+  for(const solution of result.solutions){if(solution.incompleteMaterials?.length){if(y<65)newPage();line(`Incomplete recovery assumptions (${solutionLabel(solution.code, solution.name)}): ${solution.incompleteMaterials.join(', ')}`,8);}}
   const pages=doc.getPages();pages.forEach((p,i)=>{p.drawText(`${reference} | PV Circonomy | ${i+1} / ${pages.length}`,{x:40,y:25,size:8,font:regular,color:rgb(0.4,0.4,0.4)});});
   doc.setTitle(`PV Circonomy Business Case ${reference}`);doc.setAuthor('PV Circonomy');
   return doc.save();

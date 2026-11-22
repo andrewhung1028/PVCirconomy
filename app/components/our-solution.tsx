@@ -296,21 +296,26 @@ function StackedTrendChart({ data, max, label, tone }: { data: TrendPoint[]; max
   </div>;
 }
 
-type MethodRow = { label: string; shredding: string; thermal: string; circulator: string };
+type MethodRow = { label: string; shredding: string; thermal: string; pyrolysis?: string; circulator: string };
+const FOUR_METHODS = ["Shredding", "Hot knife", "Pyrolysis", "PV Circulator"] as const;
+const THREE_METHODS = ["Shredding", "Hot knife", "PV Circulator"] as const;
 
-function MethodTable({ caption, rows, columns = ["Shredding", "Thermal", "PV Circulator"] }: { caption: string; rows: MethodRow[]; columns?: [string, string, string] }) {
-  return <div className="os-method-detail-table"><table><caption className="pv-sr-only">{caption}</caption><thead><tr><th scope="col">Item</th><th scope="col">{columns[0]}</th><th scope="col">{columns[1]}</th><th scope="col" className="is-circulator">{columns[2]}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.shredding}</td><td>{row.thermal}</td><td>{row.circulator}</td></tr>)}</tbody></table></div>;
+function MethodTable({ caption, rows, columns = FOUR_METHODS }: { caption: string; rows: MethodRow[]; columns?: readonly string[] }) {
+  const four = columns.length === 4;
+  return <div className={`os-method-detail-table${four ? " is-four" : ""}`}><table><caption className="pv-sr-only">{caption}</caption><thead><tr><th scope="col">Item</th>{columns.map((column, index) => <th scope="col" key={column} className={index === columns.length - 1 ? "is-circulator" : undefined}>{column}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.shredding}</td><td>{row.thermal}</td>{four && <td>{row.pyrolysis ?? "To be confirmed"}</td>}<td>{row.circulator}</td></tr>)}</tbody></table></div>;
 }
 
+const processRow: MethodRow = { label: "Process", shredding: "Remove frame, junction box and copper cable; shred the whole module and sieve", thermal: "Remove frame and junction box; a ~300 °C hot knife separates the glass from the encapsulant", pyrolysis: "Remove frame and junction box; heat the module at 450–650 °C to burn off EVA and backsheet, separating glass and cells", circulator: "Remove frame and junction box; mill layer by layer, separating backsheet, EVA and glass in turn" };
 const technologyRows: MethodRow[] = [
-  { label: "Principle", shredding: "Crush whole module, then screen", thermal: "Heat-decompose EVA / backsheet", circulator: "Ambient layer-by-layer physical separation" },
-  { label: "Footprint", shredding: "~480 m²", thermal: "~180 m²", circulator: "~30–40 m²" },
-  { label: "Energy", shredding: "~5 kWh / panel", thermal: "~8 kWh / panel", circulator: "<1 kWh / panel" },
-  { label: "Throughput", shredding: "~50–60 panels / h", thermal: "~20 panels / h", circulator: "~50 MW / yr per unit" },
-  { label: "Staff", shredding: "5 / shift", thermal: "6 / shift", circulator: "2 / shift" },
-  { label: "Recovery rate", shredding: "<85%", thermal: "Lower, undisclosed", circulator: "99.3% (SGS-verified)" },
-  { label: "By-products", shredding: "Mixed fragments need further treatment", thermal: "Fluorinated off-gas", circulator: "No off-gas or wastewater" },
+  processRow,
+  { label: "Footprint", shredding: "~480 m²", thermal: "To be confirmed", pyrolysis: "To be confirmed", circulator: "~30–40 m²" },
+  { label: "Energy", shredding: "~5 kWh / panel", thermal: "To be confirmed", pyrolysis: "To be confirmed", circulator: "<1 kWh / panel" },
+  { label: "Throughput", shredding: "~50–60 panels / h", thermal: "~40 panels / h (~90 s per panel)", pyrolysis: "To be confirmed", circulator: "~60 panels / h" },
+  { label: "Staff", shredding: "5 / shift", thermal: "To be confirmed", pyrolysis: "To be confirmed", circulator: "1 direct + 2 indirect" },
+  { label: "Product recovery", shredding: "~19%", thermal: "~88%", pyrolysis: "~88%", circulator: "99.3% (SGS-verified)" },
+  { label: "By-products", shredding: "Mixed fragments need further treatment", thermal: "Cell laminate (EVA, backsheet, cells) needs further treatment", pyrolysis: "Fluorinated off-gas needs treatment; cannot process glass-glass modules", circulator: "No off-gas or wastewater" },
 ];
+const methodSources = "Sources: Shredding — TNO 2022 R10860 (Späth et al.) pp. 8, 12, 19; NEDO 2026 A1-2-14 (MRI) p. 8. Hot knife — TNO 2022 App. D.1 pp. 25–26 (~90 s per panel); IEA-PVPS T12-25:2023; NEDO 2026 p. 8. Pyrolysis — NEDO 2026 p. 8; Shinryo, JPEA 2026. Product recovery = sellable output by purity. “To be confirmed” marks figures without a confirmed source yet.";
 
 const usd = (value: number, digits = 0) => value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits });
 function economicsSolutions(data: OurSolutionView) { return {
@@ -320,16 +325,16 @@ function economicsSolutions(data: OurSolutionView) { return {
 }; }
 
 const materialRows: MethodRow[] = [
-  { label: "Principle", shredding: "Crush whole module, then screen", thermal: "Heat-decompose EVA / backsheet", circulator: "Ambient layer-by-layer physical separation" },
-  { label: "Glass", shredding: "Mixed glass cullet", thermal: "Recoverable", circulator: "Graded by particle size and purity" },
-  { label: "Silver", shredding: "Remains in mixed fragments", thermal: "Can be concentrated", circulator: "Concentrated in cell powder" },
-  { label: "EVA / backsheet", shredding: "Mixed into fragments", thermal: "Burned off", circulator: "Separated and recovered" },
-  { label: "By-products", shredding: "Mixed fragments need further treatment", thermal: "Fluorinated off-gas", circulator: "No off-gas or wastewater" },
-  { label: "Secondary treatment", shredding: "~54 t / MW", thermal: "~5 t / MW", circulator: "~0.5 t / MW" },
+  processRow,
+  { label: "Glass", shredding: "Mixed glass cullet", thermal: "Separated from the encapsulant", pyrolysis: "Separated after EVA and backsheet burn-off", circulator: "Graded by particle size and purity" },
+  { label: "Silver", shredding: "Stays mixed in the fragments", thermal: "Stays in the cell laminate", pyrolysis: "Stays on the cells", circulator: "Ends in the silicon (cell) powder" },
+  { label: "EVA / backsheet", shredding: "Mixed into fragments", thermal: "Stay attached to the cell laminate", pyrolysis: "Burned off", circulator: "Separated and recovered" },
+  { label: "By-products", shredding: "Mixed fragments need further treatment", thermal: "Cell laminate needs further treatment", pyrolysis: "Fluorinated off-gas needs treatment", circulator: "No off-gas or wastewater" },
+  { label: "Secondary treatment", shredding: "~54 t / MW", thermal: "~5 t / MW", pyrolysis: "No operating data yet", circulator: "~0.5 t / MW" },
 ];
 
 function FootprintMethodVisual() {
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only ~30–40 m²—about 92–94% less footprint than shredding and 78–83% less than thermal treatment. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label="Equipment footprint comparison: shredding 480 square metres, thermal treatment 180, PV Circulator 30 to 40"><div><span>Shredding</span><i style={{ width: "100%" }} /><strong>~480 m²</strong></div><div><span>Thermal</span><i style={{ width: "37.5%" }} /><strong>~180 m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: "8.3%" }} /><strong>~30–40 m²</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows} /></div>;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only ~30–40 m²—about 92–94% less footprint than shredding. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label="Equipment footprint comparison: shredding 480 square metres, hot knife and pyrolysis to be confirmed, PV Circulator 30 to 40"><div><span>Shredding</span><i style={{ width: "100%" }} /><strong>~480 m²</strong></div><div><span>Hot knife</span><i style={{ width: "0%" }} /><strong>To be confirmed</strong></div><div><span>Pyrolysis</span><i style={{ width: "0%" }} /><strong>To be confirmed</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: "8.3%" }} /><strong>~30–40 m²</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows} /><p className="os-chart-source">{methodSources}</p></div>;
 }
 
 function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSolutionView }) {
@@ -344,15 +349,15 @@ function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSoluti
   ];
   const peak = Math.max(conventional.opexPerPanel.total, hotKnife.opexPerPanel.total, circulator.opexPerPanel.total);
   const operatingBars = [
-    { label: "Conventional", total: usd(conventional.opexPerPanel.total, 2), width: `${conventional.opexPerPanel.total / peak * 100}%`, values: [conventional.opexPerPanel.electricity, conventional.opexPerPanel.laborAndBurden, conventional.opexPerPanel.facility, conventional.opexPerPanel.other], className: "" },
-    { label: "Hot Knife", total: usd(hotKnife.opexPerPanel.total, 2), width: `${hotKnife.opexPerPanel.total / peak * 100}%`, values: [hotKnife.opexPerPanel.electricity, hotKnife.opexPerPanel.laborAndBurden, hotKnife.opexPerPanel.facility, hotKnife.opexPerPanel.other], className: "" },
+    { label: "Shredding", total: usd(conventional.opexPerPanel.total, 2), width: `${conventional.opexPerPanel.total / peak * 100}%`, values: [conventional.opexPerPanel.electricity, conventional.opexPerPanel.laborAndBurden, conventional.opexPerPanel.facility, conventional.opexPerPanel.other], className: "" },
+    { label: "Hot knife", total: usd(hotKnife.opexPerPanel.total, 2), width: `${hotKnife.opexPerPanel.total / peak * 100}%`, values: [hotKnife.opexPerPanel.electricity, hotKnife.opexPerPanel.laborAndBurden, hotKnife.opexPerPanel.facility, hotKnife.opexPerPanel.other], className: "" },
     { label: "PV Circulator", total: usd(circulator.opexPerPanel.total, 2), width: `${circulator.opexPerPanel.total / peak * 100}%`, values: [circulator.opexPerPanel.electricity, circulator.opexPerPanel.laborAndBurden, circulator.opexPerPanel.facility, circulator.opexPerPanel.other], className: "is-circulator" },
   ];
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Operating cost per processed panel (USD), using the California business-case scenario at 5,000 panels per month.</p><small>Annual OPEX divided by 60,000 panels. CAPEX and equipment depreciation are excluded; maintenance is included.</small></div><div className="os-cost-bars" role="img" aria-label={`Operating cost per panel in US dollars: Conventional ${operatingBars[0].total}, Hot Knife ${operatingBars[1].total}, PV Circulator ${operatingBars[2].total}`}>{operatingBars.map((bar) => <div className={bar.className} key={bar.label}><span>{bar.label}</span><div className="os-cost-track"><div className="os-cost-stack" style={{ width: bar.width }}>{bar.values.map((value, index) => <i className={`is-part-${index + 1}`} style={{ flexGrow: value }} key={index} />)}</div></div><strong>{bar.total}</strong></div>)}</div><div className="os-cost-legend" aria-label="Operating cost categories">{["Electricity", "Labor + burden", "Facility / rent", "Other OPEX"].map((item, index) => <span key={item}><i className={`is-part-${index + 1}`} />{item}</span>)}</div></div><MethodTable caption="Operating cost breakdown in US dollars per panel" rows={operatingCostRows} columns={["Conventional", "Hot Knife", "PV Circulator"]} /></div>;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Operating cost per processed panel (USD), using the California business-case scenario at 5,000 panels per month.</p><small>Annual OPEX divided by 60,000 panels. CAPEX and equipment depreciation are excluded; maintenance is included.</small></div><div className="os-cost-bars" role="img" aria-label={`Operating cost per panel in US dollars: Shredding ${operatingBars[0].total}, Hot knife ${operatingBars[1].total}, PV Circulator ${operatingBars[2].total}`}>{operatingBars.map((bar) => <div className={bar.className} key={bar.label}><span>{bar.label}</span><div className="os-cost-track"><div className="os-cost-stack" style={{ width: bar.width }}>{bar.values.map((value, index) => <i className={`is-part-${index + 1}`} style={{ flexGrow: value }} key={index} />)}</div></div><strong>{bar.total}</strong></div>)}</div><div className="os-cost-legend" aria-label="Operating cost categories">{["Electricity", "Labor + burden", "Facility / rent", "Other OPEX"].map((item, index) => <span key={item}><i className={`is-part-${index + 1}`} />{item}</span>)}</div></div><MethodTable caption="Operating cost breakdown in US dollars per panel" rows={operatingCostRows} columns={THREE_METHODS} /><p className="os-chart-source">Pyrolysis is not modeled: no operating data yet.</p></div>;
 }
 
 function MaterialMethodVisual() {
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Material requiring secondary treatment per MW. Shorter bars mean less material needs added processing or disposal.</p></div><div className="os-method-bars is-secondary" role="img" aria-label="Material requiring secondary treatment per megawatt: shredding 54 tonnes, thermal 5 tonnes, PV Circulator about 0.5 tonnes"><div><span>Shredding</span><i style={{ width: "100%" }} /><strong>~54 t</strong></div><div><span>Thermal</span><i style={{ width: "9.3%" }} /><strong>~5 t</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: "1%" }} /><strong>~0.5 t</strong></div></div></div><MethodTable caption="Recovered materials comparison by technology" rows={materialRows} /></div>;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Material requiring secondary treatment per MW. Shorter bars mean less material needs added processing or disposal.</p></div><div className="os-method-bars is-secondary" role="img" aria-label="Material requiring secondary treatment per megawatt: shredding 54 tonnes, hot knife 5 tonnes, PV Circulator about 0.5 tonnes; pyrolysis has no operating data yet"><div><span>Shredding</span><i style={{ width: "100%" }} /><strong>~54 t</strong></div><div><span>Hot knife</span><i style={{ width: "9.3%" }} /><strong>~5 t</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: "1%" }} /><strong>~0.5 t</strong></div></div></div><MethodTable caption="Recovered materials comparison by technology" rows={materialRows} /><p className="os-chart-source">{methodSources}</p></div>;
 }
 
 function SilverValueVisual() {
@@ -376,11 +381,23 @@ function SilverValueVisual() {
   </div>;
 }
 
+const silverRows = [
+  { method: "Shredding", fraction: "Mixed fragments (~82% of module mass)", silver: "≈0.06%", recovery: "~19%" },
+  { method: "Hot knife", fraction: "Cell laminate (~12%)", silver: "≈0.42%", recovery: "~88%" },
+  { method: "Pyrolysis", fraction: "Cells after burn-off", silver: "About 0.9–1.0%", recovery: "~88%" },
+  { method: "PV Circulator", fraction: "Silicon (cell) powder", silver: "Concentrated; grade pending verification", recovery: "99.3% (SGS-verified)" },
+];
+function SilverGradeTable() {
+  return <div className="os-method-detail-table os-silver-grade-table"><table><caption className="pv-sr-only">Where silver ends up and product recovery, by method</caption><thead><tr><th scope="col">Method</th><th scope="col">Silver-bearing fraction</th><th scope="col">Silver content (estimated)</th><th scope="col">Product recovery</th></tr></thead><tbody>{silverRows.map(row => <tr key={row.method} className={row.method === "PV Circulator" ? "is-circulator" : undefined}><th scope="row">{row.method}</th><td>{row.fraction}</td><td>{row.silver}</td><td>{row.recovery}</td></tr>)}</tbody></table></div>;
+}
+
 function ValueSection() {
   return <section id="value" className="pv-screen os-value-section" aria-labelledby="value-title">
     <div className="os-value-visual"><SilverValueVisual /></div>
     <aside className="os-value-explanation">
-      <div className="os-value-grade"><h3>Keep silver concentrated.</h3><p>Separating panel layers preserves a concentrated cell stream for further recovery instead of dispersing silver into mixed glass.</p></div>
+      <div className="os-value-grade"><h3>Keep silver concentrated.</h3><p>Separating panel layers preserves a concentrated cell stream for further recovery instead of dispersing silver into mixed glass.</p>
+        <SilverGradeTable />
+        <p className="os-chart-source">Silver content is estimated by mass balance from a reference module (mass %): glass 70, Al frame 17, junction box + cable 1, EVA 5, backsheet 3, silicon 3.0, Al paste 0.4, Cu ribbon 0.55, silver 0.05. Assumption, not a measured grade.</p></div>
       <div id="silver-trend" className="os-silver-trend">
         <h3>Less silver in every panel. Recovery has to keep up.</h3>
         <p>Panel makers keep cutting silver to lower cost. Solar panels used about 13 g of silver per kW in 2024—less than half the 2014 level (IRENA, 2026). In 2025 the median TOPCon cell used about 10 mg per watt, and the industry roadmap expects about 6.3 mg per watt within ten years; heterojunction cells, 12.0 mg today, are expected to fall to 4.3 mg (ITRPV, 17th edition, 2026).</p>
@@ -448,8 +465,8 @@ function RegulationSection({ metrics }: { metrics: RouteEnvironmentalMetric[] })
   return <section id="regulation" className="pv-screen os-regulation" aria-labelledby="regulation-title"><div>
     <h2 id="regulation-title">Less to landfill. Less carbon in the process.</h2>
     <p>Per MW of retired panels (350 W modules, about 55 t), gate-to-gate: from panels arriving at the plant to separated materials leaving it. Process CO2e covers process electricity only.</p>
-    <MethodTable caption="Environmental metrics per MW of retired panels" columns={["Shredding", "Hot knife", "PV Circulator"]} rows={rows} />
-    <p className="os-chart-source">Landfill = residues sent to disposal in the Business Case master data; CO2e = process electricity (kWh per panel, Business Case master data) × US grid average 0.3497 kg CO2e/kWh (<a href="https://www.epa.gov/egrid/summary-data">EPA eGRID2023</a>). Transport, downstream refining and avoided emissions are excluded. Hot-knife routes leave an encapsulant–cell layer that still needs further treatment before its metals are recovered.</p>
+    <MethodTable caption="Environmental metrics per MW of retired panels" columns={THREE_METHODS} rows={rows} />
+    <p className="os-chart-source">Landfill = residues sent to disposal in the Business Case master data; CO2e = process electricity (kWh per panel, Business Case master data) × US grid average 0.3497 kg CO2e/kWh (<a href="https://www.epa.gov/egrid/summary-data">EPA eGRID2023</a>). Transport, downstream refining and avoided emissions are excluded. Hot-knife routes leave an encapsulant–cell layer that still needs further treatment before its metals are recovered. Pyrolysis is not modeled: no operating data yet.</p>
   </div><div className="os-regulation-rules">{rules.map(([title, copy, href, source]) => <article key={title}><h3>{title}</h3><p>{copy}</p><a href={href}>{source} <Arrow /></a></article>)}</div></section>;
 }
 
@@ -491,17 +508,17 @@ function EconomicSection({ economicsData }: { economicsData: OurSolutionView }) 
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const feeSeries: EconomicSeries[] = [
-    { label: "Conventional", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.CONVENTIONAL, className: "is-shredding" },
-    { label: "Hot Knife", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.HOT_KNIFE, className: "is-thermal" },
+    { label: "Shredding", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.CONVENTIONAL, className: "is-shredding" },
+    { label: "Hot knife", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.HOT_KNIFE, className: "is-thermal" },
     { label: "PV Circulator", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.PVCIRCULATOR, className: "is-circulator" },
   ];
   const silverSeries: EconomicSeries[] = [
-    { label: "Conventional", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.CONVENTIONAL, className: "is-shredding" },
-    { label: "Hot Knife", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.HOT_KNIFE, className: "is-thermal" },
+    { label: "Shredding", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.CONVENTIONAL, className: "is-shredding" },
+    { label: "Hot knife", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.HOT_KNIFE, className: "is-thermal" },
     { label: "PV Circulator", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.PVCIRCULATOR, className: "is-circulator" },
   ];
   const slides = [
-    { label: "Annual P&L", heading: "Material recovery value sets the ranking.", copy: `At zero processing fee, Conventional models about ${usd(conventional.annualEbitda / 1000)}k, Hot Knife ${usd(hotKnife.annualEbitda / 1000)}k and PV Circulator ${usd(circulator.annualEbitda / 1000)}k in annual EBITDA.`, detail: `${economicsData.scenario.region} business-case scenario: ${economicsData.scenario.panelsPerMonth.toLocaleString()} panels/month, ${economicsData.scenario.annualPanels.toLocaleString()} panels/year and ${economicsData.scenario.panelWeightLb} lb/panel. CAPEX and equipment depreciation are excluded; maintenance is included.`, visual: <div className="os-economic-table-wrap"><table><caption>Annual profit and loss in US dollars, with no processing fee</caption><thead><tr><th scope="col">Annual · USD</th><th scope="col">Conventional</th><th scope="col">Hot Knife</th><th scope="col">PV Circulator</th></tr></thead><tbody>{economicRows.map(([label, conventionalValue, hotKnifeValue, circulatorValue]) => <tr key={label}><th scope="row">{label}</th><td>{conventionalValue}</td><td>{hotKnifeValue}</td><td>{circulatorValue}</td></tr>)}</tbody></table></div> },
+    { label: "Annual P&L", heading: "Material recovery value sets the ranking.", copy: `At zero processing fee, Shredding models about ${usd(conventional.annualEbitda / 1000)}k, Hot knife ${usd(hotKnife.annualEbitda / 1000)}k and PV Circulator ${usd(circulator.annualEbitda / 1000)}k in annual EBITDA.`, detail: `${economicsData.scenario.region} business-case scenario: ${economicsData.scenario.panelsPerMonth.toLocaleString()} panels/month, ${economicsData.scenario.annualPanels.toLocaleString()} panels/year and ${economicsData.scenario.panelWeightLb} lb/panel. CAPEX and equipment depreciation are excluded; maintenance is included.`, visual: <div className="os-economic-table-wrap"><table><caption>Annual profit and loss in US dollars, with no processing fee</caption><thead><tr><th scope="col">Annual · USD</th><th scope="col">Shredding</th><th scope="col">Hot knife</th><th scope="col">PV Circulator</th></tr></thead><tbody>{economicRows.map(([label, conventionalValue, hotKnifeValue, circulatorValue]) => <tr key={label}><th scope="row">{label}</th><td>{conventionalValue}</td><td>{hotKnifeValue}</td><td>{circulatorValue}</td></tr>)}</tbody></table></div> },
     { label: "Processing fee", heading: "Processing fees lift revenue, but do not change the order.", copy: "Across the modeled $0–$0.30/lb processing-fee range, PV Circulator retains the highest annual EBITDA.", detail: "California business-case scenario at 5,000 panels/month. CAPEX and equipment depreciation are excluded; maintenance is included.", visual: <EconomicLineChart title="Processing fee vs. annual EBITDA" subtitle="$1,000 per year · California · 5,000 panels/month" labels={["$0", "$0.05", "$0.10", "$0.15", "$0.20", "$0.25", "$0.30/lb"]} series={feeSeries} min={-400} max={1300} /> },
     { label: "Silver price", heading: "Silver price changes the spread, not the ranking.", copy: "Across a ±30% silver-price range, PV Circulator remains the strongest modeled annual outcome.", detail: "This sensitivity uses no processing fee and changes only modeled silver revenue. CAPEX and equipment depreciation are excluded; maintenance is included.", visual: <EconomicLineChart title="Silver price vs. annual EBITDA" subtitle="$1,000 per year · no processing fee" labels={["−30%", "−15%", "Base", "+15%", "+30%"]} series={silverSeries} min={-400} max={600} /> },
   ];
@@ -522,7 +539,7 @@ function EconomicSection({ economicsData }: { economicsData: OurSolutionView }) 
       <div className="os-economic-copy-body"><h2 id="economic-title">The lowest-impact process also delivers the highest operating profit.</h2><p>For {economicsData.scenario.annualPanels.toLocaleString()} retired panels per year in the {economicsData.scenario.region} business-case scenario, preserving material value changes the economics before any processing fee is charged.</p><strong className="os-economic-result">PV Circulator delivers about <b>{usd(circulator.annualEbitda / 1000)}k</b> annual EBITDA</strong><a className="pv-button os-economic-cta" href="/business-case/">Run the numbers for your operation <Arrow /></a><a className="pv-text-button" href="/pv-circulator/#routes">See where the profit is <Arrow /></a></div>
       <div className="os-deck-navigation" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}><div className="os-deck-progress" aria-label="Choose an economic chart">{slides.map((item, index) => <button key={item.label} type="button" aria-label={`Show economic chart ${index + 1}: ${item.label}`} aria-pressed={current === index} onClick={() => setCurrent(index)}><span /><small>{item.label}</small></button>)}</div></div>
     </aside>
-    <div className="os-economic-visual" aria-live="polite"><div key={`economic-${current}`} className="os-economic-slide"><div className="os-economic-slide-copy"><h3>{slide.heading}</h3><p>{slide.copy}</p><small>{slide.detail}</small></div><div className="os-economic-slide-graphic">{slide.visual}</div><p className="os-economic-source">Source: TSGC internal operating scenario and cited MOE market parameters. Scenario values are estimates, not guaranteed commercial outcomes.</p></div></div>
+    <div className="os-economic-visual" aria-live="polite"><div key={`economic-${current}`} className="os-economic-slide"><div className="os-economic-slide-copy"><h3>{slide.heading}</h3><p>{slide.copy}</p><small>{slide.detail} Pyrolysis is not modeled: no operating data yet.</small></div><div className="os-economic-slide-graphic">{slide.visual}</div><p className="os-economic-source">Source: TSGC internal operating scenario and cited MOE market parameters. Scenario values are estimates, not guaranteed commercial outcomes.</p></div></div>
   </section>;
 }
 
@@ -536,7 +553,7 @@ const materialOutputs = [
 ] as const;
 
 const materialPathways = [
-  { material: "Silver + copper", routes: [{ destination: "Refinery", detail: "Separated cell powder is directed to further metal recovery." }] },
+  { material: "Silver + copper", routes: [{ destination: "Refinery", detail: "Separated silicon (cell) powder is directed to further metal recovery." }] },
   { material: "Aluminum frame", routes: [{ destination: "Recycled aluminum", detail: "Around 3% of the carbon emissions of primary aluminum." }] },
   { material: "Glass", routes: [{ destination: "Cement substitute", detail: "About 70% of panel weight, prepared for pozzolan applications." }] },
   { material: "Silicon", routes: [
@@ -597,7 +614,7 @@ export function OurSolution({ economicsData = economicsUsd as OurSolutionView, r
   const conventionalSlides: DeckSlide[] = [
     { label: "Space and technology", navigationLabel: "Footprint", visual: <FootprintMethodVisual />, noteTitle: "A small footprint changes where recycling can happen.", note: <p>PV Circulator is modular and deployable, so capacity can be installed on-site or near-site as volumes shift. The idea is simple: move the machine, not the panels.</p> },
     { label: "Operating cost", navigationLabel: "OPEX", visual: <OperatingCostMethodVisual economicsData={economicsData} />, noteTitle: "PV Circulator changes the operating-cost structure.", note: <p>Automation comes first. Integrated handling, measurement and layer separation reduce repetitive labor and support consistent output. In our California operating scenario, lower labor, electricity and floor-space requirements reduce the modeled cost per panel; equipment depreciation and logistics remain outside the comparison.</p> },
-    { label: "Secondary treatment and materials", navigationLabel: "Secondary treatment", visual: <MaterialMethodVisual />, noteTitle: "The real difference is what still needs treatment.", note: <p>PV Circulator starts from first principles: panels are built in layers, so reverse the manufacturing process and separate them layer by layer. This preserves glass, cell powder and polymers as distinct outputs and leaves less material requiring secondary treatment.</p> },
+    { label: "Secondary treatment and materials", navigationLabel: "Secondary treatment", visual: <MaterialMethodVisual />, noteTitle: "The real difference is what still needs treatment.", note: <p>PV Circulator starts from first principles: panels are built in layers, so reverse the manufacturing process and separate them layer by layer. This preserves glass, silicon (cell) powder and polymers as distinct outputs and leaves less material requiring secondary treatment.</p> },
   ];
 
   const scaleSlides: DeckSlide[] = [

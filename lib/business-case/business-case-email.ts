@@ -2,6 +2,7 @@ import {sendBusinessCaseMessage,mailConfigured} from '../../server/delivery/comm
 import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { createBusinessCasePdf } from './business-case-pdf';
+import {solutionLabel} from './solution-labels';
 
 export type EmailStatus = 'accepted' | 'not_configured' | 'failed';
 export type EmailResult = {status: EmailStatus; errorCode?: string};
@@ -34,7 +35,7 @@ export async function sendBusinessCaseEmail(
   ];
   for (const solution of result.solutions || []) {
     lines.push(
-      solution.name || solution.code,
+      solutionLabel(solution.code, solution.name),
       `Annual revenue: ${money(solution.annualRevenue)}`,
       `Annual OPEX: ${money(solution.annualOpex)}`,
       `Annual EBITDA: ${money(solution.annualEbitda)}`,

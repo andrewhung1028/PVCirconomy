@@ -5,7 +5,7 @@ function compile(source,target){const out=path.join(dir,target);fs.mkdirSync(pat
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{try{
  for(const f of ['units','types','fallback','input','supported-countries','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
- for(const f of ['business-case-pdf','report-time'])compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');
+ for(const f of ['business-case-pdf','report-time','solution-labels'])compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');
  compile('server/business-case/workbook.ts','server/business-case/workbook.js');compile('server/auth/roles.ts','server/auth/roles.js');
  const {seed,parseWorkbook,exportWorkbook,diffData,validateData,sheets}=require(path.join(dir,'server/business-case/workbook.js'));
  const {calculateBusinessCase:calc}=require(path.join(dir,'lib/business-case/calculator/engine.js')),{fallback}=require(path.join(dir,'lib/business-case/fallback.js'));
