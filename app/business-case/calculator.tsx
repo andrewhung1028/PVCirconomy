@@ -661,7 +661,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
           playsInline
         >
           <source
-            src="/business-case/videos/pv-circulator-operation.mp4"
+            src="/videos/pv-circulator-operation.mp4"
             type="video/mp4"
           />
         </video>

@@ -16,8 +16,10 @@ export async function POST(request: Request) {const denied=await adminAccess("bu
     if (!(file instanceof File)) return reply({ error: "file_required" }, 400);
     if (file.size > 3_000_000) return reply({ error: "file_too_large" }, 413);
     if (!file.name.toLowerCase().endsWith(".xlsx")) return reply({ error: "xlsx_required" }, 415);
-    const active = await activeData();
     const data = await parseWorkbook(Buffer.from(await file.arrayBuffer()));
+    let active;
+    try { active = await activeData(); }
+    catch { return reply({ error: "database_unavailable", details: ["Business Case database is unavailable or not configured. Please retry after database setup or service recovery."] }, 503); }
     return reply({ data, diff: diffData(active.data, data), expectedVersion: active.version, fileName: file.name });
   } catch (error) {
     return reply({ error: "invalid_workbook", details: error instanceof Error ? [error.message] : ["無法讀取工作簿。"] }, 400);

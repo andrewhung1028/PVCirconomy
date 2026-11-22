@@ -6,10 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
     "db:migrate": "node --env-file-if-exists=.env.local server/db/migrate.mjs",
     "typecheck": "tsc --noEmit",
-    "test:business-case": "node tests/business-case.cjs && node tests/business-case-store.cjs && node tests/business-case-auth.mjs",
+    "test:business-case": "node tests/business-case.cjs && node tests/business-case-parity.cjs && node tests/business-case-store.cjs && node tests/business-case-auth.mjs",
     "test:business-case:ui": "node tests/business-case-ui.cjs"
   },
   "dependencies": {

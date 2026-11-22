@@ -74,3 +74,18 @@ Suggested small logical commit subjects once Git metadata is writable:
 4. `Verify business-case parity, role boundaries and local persistence`
 
 Review all working-tree changes before staging. This document records the actual uncommitted state and does not claim commit hashes that do not exist.
+
+## Fix round 1: local verification
+
+Run `npm run typecheck`, then `npm run build` before `npm run test:business-case`
+and `npm run test:business-case:ui`. The authentication and browser tests start
+`next start` and require the production build. A local Playwright Chromium install
+(or `PV_TEST_BROWSER_PATH`) is required. Tests use local adapters and disable mail;
+no production database or Graph connection is needed.
+
+`node scripts/business-case-seed.cjs` regenerates fallback and both SQL initial
+seeds from `data/business-case/seed-v1.xlsx`. The seed is the verified 71-region
+v1 workbook; migrations do not overwrite an existing published version.
+`tests/fixtures/parity-live-responses.json` contains the 225 captured live cases
+from 2026-11-22; parity tests replay them offline with a numeric tolerance of $1.
+The obsolete `next lint` script was removed (no ESLint dependency/configuration).

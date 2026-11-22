@@ -23,6 +23,18 @@ process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').
  assert.equal((await post({data:next,expectedVersion:initial.version})).status,409);
  assert.equal((await post({data:{},expectedVersion:current.version})).status,400);
  const restoredResponse=await post({restoreVersion:initial.version,expectedVersion:current.version,note:'Restore through API'});assert.equal(restoredResponse.status,201);assert.equal((await restoredResponse.json()).active.number,5);
+
+ // Import validates before any database access; database errors are service errors.
+ compile('app/api/admin/business-case-data/import/route.ts');
+ const importFile=path.join(dir,'app/api/admin/business-case-data/import/route.js');fs.writeFileSync(importFile,fs.readFileSync(importFile,'utf8').replaceAll('require("@/','require("'+dir+'/'));
+ const importer=require(importFile),realSql=global.__businessCaseSql;let dbCalls=0;
+ global.__businessCaseSql=()=>{dbCalls++;throw Error('database_not_configured');};
+ const upload=bytes=>{const form=new FormData();form.append('file',new File([bytes],'test.xlsx'));return importer.POST(new Request('http://localhost/api/admin/business-case-data/import/',{method:'POST',body:form}));};
+ assert.equal((await upload(Buffer.from('invalid'))).status,400);assert.equal(dbCalls,0);
+ const unavailable=await upload(await workbook.exportWorkbook());assert.equal(unavailable.status,503);assert.equal((await unavailable.json()).error,'database_unavailable');assert.equal(dbCalls,1);
+ global.__businessCaseSql=()=>{throw Error('connection refused');};assert.equal((await upload(await workbook.exportWorkbook())).status,503);
+ global.__businessCaseSql=realSql;assert.equal((await upload(await workbook.exportWorkbook())).status,200);
+ console.log('Passed: import validation before DB, unconfigured/unavailable DB 503, valid import 200.');
  // Disabled-mail follow-ups run against the same isolated PostgreSQL database.
  for(const f of ['app/api/follow-up/route.ts','lib/business-case/master-data.ts','lib/business-case/input.ts','lib/business-case/supported-countries.ts','lib/business-case/report-time.ts','lib/business-case/business-case-email.ts','lib/business-case/business-case-pdf.ts'])compile(f);
  const followFile=path.join(dir,'app/api/follow-up/route.js');fs.writeFileSync(followFile,fs.readFileSync(followFile,'utf8').replaceAll('require("@/','require("'+dir+'/'));
