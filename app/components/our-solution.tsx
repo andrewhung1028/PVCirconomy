@@ -5,7 +5,7 @@ import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 import { PublicHeader } from "./public-header";
 import { ProcessPlaylist } from "./pv-circulator-page";
 import { capacityTrend as buildCapacityTrend, usCumulativeMw, type CapacityTrendPoint } from "../../lib/market-capacity";
-import { type RetirementWave } from "../../lib/us-retirement-wave";
+import { WEIBULL_ALPHA, type RetirementWave } from "../../lib/us-retirement-wave";
 import { seededOurSolutionData, economicsView } from "../../lib/our-solution-data";
 import { model } from "../../lib/our-solution/model";
 
@@ -336,7 +336,7 @@ function GlobalCumulativeRetirementChart({ waves }: { waves: RetirementMarketWav
   const x = (index: number) => left + index / (data.length - 1) * (width - left - right);
   const y = (value: number) => top + (1 - value / max) * (height - top - bottom);
   const plotWidth = width - left - right;
-  const barGap = 3;
+  const barGap = 0;
   const barWidth = plotWidth / data.length - barGap;
   const yTicks = Array.from({ length: 5 }, (_, index) => max / 4 * index);
   const majorYears = data.filter((point) => point.year % 5 === 0);
@@ -382,6 +382,7 @@ function CountryRetirementExplorer({ waves }: { waves: RetirementMarketWaves }) 
     <div className="os-wave-country-controls">
       <div className="os-wave-country-tabs" role="group" aria-label="Choose a market">{retirementMarkets.map((market) => <button type="button" key={market} aria-pressed={country === market} onClick={() => setCountry(market)}>{labels[market]}</button>)}</div>
       <div className="os-wave-lifetime" role="group" aria-label="Choose modeled panel lifetime"><span>Lifetime</span>{([25, 18, 15, 12] as const).map((years) => <button type="button" key={years} aria-pressed={lifetime === years} onClick={() => setLifetime(years)}>{years} years</button>)}</div>
+      <p className="os-wave-lifetime-basis">Scenario, not a forecast. Lifetime basis: <strong>12 years</strong> — <a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124, p. 8 (PDF p. 19)</a>, reporting industry observations that some commercial and utility-scale project owners may replace modules every 10–12 years; <strong>15 years</strong> — <a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović (2019)</a>; <strong>18 years</strong> — an intermediate modeled case between 12 and 25 years; <strong>25 years</strong> — IRENA 2026’s reference lifetime. Weibull shape factors: early loss {WEIBULL_ALPHA.early}; regular loss {WEIBULL_ALPHA.regular}.</p>
     </div>
     <figure className="os-wave-country-chart">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${country}, ${lifetime}-year lifetime: early-loss annual end-of-life mass reaches ${(lastEarly.tonnes / 1e6).toFixed(2)} million tonnes in 2050; regular-loss reaches ${(lastRegular.tonnes / 1e6).toFixed(2)} million tonnes.`}>
@@ -537,15 +538,15 @@ function RetirementLineChart({ lifetime, onLifetimeChange, wave: retirementWave,
 function RetirementContext({ lifetime, wave: retirementWave, assumptions = defaultWaveAssumptions }: { assumptions?:WaveAssumptions; lifetime: 25 | 18 | 15 | 12; wave: RetirementWave }) {
   const sources = {
     25: <>IRENA 2026 (25-year lifetime).</>,
-    18: <>PV Circonomy conservative assumption (default).</>,
+    18: <>Intermediate modeled case between the 12- and 25-year scenarios (default).</>,
     15: <><a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović, Joule 2019</a> (initial life under 15 years).</>,
-    12: <><a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124 p.8</a> (repowering every 10–12 years, upper bound).</>,
+    12: <><a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124, p. 8 (PDF p. 19)</a> (industry observations of possible 10–12-year commercial and utility-scale repowering).</>,
   };
   return <div className="os-retirement-context" aria-live="polite">
     <p><strong>{lifetime}-year EoL lifetime, IRENA {assumptions.loss}-loss scenario.</strong> {sources[lifetime]}</p>
     <p>Default: {assumptions.defaultLifetime}-year lifetime, IRENA {assumptions.loss}-loss scenario. In {retirementWave.years[retirementWave.years.length - 1]}, early-loss retirements reach {(retirementWave[`early_T${lifetime}`][retirementWave.years.length - 1] / 1e6).toFixed(2)} million t; regular loss, for comparison, {(retirementWave[`regular_T${lifetime}`][retirementWave.years.length - 1] / 1e6).toFixed(2)} million t.</p>
     <table><caption>First year annual retirements cross each threshold ({assumptions.loss} loss is the main scenario)</caption><thead><tr><th scope="col">Annual mass</th><th scope="col">Early loss ({assumptions.loss === "early" ? "main" : "comparison"})</th><th scope="col">Regular loss ({assumptions.loss === "regular" ? "main" : "comparison"})</th></tr></thead><tbody>{[100000, 500000, 1000000].map(threshold => <tr key={threshold}><th scope="row">{threshold === 1000000 ? "1 Mt" : `${threshold / 1000} kt`}</th><td>{retirementWave.crossings[`early_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td><td>{retirementWave.crossings[`regular_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td></tr>)}</tbody></table>
-    <p className="os-chart-source">Scenario, not a forecast. IRENA Weibull shape factors: early loss {assumptions.shapes.early}; regular loss {assumptions.shapes.regular}. Capacity History: 2000–2024 actual and 2025–2049 constant annual growth to the 2050 value. Panel mass {assumptions.panelWeightLb} lb at {assumptions.panelRating} W (≈{assumptions.tonnesPerMw.toFixed(1)} t per MW). Panels produce no waste in the year they are installed. Retired panels are replaced, and replacement panels retire again. Faint reference lines use the 25-year lifetime. Threshold years depend on these assumptions.</p>
+    <p className="os-chart-source">Scenario, not a forecast. IRENA Weibull shape factors: early loss {assumptions.shapes.early}; regular loss {assumptions.shapes.regular}. Capacity History: 2000–2024 actual and 2025–2049 constant annual growth to the 2050 value. Panel mass {assumptions.panelWeightLb} lb at {assumptions.panelRating} W (≈{assumptions.tonnesPerMw.toFixed(1)} t per MW). Panels produce no waste in the year they are installed. Retired panels are replaced, and replacement panels retire again. Faint reference lines use IRENA 2026’s 25-year lifetime. The 12-year case follows NREL/TP-6A20-74124, p. 8 (PDF p. 19); 18 years is an intermediate modeled case. Threshold years depend on these assumptions.</p>
   </div>;
 }
 

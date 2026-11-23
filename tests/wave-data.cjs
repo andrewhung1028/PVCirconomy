@@ -26,6 +26,8 @@ console.log('T6 data: model rules (age ≥ 1, replacement recursion), Capacity H
 
 // Render the actual chart and panel functions with React.
 const source=ts.createSourceFile('our-solution.tsx',fs.readFileSync('app/components/our-solution.tsx','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+const sourceText=source.getFullText();
+assert.match(sourceText,/const barGap = 0;/);assert.ok(sourceText.includes('NREL/TP-6A20-74124, p. 8 (PDF p. 19)'));assert.ok(sourceText.includes('an intermediate modeled case between 12 and 25 years'));
 const compile=name=>{const node=source.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(node,name);const js=ts.transpileModule('export '+node.getText(source),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;const m={exports:{}};new Function('require','module','exports','defaultWaveAssumptions',js)(require,m,m.exports,{defaultLifetime:18,loss:'early',shapes:model.WEIBULL_ALPHA,panelWeightLb:45,panelRating:350,tonnesPerMw:model.tonnesPerMw()});return m.exports[name];};
 const Chart=compile('RetirementLineChart'),Context=compile('RetirementContext');
 const html=renderToStaticMarkup(React.createElement(Chart,{lifetime:18,onLifetimeChange:()=>{},wave}));
