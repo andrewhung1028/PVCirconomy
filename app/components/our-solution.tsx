@@ -278,16 +278,26 @@ const pressureSeries = [
 const defaultPressureData=Object.keys(defaultModel.perCapitaKg.World).map(year=>({year,values:pressureSeries.map(s=>defaultModel.perCapitaKg[s.label][Number(year)])}));
 
 function PressureTrendChart({ data: pressureTrendData = defaultPressureData }: {data?:{year:string;values:number[]}[]}) {
-  const ceiling=Math.max(1,Math.ceil(Math.max(...pressureTrendData.flatMap(p=>p.values))/10)*10);
-  const pressureTicks=[0,0.25,0.5,0.75,1].map(r=>({value:ceiling*r,position:r*100}));
-  const pressureHeight=(value:number)=>value/ceiling*100;
+  const breakAt=20,lowerRangeShare=70;
+  const ceiling=Math.max(30,Math.ceil(Math.max(...pressureTrendData.flatMap(p=>p.values))/10)*10);
+  const compressedMidpoint=(breakAt+ceiling)/2;
+  const pressureTicks=[
+    {value:0,position:0},
+    {value:breakAt/2,position:lowerRangeShare/2},
+    {value:breakAt,position:lowerRangeShare},
+    {value:compressedMidpoint,position:lowerRangeShare+(100-lowerRangeShare)/2},
+    {value:ceiling,position:100},
+  ];
+  const pressureHeight=(value:number)=>value<=breakAt
+    ? value/breakAt*lowerRangeShare
+    : lowerRangeShare+(value-breakAt)/(ceiling-breakAt)*(100-lowerRangeShare);
   return <div className="os-pressure-trend" role="img" aria-label="Annual retired-solar-panel processing pressure per person from 2025 to 2050 for the world, Europe, United States, Japan, Taiwan, China and Australia, based on our projection. ">
     <div className="os-pressure-plot">
       <div className="os-pressure-axis" aria-hidden="true">{pressureTicks.map((tick) => <span className={tick.value === 20 ? "is-break-tick" : undefined} key={tick.value} style={{ bottom: `${tick.position}%` }}>{tick.value}</span>)}</div>
       <div className="os-pressure-canvas">
         <div className="os-pressure-guides" aria-hidden="true">{pressureTicks.map((tick) => <i key={tick.value} style={{ bottom: `${tick.position}%` }} />)}</div>
         <div className="os-pressure-groups">{pressureTrendData.map((point) => <div className="os-pressure-group" key={point.year}>{pressureSeries.map((series, index) => { const pressure = point.values[index]; return <i className={series.className} style={{ height: `${Math.max(1.5, pressureHeight(pressure))}%` }} title={`${series.label}, ${point.year}: ${pressure.toFixed(1)} kg/person`} key={series.label} />; })}<small>{point.year}</small></div>)}</div>
-
+        <div className="os-pressure-break" aria-hidden="true"><span>{breakAt}–{ceiling} compressed</span></div>
       </div>
     </div>
     <div className="os-pressure-legend" aria-hidden="true">{pressureSeries.map((series) => <span key={series.label}><i className={series.className} />{series.label}</span>)}</div>
