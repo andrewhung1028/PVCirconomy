@@ -1,5 +1,5 @@
 import { database } from "../db/client";
-import { seededOurSolutionData, validateOurSolutionData, type OurSolutionEconomics } from "../../lib/our-solution-data";
+import { seededOurSolutionData, effectiveParameters, validateOurSolutionData, type OurSolutionEconomics } from "../../lib/our-solution-data";
 
 const seedId = "923a41c8-d7dc-4d25-bbc8-31ca7d6964eb";
 let initializing: Promise<void> | null = null;
@@ -25,7 +25,7 @@ export async function activeOurSolutionData(): Promise<OurSolutionSnapshot> {
   const sql = database();
   const rows = await sql`SELECT v.id,v.data,v.created_at FROM pv_our_solution_versions v JOIN pv_our_solution_active a ON a.version_id=v.id WHERE a.singleton=true`;
   const row = rows[0];
-  const checked = validateOurSolutionData(row?.data);
+  const checked = validateOurSolutionData(effectiveParameters(row?.data));
   if (!row || !checked.valid) throw Error("our_solution_data_unavailable");
   return { version: row.id, createdAt: new Date(row.created_at).toISOString(), data: checked.data };
 }
@@ -48,7 +48,7 @@ export async function ourSolutionVersion(id: string): Promise<OurSolutionSnapsho
   const sql = database();
   const rows = await sql`SELECT id,data,created_at FROM pv_our_solution_versions WHERE id=${id}::uuid`;
   const row = rows[0];
-  const checked = validateOurSolutionData(row?.data);
+  const checked = validateOurSolutionData(effectiveParameters(row?.data));
   return row && checked.valid ? { version: row.id, createdAt: new Date(row.created_at).toISOString(), data: checked.data } : null;
 }
 

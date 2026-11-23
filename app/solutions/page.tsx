@@ -1,37 +1,17 @@
-import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
-import { OurSolution } from "../components/our-solution";
-import { activeOurSolutionDataOrSeed } from "../../server/our-solution/store";
-
-import { loadMasterData } from "../../lib/business-case/master-data";
-import { routeEnvironmentalMetrics } from "../../lib/route-comparison";
-import { breakevenFees } from "../../lib/business-case/breakeven";
-import type { BreakevenView } from "../components/our-solution";
-import { marketCapacityOf } from "../../lib/our-solution-data";
-import { capacityTrend, usCumulativeMw } from "../../lib/market-capacity";
-import { computeRetirementWave } from "../../lib/us-retirement-wave";
-
-const manrope = Manrope({ subsets: ["latin"], weight: ["300", "800"] });
-
-export const metadata: Metadata = {
-  title: "Our Solution | PV Circonomy",
-  description:
-    "A connected solar circularity solution for panel owners, recyclers and recovered-material partners.",
-};
-
-export const dynamic = "force-dynamic";
-
-export default async function SolutionsPage() {
-  const economics = await activeOurSolutionDataOrSeed();
-  const master = await loadMasterData();
-  const routeMetrics = routeEnvironmentalMetrics(master);
-  let breakeven: BreakevenView = null;
-  try {
-    const result = breakevenFees(master, { regionCode: economics.data.scenario.regionCode, panelsPerMonth: economics.data.scenario.panelsPerMonth }, ["CONVENTIONAL", "HOT_KNIFE", "PVCIRCULATOR"].filter(code => master.solutions.some(s => s.code === code && s.active)));
-    breakeven = { region: result.region, feeUnit: result.feeUnit, currency: result.currency, panelsPerMonth: result.panelsPerMonth, panelWeightLb: result.panelWeightLb, source: master.source, fees: result.fees.map(({ code, breakevenFee }) => ({ code, breakevenFee })) };
-  } catch (error) { console.warn("Breakeven fees unavailable:", (error as Error).message); }
-  // Installed-capacity chart and US retirement curve share the published Market Capacity sheet.
-  const capacityRows = marketCapacityOf(economics.data);
-  const { marketCapacity: _marketCapacity, ...economicsView } = economics.data;
-  return <div className={manrope.className}><OurSolution capacityTrend={capacityTrend(capacityRows)} retirementWave={computeRetirementWave(usCumulativeMw(capacityRows))} economicsData={{ ...economicsView, solutions: economicsView.solutions.map(({ residualMetricTons, ...solution }) => solution), meta: { ...economicsView.meta, sourceSite: "/business-case/", calculatorDataApi: "/api/calculator-data/", calculationApi: "/api/calculate/" } }} routeMetrics={routeMetrics} breakeven={breakeven} /></div>;
+import type { Metadata } from 'next';
+import { Manrope } from 'next/font/google';
+import { OurSolution } from '../components/our-solution';
+import { activeOurSolutionDataOrSeed } from '../../server/our-solution/store';
+import { effectiveMetalPrices } from '../../server/metal-prices/store';
+import { economicsView } from '../../lib/our-solution-data';
+import { model } from '../../lib/our-solution/model';
+import { capacityTrend } from '../../lib/market-capacity';
+const manrope=Manrope({subsets:['latin'],weight:['300','800']});
+export const metadata:Metadata={title:'Our Solution | PV Circonomy',description:'A connected solar circularity solution for panel owners, recyclers and recovered-material partners.'};
+export const dynamic='force-dynamic';
+export default async function SolutionsPage(){
+  const {data}=await activeOurSolutionDataOrSeed(),prices=await effectiveMetalPrices(data),result=model(data,prices);
+  const sc=data.scenario;
+  const breakeven={region:sc.region,feeUnit:'USD/lb',currency:'USD',panelsPerMonth:sc.panels_per_month,panelWeightLb:sc.panel_weight_lb,source:'Our Solution parameter master',fees:Object.values(result.solutions).map(s=>({code:s.code,breakevenFee:s.breakevenFeePerLb}))};
+  return <div className={manrope.className}><OurSolution economicsData={economicsView(data,prices)} capacityTrend={capacityTrend(data)} retirementWave={result.retirementWave} waveAssumptions={{defaultLifetime:result.defaultLifetime as 25|18|15|12,loss:result.loss,shapes:result.shapes,panelWeightLb:sc.panel_weight_lb,panelRating:Number(data.assumptions[10]['Panel rating'][0]),tonnesPerMw:result.kgPerMw/1000}} pressureData={Object.entries(result.perCapitaKg.World).map(([year])=>({year,values:['World','Europe','United States','Japan','Taiwan','China','Australia'].map(m=>result.perCapitaKg[m][Number(year)])}))} routeMetrics={Object.values(result.solutions).map(s=>({code:s.code,landfillTPerMw:s.residualTPerMw,co2eTPerMw:s.co2eTPerMw}))} breakeven={breakeven} priceSources={Object.entries(prices).map(([metal,v])=>`${metal}: ${v.source}${v.workbookValue ? "" : `, ${v.asOf}`}`).join(' · ')} /></div>;
 }

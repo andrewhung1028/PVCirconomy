@@ -1,0 +1,26 @@
+const assert=require('node:assert/strict');require('./helpers/typescript.cjs');
+const {parseSilver,parseWestmetall,refreshMetalPrices,applyStoredPrices,workbookPrices}=require('../server/metal-prices/service.ts');
+const p=require('../data/our-solution-parameters.json');
+const html=(cash='3,184.50',three='2,831.50')=>`<table><tr><th>date</th><th>Cash</th></tr><tr><td>20. November 2026</td><td>${cash}</td><td>${three}</td><td>223,525</td></tr><tr><td>19. November 2026</td><td>2,000</td><td>2,100</td></tr></table>`;
+(async()=>{
+ assert.deepEqual(parseSilver({date:'2026-11-20',xag:{usd:45.5}}),{price:45.5,as_of:'2026-11-20'});
+ assert.throws(()=>parseSilver({date:'oops',xag:{usd:3}}));assert.throws(()=>parseSilver({date:'2026-11-20',xag:{usd:'45'}}));
+ assert.deepEqual(parseWestmetall(html(),'Aluminium'),{price:3184.5,as_of:'2026-11-20'});
+ assert.equal(parseWestmetall(html('13,000','13,210'),'Copper').price,13210,'Copper uses 3-month, not cash');
+ assert.equal(parseWestmetall(html().replace('20. November 2026','20.11.2026'),'Aluminium').as_of,'2026-11-20');
+ assert.throws(()=>parseWestmetall('<html>Error</html>','Copper'));
+ const now=new Date('2026-11-23T01:00:00Z');let rows=[],calls=[];
+ const store={latest:async()=>rows,save:async(r)=>{rows.push(...r)}};
+ const good=async(url,opts)=>{calls.push(url);assert.ok(opts.signal instanceof AbortSignal);if(url.includes('xag'))return Response.json({date:'2026-11-20',xag:{usd:45.5}});return new Response(url.includes('LME_Al')?html():html('13,000','13,210'));};
+ let result=await refreshMetalPrices(p,store,good,now);assert.equal(result.updated,3);assert.equal(rows.length,3);assert.equal(calls.length,3);assert.match(result.status.Silicon,/workbook/);
+ result=await refreshMetalPrices(p,store,()=>{throw Error('must not fetch')},new Date(now.getTime()+5*864e5));assert.equal(result.skipped,true);
+ rows=rows.map(r=>({...r,fetched_at:'2026-11-01T00:00:00Z'}));
+ result=await refreshMetalPrices(p,store,async url=>url.includes('xag')?Response.json({date:'2026-11-23',xag:{usd:99999}}):new Response('failed',{status:500}),now);
+ assert.equal(result.updated,0);assert.match(result.status.Silver,/rejected/);assert.equal(applyStoredPrices(p,rows).Silver.price,45.5);
+ rows=[];let primary=0;result=await refreshMetalPrices(p,store,async(url,opts)=>{if(url.includes('jsdelivr')){primary++;throw Error('offline')}return good(url,opts);},now);assert.equal(result.updated,3);assert.equal(primary,1);
+ rows=[];result=await refreshMetalPrices(p,store,async()=>{throw Error('offline')},now);assert.equal(result.updated,0);assert.deepEqual(applyStoredPrices(p,rows),workbookPrices(p));
+ const {effectiveMetalPrices}=require('../server/metal-prices/store.ts');const prior=process.env.DATABASE_URL;process.env.DATABASE_URL='';assert.deepEqual(await effectiveMetalPrices(p),workbookPrices(p));if(prior===undefined)delete process.env.DATABASE_URL;else process.env.DATABASE_URL=prior;
+ const {GET}=require('../app/api/cron/metal-prices/route.ts');process.env.CRON_SECRET='test-secret';assert.equal((await GET(new Request('http://localhost/api/cron/metal-prices/'))).status,401);assert.equal((await GET(new Request('http://localhost/api/cron/metal-prices/',{headers:{Authorization:'Bearer wrong'}}))).status,401);delete process.env.CRON_SECRET;
+ const vercel=require('../vercel.json');assert.deepEqual(vercel.crons,[{path:'/api/cron/metal-prices/',schedule:'0 1 * * 1'}]);
+ console.log('Metal prices: mocked parsers, timeouts, sanity rejection, mirror fallback, failed-feed retention, six-day idempotency, DB fallback, cron authorization and schedule passed (no network).');
+})().catch(e=>{console.error(e);process.exit(1)});

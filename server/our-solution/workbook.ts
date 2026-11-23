@@ -1,198 +1,111 @@
-import ExcelJS from "exceljs";
-import { marketCapacityOf, solutionCodes, validateOurSolutionData, type OurSolutionEconomics, type SolutionCode } from "../../lib/our-solution-data";
-import { capacityMarkets, type CapacityMarket, type MarketCapacityRow } from "../../lib/market-capacity";
-
-const capacityHeaders = ["市場", "年份", "累積裝置量 GW", "出處", "出處年份", "備註"];
-
-const editableSheets = ["Scenario", "Annual Summary", "Website Values", "Fee Sensitivity", "Silver Sensitivity"] as const;
-const allSheets = ["Instructions", ...editableSheets, "Material Revenue"] as const;
-const websiteKeys = ["opex_per_panel_electricity", "opex_per_panel_labor", "opex_per_panel_facility", "opex_per_panel_other", "opex_per_panel_total", "material_revenue_silver", "material_revenue_al_cu", "material_revenue_other", "material_revenue_total", "annual_opex", "annual_ebitda"] as const;
-
-function value(cell: ExcelJS.Cell) {
-  const raw = cell.value;
-  if (raw === null || raw === undefined) return "";
-  if (typeof raw === "number" || typeof raw === "string") return raw;
-  throw Error(`欄位 ${cell.address} 不可使用公式、連結或複合格式。`);
+import ExcelJS from 'exceljs';
+import layout from '../../data/our-solution-workbook-layout.json';
+import schema from '../../data/our-solution-parameter-schema.json';
+import { markets, type Parameters } from '../../lib/our-solution/parameters';
+import { validateParameters } from '../../lib/our-solution/validation';
+import { model, type EffectivePrices } from '../../lib/our-solution/model';
+const sections = schema as Record<string,Record<string,(string|number)[]>>;
+const streamMaterial: Record<string,string>={'Glass':'Glass','Aluminium frame':'Aluminium','Junction box + cable':'Junction box','EVA':'EVA','Backsheet':'Backsheet','Silicon cell':'Silicon','Copper ribbon':'Copper','Other':'Residual / mixed fraction'};
+const scenarioKeys=['region_code','region','panels_per_month','panel_weight_lb','operating_hours_per_day','working_weeks_per_year','working_days_per_week'];
+function raw(c:ExcelJS.Cell):string|number {
+  if(typeof c.value==='number'||typeof c.value==='string') return c.value;
+  throw Error(`欄位 ${c.worksheet.name}!${c.address} 必須是數值或文字，不可使用公式、連結或複合格式。`);
 }
-function text(cell: ExcelJS.Cell) { const raw = value(cell); if (typeof raw !== "string" || !raw.trim()) throw Error(`欄位 ${cell.address} 必須是文字。`); return raw.trim(); }
-function number(cell: ExcelJS.Cell) { const raw = value(cell); if (typeof raw !== "number" || !Number.isFinite(raw)) throw Error(`欄位 ${cell.address} 必須是數字。`); return raw; }
-function headers(sheet: ExcelJS.Worksheet, expected: string[]) {
-  const actual = expected.map((_, index) => String(value(sheet.getCell(1, index + 1))));
-  if (actual.some((item, index) => item !== expected[index])) throw Error(`${sheet.name} 欄位名稱或順序不正確。請重新下載現行資料後修改。`);
+function rows(sheet:ExcelJS.Worksheet) {
+  const groups:Record<string,Map<string,ExcelJS.Row>>={}; let section='0';groups[section]=new Map();
+  sheet.eachRow(row=>{const key=row.getCell(1).value;if(typeof key!=='string')return;
+    if(sheet.name==='Assumptions'&&/^\d+\./.test(key)){section=key.split('.')[0];if(groups[section])throw Error(`${sheet.name} 區段 ${section} 重複。`);groups[section]=new Map();}
+    if(groups[section].has(key))throw Error(`${sheet.name} 包含重複欄位 ${key}。`);groups[section].set(key,row);
+  });return groups;
 }
-function rowsByKey(sheet: ExcelJS.Worksheet, keyColumn = 1) {
-  const map = new Map<string, ExcelJS.Row>();
-  for (let index = 2; index <= sheet.actualRowCount; index++) {
-    const row = sheet.getRow(index);
-    const key = text(row.getCell(keyColumn));
-    if (map.has(key)) throw Error(`${sheet.name} 包含重複欄位鍵 ${key}。`);
-    map.set(key, row);
-  }
-  return map;
+function get(map:Map<string,ExcelJS.Row>|undefined,label:string,sheet:string){const row=map?.get(label);if(!row)throw Error(`${sheet} 缺少欄位 ${label}。`);return row;}
+function table(sheet:ExcelJS.Worksheet, headers:string[], years:number[]) {
+  const matches:ExcelJS.Row[]=[];sheet.eachRow(row=>{if(row.getCell(1).value==='Year')matches.push(row)});
+  if(matches.length!==1)throw Error(`${sheet.name} 必須有且只有一個 Year 標題列。`);
+  const header=matches[0], columns=new Map<string,number>();header.eachCell(c=>{const v=String(c.value);if(columns.has(v))throw Error(`${sheet.name} 標題 ${v} 重複。`);columns.set(v,Number(c.col))});
+  if(columns.size!==headers.length+1||headers.some(h=>!columns.has(h)))throw Error(`${sheet.name} 標題不符。`);
+  const out=Object.fromEntries(headers.map(h=>[h,{} as Record<string,number>]));const seen=new Set<number>();
+  sheet.eachRow(row=>{if(row.number<=header.number)return;const y=row.getCell(1).value;if(y==null)return;
+    if(typeof y!=='number'||!years.includes(y)||seen.has(y))throw Error(`${sheet.name} 年份無效或重複：${y}。`);seen.add(y);
+    for(const h of headers){const c=row.getCell(columns.get(h)!);const v=raw(c);if(typeof v!=='number'||!Number.isFinite(v))throw Error(`欄位 ${sheet.name}!${c.address} 必須是有限數字。`);out[h][y]=v;}
+  });for(const y of years)if(!seen.has(y))throw Error(`${sheet.name} 缺少年份 ${y}。`);return out;
 }
-function requireExactKeys(sheet: ExcelJS.Worksheet, map: Map<string, ExcelJS.Row>, expected: readonly string[]) {
-  const missing = expected.filter((key) => !map.has(key));
-  const unknown = [...map.keys()].filter((key) => !expected.includes(key));
-  if (missing.length || unknown.length) throw Error(`${sheet.name} 欄位鍵不符。缺少：${missing.join(", ") || "無"}；未知：${unknown.join(", ") || "無"}。`);
-}
-
-export async function parseOurSolutionWorkbook(buffer: Buffer, base: OurSolutionEconomics) {
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer as unknown as Parameters<typeof workbook.xlsx.load>[0]);
-  for (const name of allSheets) if (!workbook.getWorksheet(name)) throw Error(`缺少工作表：${name}。`);
-  const data = structuredClone(base);
-
-  const scenario = workbook.getWorksheet("Scenario")!;
-  headers(scenario, ["field_key", "label", "value", "unit"]);
-  const scenarioRows = rowsByKey(scenario);
-  const scenarioKeys = ["region_code", "region", "panels_per_month", "annual_panels", "panel_weight_lb", "annual_input_metric_tons", "processing_fee_usd_per_lb", "operating_days_per_month", "operating_hours_per_day"] as const;
-  requireExactKeys(scenario, scenarioRows, scenarioKeys);
-  data.scenario.regionCode = text(scenarioRows.get("region_code")!.getCell(3));
-  data.scenario.region = text(scenarioRows.get("region")!.getCell(3));
-  data.scenario.panelsPerMonth = number(scenarioRows.get("panels_per_month")!.getCell(3));
-  data.scenario.annualPanels = number(scenarioRows.get("annual_panels")!.getCell(3));
-  data.scenario.panelWeightLb = number(scenarioRows.get("panel_weight_lb")!.getCell(3));
-  data.scenario.annualInputMetricTons = number(scenarioRows.get("annual_input_metric_tons")!.getCell(3));
-  data.scenario.processingFeeUsdPerLb = number(scenarioRows.get("processing_fee_usd_per_lb")!.getCell(3));
-  data.scenario.operatingDaysPerMonth = number(scenarioRows.get("operating_days_per_month")!.getCell(3));
-  data.scenario.operatingHoursPerDay = number(scenarioRows.get("operating_hours_per_day")!.getCell(3));
-
-  const annual = workbook.getWorksheet("Annual Summary")!;
-  headers(annual, ["solution_code", "solution", "material_revenue_usd", "annual_opex_usd", "annual_ebitda_usd", "capex_usd", "recovery_rate", "residual_metric_tons"]);
-  const annualRows = rowsByKey(annual);
-  requireExactKeys(annual, annualRows, solutionCodes);
-  for (const code of solutionCodes) {
-    const row = annualRows.get(code)!;
-    const item = data.solutions.find((solution) => solution.code === code)!;
-    if (text(row.getCell(2)) !== item.label) throw Error(`Annual Summary 的 ${code} 顯示名稱不可修改。`);
-    item.annualMaterialRevenue = number(row.getCell(3));
-    item.annualOpex = number(row.getCell(4));
-    item.annualEbitda = number(row.getCell(5));
-    item.capexUsd = number(row.getCell(6));
-    item.recoveryRate = number(row.getCell(7));
-    item.residualMetricTons = number(row.getCell(8));
-  }
-
-  const website = workbook.getWorksheet("Website Values")!;
-  headers(website, ["field_key", "label", "unit", ...solutionCodes]);
-  const websiteRows = rowsByKey(website);
-  requireExactKeys(website, websiteRows, websiteKeys);
-  const setByKey = (item: OurSolutionEconomics["solutions"][number], key: typeof websiteKeys[number], next: number) => {
-    if (key === "opex_per_panel_electricity") item.opexPerPanel.electricity = next;
-    else if (key === "opex_per_panel_labor") item.opexPerPanel.laborAndBurden = next;
-    else if (key === "opex_per_panel_facility") item.opexPerPanel.facility = next;
-    else if (key === "opex_per_panel_other") item.opexPerPanel.other = next;
-    else if (key === "opex_per_panel_total") item.opexPerPanel.total = next;
-    else if (key === "material_revenue_silver") item.materialRevenue.silver = next;
-    else if (key === "material_revenue_al_cu") item.materialRevenue.aluminumAndCopper = next;
-    else if (key === "material_revenue_other") item.materialRevenue.other = next;
-    else if (key === "material_revenue_total") item.annualMaterialRevenue = next;
-    else if (key === "annual_opex") item.annualOpex = next;
-    else item.annualEbitda = next;
-  };
-  websiteKeys.forEach((key) => solutionCodes.forEach((code, index) => setByKey(data.solutions.find((item) => item.code === code)!, key, number(websiteRows.get(key)!.getCell(index + 4)))));
-
-  const fee = workbook.getWorksheet("Fee Sensitivity")!;
-  headers(fee, ["processing_fee_usd_lb", "CONVENTIONAL_ebitda_usd_thousands", "HOT_KNIFE_ebitda_usd_thousands", "PVCIRCULATOR_ebitda_usd_thousands"]);
-  if (fee.actualRowCount !== 8) throw Error("Fee Sensitivity 必須保留 7 個資料列。");
-  data.feeSensitivity.feeUsdPerLb = [];
-  solutionCodes.forEach((code) => { data.feeSensitivity.annualEbitdaUsdThousands[code] = []; });
-  for (let row = 2; row <= 8; row++) {
-    data.feeSensitivity.feeUsdPerLb.push(number(fee.getCell(row, 1)));
-    solutionCodes.forEach((code, index) => data.feeSensitivity.annualEbitdaUsdThousands[code].push(number(fee.getCell(row, index + 2))));
-  }
-
-  const silver = workbook.getWorksheet("Silver Sensitivity")!;
-  headers(silver, ["silver_price_change_percent", "CONVENTIONAL_ebitda_usd_thousands", "HOT_KNIFE_ebitda_usd_thousands", "PVCIRCULATOR_ebitda_usd_thousands"]);
-  if (silver.actualRowCount !== 6) throw Error("Silver Sensitivity 必須保留 5 個資料列。");
-  data.silverSensitivity.changePercent = [];
-  solutionCodes.forEach((code) => { data.silverSensitivity.annualEbitdaUsdThousands[code] = []; });
-  for (let row = 2; row <= 6; row++) {
-    data.silverSensitivity.changePercent.push(number(silver.getCell(row, 1)) * 100);
-    solutionCodes.forEach((code, index) => data.silverSensitivity.annualEbitdaUsdThousands[code].push(number(silver.getCell(row, index + 2))));
-  }
-  // Market Capacity is optional on import so workbooks downloaded before the sheet existed still work; they keep the current rows.
-  const capacity = workbook.getWorksheet("Market Capacity");
-  if (capacity) {
-    headers(capacity, capacityHeaders);
-    const rows: MarketCapacityRow[] = [];
-    for (let index = 2; index <= capacity.actualRowCount; index++) {
-      const row = capacity.getRow(index);
-      if ([1, 2, 3, 4, 5, 6].every((column) => value(row.getCell(column)) === "")) continue;
-      const market = text(row.getCell(1));
-      if (!capacityMarkets.includes(market as CapacityMarket)) throw Error(`欄位 ${row.getCell(1).address} 市場必須是 ${capacityMarkets.join("、")} 之一。`);
-      const sourceYear = value(row.getCell(5));
-      if (sourceYear !== "" && typeof sourceYear !== "number") throw Error(`欄位 ${row.getCell(5).address} 出處年份必須是數字或空白。`);
-      const note = value(row.getCell(6));
-      rows.push({ market: market as CapacityMarket, year: number(row.getCell(2)), gw: number(row.getCell(3)), source: text(row.getCell(4)), sourceYear: sourceYear === "" ? null : sourceYear, note: String(note).trim() });
+export async function parseOurSolutionWorkbook(buffer:Buffer, _base?:Parameters):Promise<Parameters> {
+  const w=new ExcelJS.Workbook();await w.xlsx.load(buffer as never);
+  if(w.getWorksheet('Annual Summary')||!w.getWorksheet('Assumptions'))throw Error('舊版結果格式工作簿不再支援，請下載現行參數範本後重新匯入。');
+  for(const s of layout)if(!w.getWorksheet(s.name))throw Error(`缺少工作表：${s.name}。`);
+  if(w.worksheets.some(s=>!layout.some(l=>l.name===s.name)))throw Error('工作表格式不符，請下載現行範本。');
+  const a=w.getWorksheet('Assumptions')!,groups=rows(a),materialRows=groups['5'];
+  // A formula is allowed only in Product Value, or the designated Section 8 cells.
+  for(const s of w.worksheets)s.eachRow(row=>row.eachCell(c=>{
+    if(c.type!==ExcelJS.ValueType.Formula)return;
+    if(s.name==='Product Value')return;
+    const key=String(row.getCell(1).value),in8=groups['8']?.get(key)?.number===row.number;
+    if(s.name==='Assumptions'&&in8){
+      if(['Theoretical silver content upper limit (%)','Theoretical silver content upper limit (g/t)'].includes(key)&&Number(c.col)>=3&&Number(c.col)<=5)return;
+      if(Number(c.col)===2&&streamMaterial[key]){
+        const expected=`B${get(materialRows,streamMaterial[key],'Assumptions').number}`;
+        const formula=c.formula.replace(/\$/g,'').replace(/^=?('Assumptions'|Assumptions)!/,'').trim();
+        if(formula===expected)return;
+        throw Error(`欄位 Assumptions!${c.address} 公式必須參照相符材料的 Section 5 ${expected}。`);
+      }
     }
-    data.marketCapacity = rows;
+    throw Error(`欄位 ${s.name}!${c.address} 不可使用公式。`);
+  }));
+  // Header rows are located by their labels, never by their row numbers.
+  for(const [section,label,expected] of [
+    ['4','Parameter',['Shredding','Hot knife','PV Circulator','Unit']],
+    ['5','Material',['Share of module mass','Benchmark price','Price unit','Price source']],
+    ['6','Material',['Recovery','Realization','Saleable','Recovery','Realization','Saleable','Recovery','Realization','Saleable']],
+    ['8','Component',['Mass share of module','In shredding mix','In hot-knife laminate','In PV Circulator cell powder']],
+  ] as [string,string,string[]][]){const header=get(groups[section],label,'Assumptions');expected.forEach((v,i)=>{if(raw(header.getCell(i+2))!==v)throw Error(`欄位 Assumptions!${header.getCell(i+2).address} 標題必須是 ${v}。`);});}
+  const recoveryHeader=get(groups['6'],'Material','Assumptions');
+  const recoveryTitles=a.getRow(recoveryHeader.number-1);
+  ['Shredding','Hot knife','PV Circulator'].forEach((label,i)=>{const c=recoveryTitles.getCell(2+i*3);if(raw(c)!==label)throw Error(`欄位 Assumptions!${c.address} 方案標題必須是 ${label}。`);});
+  for(const section of ['8'])for(const label of ['Theoretical silver content upper limit (%)','Theoretical silver content upper limit (g/t)'])get(groups[section],label,'Assumptions');
+  const assumptions:Parameters['assumptions']={};
+  for(const [section,defs] of Object.entries(sections)){
+    assumptions[section]={};
+    for(const [label,values] of Object.entries(defs)){
+      const row=get(groups[section],label,'Assumptions');
+      assumptions[section][label]=values.map((base,i)=>{const c=row.getCell(i+(section==='8'?3:2));const v=raw(c);if(typeof v!==typeof base)throw Error(`欄位 Assumptions!${c.address} 類型不正確。`);return v;});
+      if(section==='8') {const c=row.getCell(2);if(c.type!==ExcelJS.ValueType.Formula&&raw(c)!==raw(get(materialRows,streamMaterial[label],'Assumptions').getCell(2)))throw Error(`欄位 Assumptions!${c.address} 必須與 Section 5 相符材料比例一致。`);}
+    }
   }
-  const checked = validateOurSolutionData(data);
-  if (!checked.valid) throw Error(checked.errors.join("\n"));
-  return checked.data;
+  const sr=rows(w.getWorksheet('Scenario')!)['0'];
+  const actual=[...sr.keys()].filter(k=>k!=='field_key');if(actual.length!==scenarioKeys.length||actual.some(k=>!scenarioKeys.includes(k)))throw Error('Scenario 欄位不符，請下載現行範本。');
+  const scenario=Object.fromEntries(scenarioKeys.map(k=>[k,raw(get(sr,k,'Scenario').getCell(3))])) as Parameters['scenario'];
+  const cap=table(w.getWorksheet('Capacity History')!,[...markets],[...Array.from({length:25},(_,i)=>2000+i),2050]) as Parameters['capacityHistory'];
+  const years=Array.from({length:31},(_,i)=>2020+i),euLayout=layout.find(s=>s.name==='EU-27 Population')!;
+  const euHeaders=euLayout.rows.find(r=>r.cells[0]?.value==='Year')!.cells.slice(1).map(c=>String(c.value));
+  const population=table(w.getWorksheet('Population')!,markets.filter(m=>m!=='Europe'),years) as unknown as Parameters['population'];
+  population.eu27=table(w.getWorksheet('EU-27 Population')!,euHeaders,years);population.Europe=Object.fromEntries(years.map(y=>[y,Object.values(population.eu27).reduce((s,v)=>s+v[y],0)]));
+  const data:Parameters={format:'parameters-v2',scenario,assumptions,capacityHistory:cap,population,meta:{currency:'USD',extractedAt:'2026-11-22T00:00:00.000Z',sourceSite:'https://businesscase.pvcirconomy.com/',note:'Illustrative business-case scenario; not a quotation or guarantee.'}};
+  const errors=validateParameters(data);if(errors.length)throw Error(errors.join('\n'));return data;
 }
 
-function addHeader(sheet: ExcelJS.Worksheet, columns: string[]) {
-  sheet.addRow(columns);
-  const row = sheet.getRow(1);
-  row.height = 24;
-  row.eachCell((cell) => { cell.font = { bold: true, color: { argb: "FFFFFFFF" } }; cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF151719" } }; });
-  sheet.views = [{ state: "frozen", ySplit: 1, showGridLines: false }];
-}
-function widths(sheet: ExcelJS.Worksheet, values: number[]) { values.forEach((width, index) => { sheet.getColumn(index + 1).width = width; }); }
-function money(sheet: ExcelJS.Worksheet, columns: number[], start = 2) { columns.forEach((column) => { for (let row = start; row <= sheet.rowCount; row++) sheet.getCell(row, column).numFmt = "$#,##0.00;[Red]-$#,##0.00"; }); }
-
-export async function createOurSolutionWorkbook(data: OurSolutionEconomics, blank = false) {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = "PV Circonomy";
-  workbook.subject = "Our Solution USD data import";
-  const numeric = (next: number) => blank ? null : next;
-  const instructions = workbook.addWorksheet("Instructions");
-  addHeader(instructions, ["PV Circonomy · Our Solution USD data workbook", "Value"]);
-  [["Purpose", "Single reviewable source for the Our Solution USD charts and tables."], ["Source", data.meta.sourceSite], ["Scenario", `${data.scenario.region} · ${data.scenario.panelsPerMonth.toLocaleString()} panels/month`], ["Currency", "USD"], ["Editing", "Edit value cells only. Do not rename sheets, field keys, units or solution codes."], ["Import workflow", "Upload → validate → preview differences → publish. Uploading never changes the live website."], ["Market Capacity", "Cumulative installed capacity (GW) by market and year. Every year is stored; Other markets must equal World minus the six markets. United States 2000–2050 also drives the US retirement curve. 出處「待補」= source still to be added."], ["Disclosure", data.meta.note]].forEach((row) => instructions.addRow(row));
-  widths(instructions, [24, 110]);
-
-  const scenario = workbook.addWorksheet("Scenario");
-  addHeader(scenario, ["field_key", "label", "value", "unit"]);
-  [["region_code", "Region code", data.scenario.regionCode, ""], ["region", "Region", data.scenario.region, ""], ["panels_per_month", "Panels per month", numeric(data.scenario.panelsPerMonth), "panels/month"], ["annual_panels", "Annual panels", numeric(data.scenario.annualPanels), "panels/year"], ["panel_weight_lb", "Panel weight", numeric(data.scenario.panelWeightLb), "lb/panel"], ["annual_input_metric_tons", "Annual input", numeric(data.scenario.annualInputMetricTons), "metric tons/year"], ["processing_fee_usd_per_lb", "Base processing fee", numeric(data.scenario.processingFeeUsdPerLb), "USD/lb"], ["operating_days_per_month", "Operating days", numeric(data.scenario.operatingDaysPerMonth), "days/month"], ["operating_hours_per_day", "Operating hours", numeric(data.scenario.operatingHoursPerDay), "hours/day"]].forEach((row) => scenario.addRow(row));
-  widths(scenario, [34, 26, 20, 24]);
-
-  const annual = workbook.addWorksheet("Annual Summary");
-  addHeader(annual, ["solution_code", "solution", "material_revenue_usd", "annual_opex_usd", "annual_ebitda_usd", "capex_usd", "recovery_rate", "residual_metric_tons"]);
-  data.solutions.forEach((item) => annual.addRow([item.code, item.label, numeric(item.annualMaterialRevenue), numeric(item.annualOpex), numeric(item.annualEbitda), numeric(item.capexUsd), numeric(item.recoveryRate), numeric(item.residualMetricTons)]));
-  widths(annual, [22, 22, 24, 22, 24, 18, 18, 24]); money(annual, [3, 4, 5, 6]); for (let row = 2; row <= annual.rowCount; row++) annual.getCell(row, 7).numFmt = "0.00%";
-
-  const website = workbook.addWorksheet("Website Values");
-  addHeader(website, ["field_key", "label", "unit", ...solutionCodes]);
-  const getters: Record<typeof websiteKeys[number], (item: OurSolutionEconomics["solutions"][number]) => number> = {
-    opex_per_panel_electricity: (item) => item.opexPerPanel.electricity, opex_per_panel_labor: (item) => item.opexPerPanel.laborAndBurden, opex_per_panel_facility: (item) => item.opexPerPanel.facility, opex_per_panel_other: (item) => item.opexPerPanel.other, opex_per_panel_total: (item) => item.opexPerPanel.total,
-    material_revenue_silver: (item) => item.materialRevenue.silver, material_revenue_al_cu: (item) => item.materialRevenue.aluminumAndCopper, material_revenue_other: (item) => item.materialRevenue.other, material_revenue_total: (item) => item.annualMaterialRevenue, annual_opex: (item) => item.annualOpex, annual_ebitda: (item) => item.annualEbitda,
-  };
-  const labels: Record<typeof websiteKeys[number], [string, string]> = { opex_per_panel_electricity: ["Electricity", "USD/panel"], opex_per_panel_labor: ["Labor + burden", "USD/panel"], opex_per_panel_facility: ["Facility / rent", "USD/panel"], opex_per_panel_other: ["Other operating costs", "USD/panel"], opex_per_panel_total: ["Total operating cost", "USD/panel"], material_revenue_silver: ["Material revenue — silver", "USD/year"], material_revenue_al_cu: ["Material revenue — Al, Cu", "USD/year"], material_revenue_other: ["Other recovered materials", "USD/year"], material_revenue_total: ["Total material revenue", "USD/year"], annual_opex: ["Operating cost", "USD/year"], annual_ebitda: ["Annual EBITDA", "USD/year"] };
-  websiteKeys.forEach((key) => website.addRow([key, ...labels[key], ...solutionCodes.map((code) => numeric(getters[key](data.solutions.find((item) => item.code === code)!)))]));
-  widths(website, [34, 32, 18, 20, 20, 20]); money(website, [4, 5, 6]);
-
-  const materials = workbook.addWorksheet("Material Revenue");
-  addHeader(materials, ["solution_code", "solution", "silver_usd_year", "aluminum_copper_usd_year", "other_usd_year", "total_usd_year"]);
-  data.solutions.forEach((item) => materials.addRow([item.code, item.label, numeric(item.materialRevenue.silver), numeric(item.materialRevenue.aluminumAndCopper), numeric(item.materialRevenue.other), numeric(item.annualMaterialRevenue)]));
-  widths(materials, [22, 22, 22, 30, 22, 22]); money(materials, [3, 4, 5, 6]);
-
-  const fee = workbook.addWorksheet("Fee Sensitivity");
-  addHeader(fee, ["processing_fee_usd_lb", "CONVENTIONAL_ebitda_usd_thousands", "HOT_KNIFE_ebitda_usd_thousands", "PVCIRCULATOR_ebitda_usd_thousands"]);
-  data.feeSensitivity.feeUsdPerLb.forEach((amount, index) => fee.addRow([numeric(amount), ...solutionCodes.map((code) => numeric(data.feeSensitivity.annualEbitdaUsdThousands[code][index]))]));
-  widths(fee, [28, 38, 38, 40]);
-
-  const silver = workbook.addWorksheet("Silver Sensitivity");
-  addHeader(silver, ["silver_price_change_percent", "CONVENTIONAL_ebitda_usd_thousands", "HOT_KNIFE_ebitda_usd_thousands", "PVCIRCULATOR_ebitda_usd_thousands"]);
-  data.silverSensitivity.changePercent.forEach((amount, index) => silver.addRow([numeric(amount / 100), ...solutionCodes.map((code) => numeric(data.silverSensitivity.annualEbitdaUsdThousands[code][index]))]));
-  widths(silver, [30, 38, 38, 40]); for (let row = 2; row <= silver.rowCount; row++) silver.getCell(row, 1).numFmt = "0%";
-
-  const capacity = workbook.addWorksheet("Market Capacity");
-  addHeader(capacity, capacityHeaders);
-  marketCapacityOf(data).forEach((row) => capacity.addRow([row.market, row.year, numeric(row.gw), row.source, row.sourceYear, row.note]));
-  widths(capacity, [18, 10, 20, 22, 12, 70]);
-  for (let row = 2; row <= capacity.rowCount; row++) capacity.getCell(row, 3).numFmt = "#,##0.000";
-
-  return Buffer.from(await workbook.xlsx.writeBuffer());
+export async function createOurSolutionWorkbook(data:Parameters, _template=false, effective:EffectivePrices={}) {
+  const w=new ExcelJS.Workbook();w.creator='PV Circonomy';w.calcProperties.fullCalcOnLoad=true;
+  for(const template of layout){const s=w.addWorksheet(template.name);s.columns=template.columns;
+    template.rows.forEach((r,i)=>{const row=s.getRow(i+1);if(r.height)row.height=r.height;r.cells.forEach((c,j)=>{const cell=row.getCell(j+1);cell.value=structuredClone(c.value) as ExcelJS.CellValue;cell.style=structuredClone(c.style) as ExcelJS.Style;});});
+    template.merges.forEach(m=>s.mergeCells(m));
+  }
+  const a=w.getWorksheet('Assumptions')!,groups=rows(a);
+  for(const [section,defs] of Object.entries(data.assumptions))for(const [label,vals] of Object.entries(defs)){
+    const row=get(groups[section],label,'Assumptions');vals.forEach((v,i)=>{const cell=row.getCell(i+(section==='8'?3:2));cell.value=v;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};});
+  }
+  for(const [name,v] of Object.entries(effective)) {if(v.workbookValue)continue;const row=groups['5'].get(name);if(row){row.getCell(3).value=v.price;row.getCell(4).value=v.unit;row.getCell(5).value=`${v.source}; as of ${v.asOf}`;}}
+  const sr=rows(w.getWorksheet('Scenario')!)['0'];for(const [k,v] of Object.entries(data.scenario))get(sr,k,'Scenario').getCell(3).value=v;
+  for(const name of ['Capacity History','Population','EU-27 Population']){
+    const s=w.getWorksheet(name)!;const header=s.getRow(4);s.eachRow(row=>{const y=row.getCell(1).value;if(typeof y!=='number')return;header.eachCell(c=>{if(Number(c.col)===1)return;const key=String(c.value);const values=name==='Capacity History'?data.capacityHistory[key as keyof typeof data.capacityHistory]:name==='Population'?data.population[key as keyof typeof data.population]:data.population.eu27[key];row.getCell(c.col).value=(values as Record<string,number>)[y];});});
+  }
+  // Product Value and Section 8 formulas retain the template's live references.
+  const result=model(data,effective);
+  for(const [label,mat] of Object.entries(streamMaterial))get(groups['8'],label,'Assumptions').getCell(2).value={formula:`B${get(groups['5'],mat,'Assumptions').number}`,result:data.assumptions[5][mat][0] as number};
+  for(const [i,code] of ['SHREDDING','HOT_KNIFE','PVCIRCULATOR'].entries()){
+    for(const [label,mult] of [['Theoretical silver content upper limit (%)',1],['Theoretical silver content upper limit (g/t)',10000]] as const){const cell=get(groups['8'],label,'Assumptions').getCell(i+3);cell.value={formula:cell.formula,result:result.solutions[code as keyof typeof result.solutions].silverUpperPct*mult};}
+  }
+  // Silicon is deliberately workbook-only; no claim of an automated SMM feed.
+  w.getWorksheet('Instructions')!.getCell('B12').value='Weekly prices: silver XAG/USD spot via currency-api; LME aluminium cash and LME copper 3-month via Westmetall. Silicon SMM #553 remains the workbook value (no reliable free feed).';
+  return Buffer.from(await w.xlsx.writeBuffer());
 }

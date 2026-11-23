@@ -1,0 +1,458 @@
+{
+  "1": {
+    "Hourly wage": [
+      41.32,
+      "USD/hour"
+    ],
+    "Base rent": [
+      18,
+      "USD/sq.ft./year"
+    ],
+    "CAM": [
+      3.5,
+      "USD/sq.ft./year"
+    ],
+    "Electricity price": [
+      0.2153,
+      "USD/kWh"
+    ],
+    "Landfill cost": [
+      62.28,
+      "USD/short ton"
+    ]
+  },
+  "2": {
+    "Labor burden": [
+      0.2,
+      "share of wages"
+    ],
+    "Workers' compensation": [
+      0.02,
+      "share of wages"
+    ],
+    "Forklift / handling": [
+      12000,
+      "USD/year"
+    ],
+    "Packaging": [
+      0.08,
+      "USD/panel"
+    ],
+    "Insurance and compliance": [
+      10000,
+      "USD/year"
+    ],
+    "Facility utilities / admin": [
+      15000,
+      "USD/year"
+    ]
+  },
+  "3": {
+    "Short tons per metric ton": [
+      1.10231131
+    ],
+    "Pounds per metric ton": [
+      2204.6226218
+    ],
+    "Pounds per kilogram": [
+      2.2046226218
+    ],
+    "Shifts per equipment line (limit)": [
+      3
+    ],
+    "Square feet per square metre": [
+      10.7639104
+    ],
+    "Kilograms per pound": [
+      0.45359237
+    ]
+  },
+  "4": {
+    "Capex per line": [
+      500000,
+      1333333,
+      1000000,
+      "USD"
+    ],
+    "Capacity": [
+      60,
+      60,
+      60,
+      "panels/hour"
+    ],
+    "Operators per shift": [
+      5,
+      5,
+      3,
+      "people"
+    ],
+    "Equipment space per line": [
+      500,
+      100,
+      40,
+      "m²"
+    ],
+    "Electricity": [
+      3,
+      5,
+      0.9,
+      "kWh/panel"
+    ],
+    "Consumables": [
+      0.25,
+      2.5,
+      0.05,
+      "USD/panel"
+    ],
+    "Maintenance": [
+      0.05,
+      0.05,
+      0.04,
+      "share of capex per year"
+    ]
+  },
+  "5": {
+    "Glass": [
+      0.7,
+      160,
+      "USD/metric ton",
+      "Benchmarked to US cement price: USGS Mineral Commodity Summaries 2026, average mill unit value, 2025"
+    ],
+    "Aluminium": [
+      0.17,
+      3064,
+      "USD/metric ton",
+      "LME aluminium, 11 Nov 2026 (Argus)"
+    ],
+    "Copper": [
+      0.0105,
+      13210,
+      "USD/metric ton",
+      "LME three-month copper, 16 Nov 2026 (SMM)"
+    ],
+    "EVA": [
+      0.05,
+      0,
+      "USD/metric ton",
+      "Business Case master data"
+    ],
+    "Backsheet": [
+      0.025,
+      0,
+      "USD/metric ton",
+      "Business Case master data"
+    ],
+    "Silicon": [
+      0.035,
+      1414.71,
+      "USD/metric ton",
+      "SMM silicon metal East China #553"
+    ],
+    "Silver": [
+      0.0005,
+      45.19,
+      "USD/troy oz",
+      "Silver spot XAG/USD, 19 Nov 2026"
+    ],
+    "Junction box": [
+      0.0075,
+      0.5,
+      "USD/lb",
+      "Business Case master data"
+    ],
+    "Residual / mixed fraction": [
+      0.0015,
+      0,
+      "N/A",
+      "Business Case master data"
+    ]
+  },
+  "6": {
+    "Glass": [
+      0.3,
+      0,
+      0,
+      0.99,
+      1,
+      1,
+      0.99,
+      1,
+      1
+    ],
+    "Aluminium": [
+      1,
+      0.5,
+      1,
+      1,
+      0.5,
+      1,
+      1,
+      0.5,
+      1
+    ],
+    "Copper": [
+      0.85,
+      0.5,
+      1,
+      0.95,
+      0.05,
+      1,
+      0.95,
+      0.5,
+      1
+    ],
+    "EVA": [
+      0,
+      0,
+      0,
+      0.99,
+      0,
+      0,
+      0.95,
+      1,
+      1
+    ],
+    "Backsheet": [
+      0,
+      0,
+      0,
+      0.99,
+      0,
+      0,
+      0.95,
+      1,
+      1
+    ],
+    "Silicon": [
+      0.8,
+      0,
+      0,
+      0.95,
+      0.05,
+      1,
+      0.95,
+      0.2,
+      1
+    ],
+    "Silver": [
+      0.8,
+      0,
+      0,
+      0.99,
+      0.05,
+      1,
+      0.95,
+      0.2,
+      1
+    ],
+    "Junction box": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "Residual / mixed fraction": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "7": {
+    "Storage time": [
+      2,
+      "weeks of throughput"
+    ],
+    "Panels per pallet": [
+      30,
+      "panels"
+    ],
+    "Pallet footprint": [
+      2,
+      "m²"
+    ],
+    "Aisle space added per pallet": [
+      1,
+      "share of footprint"
+    ],
+    "Pallet stack levels": [
+      1
+    ]
+  },
+  "8": {
+    "Glass": [
+      1,
+      0,
+      0
+    ],
+    "Aluminium frame": [
+      0,
+      0,
+      0
+    ],
+    "Junction box + cable": [
+      0,
+      0,
+      0
+    ],
+    "EVA": [
+      1,
+      1,
+      0
+    ],
+    "Backsheet": [
+      1,
+      1,
+      0
+    ],
+    "Silicon cell": [
+      1,
+      1,
+      1
+    ],
+    "Copper ribbon": [
+      1,
+      1,
+      0
+    ],
+    "Other": [
+      1,
+      1,
+      0
+    ]
+  },
+  "9": {
+    "Grams per troy ounce": [
+      31.1034768,
+      "g"
+    ],
+    "Sulfuric acid price": [
+      436.35,
+      "USD/metric ton as sold",
+      "USA CIF, Oct 2026 (Procurement Resource)"
+    ],
+    "Sulfuric acid concentration": [
+      0.98
+    ],
+    "Hydrogen peroxide price": [
+      706,
+      "USD/metric ton as sold",
+      "United States, Apr 2026 (Intratec)"
+    ],
+    "Hydrogen peroxide concentration": [
+      0.5
+    ],
+    "Nitric acid price": [
+      526,
+      "USD/metric ton as sold",
+      "United States, Oct 2025 (Intratec)"
+    ],
+    "Nitric acid concentration": [
+      0.68
+    ],
+    "Silver product purity": [
+      0.99
+    ],
+    "Silicon product purity": [
+      0.99
+    ],
+    "Silver recovery in refining": [
+      1
+    ],
+    "Silicon recovery in refining": [
+      1
+    ],
+    "Realization of 99% silver and 99% silicon": [
+      1
+    ],
+    "H2O2 excess over stoichiometric": [
+      0
+    ],
+    "Electrorefining cell voltage": [
+      2,
+      "V"
+    ],
+    "Electrorefining current efficiency": [
+      0.95
+    ],
+    "Molar mass Ag": [
+      107.8682,
+      "g/mol"
+    ],
+    "Molar mass Cu": [
+      63.546,
+      "g/mol"
+    ],
+    "Molar mass Al": [
+      26.9815,
+      "g/mol"
+    ],
+    "Molar mass H2SO4": [
+      98.079,
+      "g/mol"
+    ],
+    "Molar mass H2O2": [
+      34.0147,
+      "g/mol"
+    ],
+    "Molar mass HNO3": [
+      63.0128,
+      "g/mol"
+    ],
+    "Faraday constant": [
+      96485.332,
+      "C/mol"
+    ]
+  },
+  "10": {
+    "Average lifetime T": [
+      18,
+      "years"
+    ],
+    "Shape, early-loss": [
+      2.4928
+    ],
+    "Shape, regular-loss": [
+      5.3759
+    ],
+    "Loss scenario": [
+      "Early-loss"
+    ],
+    "Panel rating": [
+      350,
+      "W"
+    ]
+  },
+  "11": {
+    "Recovery fee": [
+      0.2,
+      "USD/lb"
+    ],
+    "Processing fee steps (USD/lb)": [
+      0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3
+    ],
+    "Silver price change steps": [
+      -0.3,
+      -0.15,
+      0,
+      0.15,
+      0.3
+    ]
+  }
+}

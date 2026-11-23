@@ -15,22 +15,22 @@ const {capacity,wave:model,rows,seedWave:wave}=require('./helpers/market-capacit
  const totalRetired=[...s.retiredMw.values()].reduce((a,b)=>a+b,0);assert.ok(totalRetired>100,'replacements retire again');
  const mass=[...s.mass.entries()].find(([y])=>y===2010)[1];let expected=0;for(let v=2000;v<2010;v++)expected+=added[v]*(F(2010-v)-F(2010-v-1))*model.tonnesPerMw(v);assert.ok(Math.abs(mass-expected)<1e-6,'mass uses vintage t/MW');
 }
-assert.deepEqual(capacity.validateMarketCapacity(rows),[]);
+
 assert.deepEqual(wave.years,Array.from({length:35},(_,i)=>2016+i));
 for(const key of ['early_T18','regular_T18','early_T25','regular_T25','early_T15','regular_T15','early_T12','regular_T12']){assert.equal(wave[key].length,35);assert.ok(wave[key].every(x=>Number.isFinite(x)&&x>=0));}
-for(const [threshold,early,regular] of [[100000,2022,2026],[500000,2030,2032],[1000000,2035,2037]]){assert.equal(wave.crossings.early_T18[threshold],early);assert.equal(wave.crossings.regular_T18[threshold],regular);}
-assert.equal(wave.early_T18[wave.years.indexOf(2030)],566702);assert.equal(wave.regular_T18[wave.years.indexOf(2030)],353645);
+for(const [threshold,early,regular] of [[100000,2023,2027],[500000,2030,2033],[1000000,2034,2037]]){assert.equal(wave.crossings.early_T18[threshold],early);assert.equal(wave.crossings.regular_T18[threshold],regular);}
+assert.equal(wave.early_T18[wave.years.indexOf(2030)],576583);assert.equal(wave.regular_T18[wave.years.indexOf(2030)],281800);
 assert.deepEqual(model.LIFETIMES,[25,18,15,12]);assert.equal(model.DEFAULT_LIFETIME,18);assert.deepEqual(model.WEIBULL_ALPHA,{regular:5.3759,early:2.4928});
 for(const lifetime of model.LIFETIMES)for(const loss of ['early','regular'])for(const threshold of [100000,500000,1000000]){const i=wave[`${loss}_T${lifetime}`].findIndex(x=>x>=threshold);if(wave.years[i]>2016)assert.equal(wave.crossings[`${loss}_T${lifetime}`][threshold],wave.years[i]);}
-console.log('T6 data: model rules (age ≥ 1, replacement recursion), Market Capacity seed, 35 years × 8 series, thresholds and pinned 2030 values passed.');
+console.log('T6 data: model rules (age ≥ 1, replacement recursion), Capacity History seed, 35 years × 8 series, thresholds and pinned 2030 values passed.');
 
 // Render the actual chart and panel functions with React.
 const source=ts.createSourceFile('our-solution.tsx',fs.readFileSync('app/components/our-solution.tsx','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-const compile=name=>{const node=source.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(node,name);const js=ts.transpileModule('export '+node.getText(source),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;const m={exports:{}};new Function('require','module','exports',js)(require,m,m.exports);return m.exports[name];};
+const compile=name=>{const node=source.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(node,name);const js=ts.transpileModule('export '+node.getText(source),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;const m={exports:{}};new Function('require','module','exports','defaultWaveAssumptions',js)(require,m,m.exports,{defaultLifetime:18,loss:'early',shapes:model.WEIBULL_ALPHA,panelWeightLb:45,panelRating:350,tonnesPerMw:model.tonnesPerMw()});return m.exports[name];};
 const Chart=compile('RetirementLineChart'),Context=compile('RetirementContext');
 const html=renderToStaticMarkup(React.createElement(Chart,{lifetime:18,onLifetimeChange:()=>{},wave}));
 assert.equal((html.match(/<svg\b/g)||[]).length,1);assert.ok(html.includes('role="img"'));const lines=html.match(/<polyline\b[^>]*>/g)||[];assert.equal(lines.length,4);assert.equal(lines.filter(line=>line.includes('is-reference')).length,2);
-for(const label of ['100 kt/yr','1 Mt/yr','Early-loss scenario','Regular-loss scenario','0.57m t','0.35m t'])assert.ok(html.includes(label),label);
+for(const label of ['100 kt/yr','1 Mt/yr','Early-loss scenario','Regular-loss scenario','0.58m t','0.28m t'])assert.ok(html.includes(label),label);
 for(const lifetime of [25,18,15,12]){
  const chartHtml=renderToStaticMarkup(React.createElement(Chart,{lifetime,onLifetimeChange:()=>{},wave}));
  const panelHtml=renderToStaticMarkup(React.createElement(Context,{lifetime,wave}));

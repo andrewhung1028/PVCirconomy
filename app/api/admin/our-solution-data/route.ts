@@ -3,12 +3,15 @@ import { staffSession, trustedOrigin } from "../../../../server/auth/microsoft";
 import { activeOurSolutionData, ourSolutionHistory, saveOurSolutionData } from "../../../../server/our-solution/store";
 import { validateOurSolutionData } from "../../../../lib/our-solution-data";
 
+import { effectiveMetalPrices } from "../../../../server/metal-prices/store";
+import { model } from "../../../../lib/our-solution/model";
+
 export const runtime = "nodejs";
 const reply = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function GET() {const denied=await adminAccess("our-solution-data","GET");if(denied)return denied;
   if (!await staffSession()) return reply({ error: "unauthorized" }, 401);
-  try { return reply({ active: await activeOurSolutionData(), history: await ourSolutionHistory() }); }
+  try { const active = await activeOurSolutionData(); const prices = await effectiveMetalPrices(active.data); return reply({ active, history: await ourSolutionHistory(), preview:model(active.data, prices), prices }); }
   catch { return reply({ error: "database_unavailable" }, 503); }
 }
 
@@ -30,6 +33,7 @@ export async function POST(request: Request) {const denied=await adminAccess("ou
   try {
     const saved = await saveOurSolutionData(checked.data, payload.expectedVersion, staff, typeof payload.note === "string" ? payload.note : "");
     if (!saved) return reply({ error: "version_conflict" }, 409);
-    return reply({ active: saved, history: await ourSolutionHistory() }, 201);
+    const prices = await effectiveMetalPrices(saved.data);
+    return reply({ active: saved, history: await ourSolutionHistory(), preview: model(saved.data, prices), prices }, 201);
   } catch { return reply({ error: "database_unavailable" }, 503); }
 }
