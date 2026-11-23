@@ -91,12 +91,6 @@
         60,
         "panels/hour"
       ],
-      "Operators per shift": [
-        5,
-        5,
-        3,
-        "people"
-      ],
       "Equipment space per line": [
         500,
         100,

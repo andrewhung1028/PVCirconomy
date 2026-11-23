@@ -14,7 +14,8 @@ export function capacityHistory(p: Parameters) {
   return cap;
 }
 export function model(p: Parameters, effective: EffectivePrices = {}) {
-  const gridKgCo2ePerKwh=websiteNumber(websiteDataFromAssumptions(p.assumptions),'impact.grid_kg_co2e_per_kwh');
+  const websiteData=websiteDataFromAssumptions(p.assumptions);
+  const gridKgCo2ePerKwh=websiteNumber(websiteData,'impact.grid_kg_co2e_per_kwh');
   const sc=p.scenario, annualPanels=sc.panels_per_month*12, inputT=annualPanels*sc.panel_weight_lb*n(p,3,'Kilograms per pound')/1000;
   const operatingDays=sc.working_weeks_per_year*sc.working_days_per_week/12;
   const panelsPerMw=1e6/n(p,10,'Panel rating'), kgPerMw=sc.panel_weight_lb*n(p,3,'Kilograms per pound')*panelsPerMw;
@@ -23,9 +24,11 @@ export function model(p: Parameters, effective: EffectivePrices = {}) {
   const streamNames: Record<string,string> = {'Glass':'Glass','Aluminium frame':'Aluminium','Junction box + cable':'Junction box','EVA':'EVA','Backsheet':'Backsheet','Silicon cell':'Silicon','Copper ribbon':'Copper','Other':'Residual / mixed fraction'};
   const solutions=Object.fromEntries(solutionCodes.map((code,i)=>{
     const s=(label:string)=>n(p,4,label,i);
+    const staffPrefix=code==='SHREDDING'?'methods.shredding':code==='HOT_KNIFE'?'methods.thermal':'methods.circulator';
+    const staffPerShift=websiteNumber(websiteData,`${staffPrefix}.total_staff_per_shift`);
     const shifts=Math.max(1,Math.ceil(sc.panels_per_month/(s('Capacity')*sc.operating_hours_per_day*operatingDays)));
     const lines=Math.max(1,Math.ceil(shifts/n(p,3,'Shifts per equipment line (limit)')));
-    const labor=s('Operators per shift')*n(p,1,'Hourly wage')*sc.operating_hours_per_day*operatingDays*12*shifts;
+    const labor=staffPerShift*n(p,1,'Hourly wage')*sc.operating_hours_per_day*operatingDays*12*shifts;
     const burden=labor*(n(p,2,'Labor burden')+n(p,2,"Workers' compensation"));
     const storageM2=Math.ceil(annualPanels/sc.working_weeks_per_year*n(p,7,'Storage time')/n(p,7,'Panels per pallet'))*n(p,7,'Pallet footprint')*(1+n(p,7,'Aisle space added per pallet'))/n(p,7,'Pallet stack levels');
     const equipmentM2=s('Equipment space per line')*lines;

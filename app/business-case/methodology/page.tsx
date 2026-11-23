@@ -83,7 +83,7 @@ export default function MethodologyPage() {
           <div className="methodologyContent">
             <h2>Costs follow the way the operation scales.</h2>
             <Table headers={['Cost group', 'Calculation basis']} rows={[
-              ['Direct labor', 'Operators per shift × local hourly wage × hours per shift × operating days × 12 × required shifts.'],
+              ['Labor', 'Total staff per shift × local hourly wage × hours per shift × operating days × 12 × required shifts.'],
               ['Labor burden / workers’ compensation', 'Percentages applied to modeled direct labor.'],
               ['Facility / rent / CAM', 'Required space per line × regional rent and CAM assumptions × equipment lines.'],
               ['Electricity', 'Annual panels × energy consumption per panel × regional electricity price.'],

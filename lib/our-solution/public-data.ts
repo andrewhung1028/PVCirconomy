@@ -29,37 +29,59 @@ export const websiteDataDefaults: WebsiteData = {
   "methods.thermal.throughput_panels_per_hour": { section: "Methods", label: "Thermal processing throughput", value: 40, unit: "panels/hour", source: "TNO 2022 App. D.1, pp. 25–26" },
   "methods.thermal.seconds_per_panel": { section: "Methods", label: "Thermal processing cycle time", value: 90, unit: "seconds/panel", source: "TNO 2022 App. D.1, pp. 25–26" },
   "methods.circulator.throughput_panels_per_hour": { section: "Methods", label: "PV Circulator throughput", value: 60, unit: "panels/hour", source: "PV Circulator product specification" },
-  "methods.shredding.direct_staff_per_shift": { section: "Methods", label: "Shredding direct staff", value: 3, unit: "people/shift", source: "PV Circonomy staffing comparison" },
-  "methods.shredding.indirect_staff_per_shift": { section: "Methods", label: "Shredding indirect staff", value: 2, unit: "people/shift", source: "PV Circonomy staffing comparison" },
-  "methods.thermal.direct_staff_per_shift": { section: "Methods", label: "Thermal processing direct staff", value: 2, unit: "people/shift", source: "Thermal processing operating configuration" },
-  "methods.thermal.indirect_staff_per_shift": { section: "Methods", label: "Thermal processing indirect staff", value: 2, unit: "people/shift", source: "Thermal processing operating configuration" },
-  "methods.circulator.direct_staff_per_shift": { section: "Methods", label: "PV Circulator direct staff", value: 1, unit: "people/shift", source: "PV Circulator operating configuration" },
-  "methods.circulator.indirect_staff_per_shift": { section: "Methods", label: "PV Circulator indirect staff", value: 2, unit: "people/shift", source: "PV Circulator operating configuration" },
+  "methods.shredding.total_staff_per_shift": { section: "Methods", label: "Shredding staff", value: 5, unit: "people/shift", source: "PV Circonomy staffing comparison" },
+  "methods.thermal.total_staff_per_shift": { section: "Methods", label: "Thermal processing staff", value: 4, unit: "people/shift", source: "Thermal processing operating configuration" },
+  "methods.circulator.total_staff_per_shift": { section: "Methods", label: "PV Circulator staff", value: 3, unit: "people/shift", source: "PV Circulator operating configuration" },
   "methods.shredding.product_recovery_percent": { section: "Methods", label: "Shredding product recovery upper bound", value: 80, unit: "%", source: "PV Circonomy comparison threshold" },
   "methods.thermal.product_recovery_percent": { section: "Methods", label: "Thermal processing product recovery", value: 88, unit: "%", source: "IEA-PVPS T12-25:2023" },
   "methods.circulator.product_recovery_percent": { section: "Methods", label: "PV Circulator product recovery", value: 99.3, unit: "%", source: "SGS verification" },
   "methods.shredding.secondary_treatment_t_per_mw": { section: "Methods", label: "Shredding secondary treatment", value: 54, unit: "t/MW", source: "TNO 2022 R10860 (Späth et al.)" },
   "methods.circulator.secondary_treatment_t_per_mw": { section: "Methods", label: "PV Circulator secondary treatment", value: 0.5, unit: "t/MW", source: "PV Circulator product specification" },
   "impact.grid_kg_co2e_per_kwh": { section: "Impact", label: "US grid emissions factor", value: 0.3497, unit: "kg CO2e/kWh", source: "EPA eGRID2023 rev2, US total output rate" },
-  "materials.silver_demand_recovered_percent": { section: "Materials", label: "Solar-industry silver demand supplied by recovered material", value: 70, unit: "%", source: "IEA assessment" },
-  "materials.other_demand_recovered_percent": { section: "Materials", label: "Aluminium, copper, glass and silicon demand supplied by recovered material", value: 20, unit: "%", source: "IEA assessment" },
-  "materials.demand_horizon_start_year": { section: "Materials", label: "Recovered-material demand horizon, start", value: 2040, unit: "year", source: "IEA assessment" },
-  "materials.demand_horizon_end_year": { section: "Materials", label: "Recovered-material demand horizon, end", value: 2050, unit: "year", source: "IEA assessment" },
+  "materials.silver_demand_recovered_percent": { section: "Materials", label: "Solar-industry silver demand supplied by recovered material", value: 70, unit: "%", source: "IEA, Solar PV Global Supply Chains (2022)" },
+  "materials.other_demand_recovered_percent": { section: "Materials", label: "Aluminium, copper, glass and silicon demand supplied by recovered material", value: 20, unit: "%", source: "IEA, Solar PV Global Supply Chains (2022)" },
+  "materials.demand_horizon_start_year": { section: "Materials", label: "Recovered-material demand horizon, start", value: 2040, unit: "year", source: "IEA, Solar PV Global Supply Chains (2022)" },
+  "materials.demand_horizon_end_year": { section: "Materials", label: "Recovered-material demand horizon, end", value: 2050, unit: "year", source: "IEA, Solar PV Global Supply Chains (2022)" },
   "materials.recycled_aluminium_primary_carbon_percent": { section: "Materials", label: "Recycled aluminium carbon emissions versus primary", value: 3, unit: "%", source: "PV Circonomy materials pathway reference" },
   "value.silver_industry_2024_mg_per_w": { section: "Value", label: "Industry-average silver use, 2024", value: 13, unit: "mg/W", source: "IRENA 2026" },
   "value.silver_topcon_2025_mg_per_w": { section: "Value", label: "TOPCon median silver use, 2025", value: 10, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
   "value.silver_topcon_2035_mg_per_w": { section: "Value", label: "TOPCon expected silver use, 2035", value: 6.3, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
   "value.silver_hjt_2025_mg_per_w": { section: "Value", label: "HJT median silver use, 2025", value: 12, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
   "value.silver_hjt_2035_mg_per_w": { section: "Value", label: "HJT expected silver use, 2035", value: 4.3, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
+  "value.circulator_measured_silver_percent": { section: "Value", label: "PV Circulator cell-powder measured silver content", value: 1.5, unit: "%", source: "Actual measurement" },
   "scale.australia_launch_year": { section: "Scale", label: "Australia launch year", value: 2027, unit: "year", source: "PV Circonomy commercialization plan" },
   "scale.taiwan_launch_year": { section: "Scale", label: "Taiwan launch year", value: 2027, unit: "year", source: "PV Circonomy commercialization plan" },
+  "scale.line_capacity_mw_per_year": { section: "Scale", label: "Equipment capacity per line-year", value: 50, unit: "MW/line-year", source: "PV Circonomy equipment-demand scenario" },
 };
 
 export const websiteAssumptionRows:Record<string,(number|string)[]>=Object.fromEntries(Object.entries(websiteDataDefaults).map(([key,row])=>[key,[row.value,row.unit,row.source,row.section,row.label]]));
 
+const legacyStaffKeys:Record<string,[string,string]>={
+  "methods.shredding.total_staff_per_shift":["methods.shredding.direct_staff_per_shift","methods.shredding.indirect_staff_per_shift"],
+  "methods.thermal.total_staff_per_shift":["methods.thermal.direct_staff_per_shift","methods.thermal.indirect_staff_per_shift"],
+  "methods.circulator.total_staff_per_shift":["methods.circulator.direct_staff_per_shift","methods.circulator.indirect_staff_per_shift"],
+};
+const legacyWebsiteKeys:Record<string,string>={
+  "value.circulator_measured_silver_percent":"value.circulator_elkem_silver_percent",
+};
+
+export function normalizedWebsiteAssumptionRows(rows:Record<string,(number|string)[]>={}):Record<string,(number|string)[]> {
+  return Object.fromEntries(Object.entries(websiteAssumptionRows).map(([key,fallback])=>{
+    const current=rows[key]??rows[legacyWebsiteKeys[key]];
+    if(current) {
+      const row=[...current];
+      if(key==='value.circulator_measured_silver_percent'){row[2]=fallback[2];row[4]=fallback[4];}
+      if(key.startsWith('materials.')&&row[2]==='IEA assessment')row[2]=fallback[2];
+      return [key,row];
+    }
+    const legacy=legacyStaffKeys[key],direct=legacy&&rows[legacy[0]]?.[0],indirect=legacy&&rows[legacy[1]]?.[0];
+    return [key,typeof direct==='number'&&typeof indirect==='number'?[direct+indirect,...fallback.slice(1)]:fallback];
+  }));
+}
+
 export function websiteDataFromAssumptions(assumptions:Record<string,Record<string,(number|string)[]>>):WebsiteData {
-  const rows=assumptions['12']??{};
-  return Object.fromEntries(Object.entries(websiteDataDefaults).map(([key,fallback])=>{const row=rows[key]??websiteAssumptionRows[key];return [key,{value:row[0],unit:String(row[1]),source:String(row[2]),section:String(row[3]),label:String(row[4])}]}));
+  const rows=normalizedWebsiteAssumptionRows(assumptions['12']);
+  return Object.fromEntries(Object.entries(websiteDataDefaults).map(([key])=>{const row=rows[key];return [key,{value:row[0],unit:String(row[1]),source:String(row[2]),section:String(row[3]),label:String(row[4])}]}));
 }
 
 export function websiteNumber(data: WebsiteData, key: keyof typeof websiteDataDefaults | string): number {

@@ -100,7 +100,10 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
     template.rows.forEach((r,i)=>{const row=s.getRow(i+1);if(r.height)row.height=r.height;r.cells.forEach((c,j)=>{const cell=row.getCell(j+1);cell.value=structuredClone(c.value) as ExcelJS.CellValue;cell.style=structuredClone(c.style) as ExcelJS.Style;});});
     template.merges.forEach(m=>s.mergeCells(m));
   }
-  const a=w.getWorksheet('Assumptions')!;appendWebsiteAssumptions(a);const groups=rows(a);
+  const a=w.getWorksheet('Assumptions')!;
+  const legacyOperators=a.getRows(1,a.rowCount)?.find(row=>row.getCell(1).value==='Operators per shift');
+  if(legacyOperators)a.spliceRows(legacyOperators.number,1);
+  appendWebsiteAssumptions(a);const groups=rows(a);
   for(const [section,defs] of Object.entries(data.assumptions))for(const [label,vals] of Object.entries(defs)){
     const row=get(groups[section],label,'Assumptions');vals.forEach((v,i)=>{const cell=row.getCell(i+(section==='8'?3:2));cell.value=v;if(section!=='12'||i===0||i===2)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};});
   }
