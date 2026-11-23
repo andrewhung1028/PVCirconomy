@@ -273,7 +273,7 @@ function systemCardContent(data:OurSolutionView):Record<SystemTopic,{tagline:str
 
 const audienceTopics = {
   owner: ["Owner / EPC / Contractor", "Retire panels at lower cost, with records you can prove.", "Prepare a project estimate", "/#pricing", "Plan quantity, condition, logistics and reporting requirements."],
-  recycler: ["Recycler", "Add processing capacity while preserving more material value.", "Evaluate PV Circulator", "/pv-circulator/", "Review feedstock, configuration, output quality, deployment and partnership options."],
+  recycler: ["Recycler", "Add capacity. Preserve material value.", "Evaluate PV Circulator", "/pv-circulator/", "Review feedstock, configuration, output quality, deployment and partnership options."],
   investor: ["Investor / Strategic partner", "Help build the infrastructure behind circular solar.", "Discuss market expansion", "/contact/?interest=investment", "Review market timing, technology evidence, commercial milestones and the potential revenue model."],
 } as const;
 type AudienceTopic = keyof typeof audienceTopics;
@@ -720,8 +720,8 @@ function ProfitPerMwChart({data}:{data:OurSolutionView}) {
   const refinedRevenue=circulator.annualMaterialRevenue-data.cellPowder.scenario1+data.cellPowder.scenario2Revenue;
   const refinedCost=circulator.annualOpex+data.cellPowder.reagentCost+data.cellPowder.electroCost;
   const refined=[{label:"PV Circulator",revenue:perMw(refinedRevenue),cost:perMw(refinedCost)}];
-  const peak=Math.max(...[...direct,...refined].flatMap(item=>[item.revenue,item.cost]));
-  const group=(title:string,items:typeof direct,className:string)=><section className={className}><h4>{title}</h4><div>{items.map(item=>{const profit=item.revenue-item.cost;return <article key={item.label}><div className="os-profit-pair"><i className="is-revenue" style={{height:`${item.revenue/peak*100}%`}}><b>{short(item.revenue)}</b></i><i className="is-cost" style={{height:`${item.cost/peak*100}%`}}><b>{short(item.cost)}</b></i></div><strong>{item.label}</strong><span className={profit>=0?"is-positive":"is-negative"}>{short(profit)} net</span></article>})}</div></section>;
+  const axisMax=Math.max(...[...direct,...refined].flatMap(item=>[item.revenue,item.cost]))*1.15;
+  const group=(title:string,items:typeof direct,className:string)=><section className={className}><h4>{title}</h4><div>{items.map(item=>{const profit=item.revenue-item.cost;return <article key={item.label}><div className="os-profit-pair"><i className="is-revenue" style={{height:`${item.revenue/axisMax*100}%`}}><b>{short(item.revenue)}</b></i><i className="is-cost" style={{height:`${item.cost/axisMax*100}%`}}><b>{short(item.cost)}</b></i></div><strong>{item.label}</strong><span className={profit>=0?"is-positive":"is-negative"}>{short(profit)} net</span></article>})}</div></section>;
   return <figure className="os-profit-per-mw"><figcaption><strong>Recycling profit per MW</strong><span>No processing fee · {compactNumber(watts)} W modules</span></figcaption><div className="os-profit-legend" aria-hidden="true"><span><i className="is-revenue"/>Material revenue</span><span><i className="is-cost"/>Operating cost</span></div><div className="os-profit-groups" role="img" aria-label={`Without silver refining: PV Circulator net ${short(direct[0].revenue-direct[0].cost)}, Shredding net ${short(direct[1].revenue-direct[1].cost)}, Thermal processing net ${short(direct[2].revenue-direct[2].cost)}. With silver refining: PV Circulator modeled net ${short(refined[0].revenue-refined[0].cost)} per megawatt.`}>{group("Without silver refining",direct,"is-direct")}{group("With silver refining",refined,"is-refined")}</div><small>Silver-refining cost includes modeled reagents and electrorefining electricity only. Added labor, depreciation, permitting, wastewater treatment, financing and product qualification are excluded.</small></figure>;
 }
 
