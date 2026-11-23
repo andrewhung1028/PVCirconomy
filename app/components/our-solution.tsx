@@ -5,7 +5,7 @@ import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 import { PublicHeader } from "./public-header";
 import { ProcessPlaylist } from "./pv-circulator-page";
 import { capacityTrend as buildCapacityTrend, usCumulativeMw, type CapacityTrendPoint } from "../../lib/market-capacity";
-import { computeRetirementWave, type RetirementWave } from "../../lib/us-retirement-wave";
+import { type RetirementWave } from "../../lib/us-retirement-wave";
 import { seededOurSolutionData, economicsView } from "../../lib/our-solution-data";
 import { model } from "../../lib/our-solution/model";
 
@@ -26,13 +26,13 @@ const defaultModel=model(seededOurSolutionData);
 const defaultWaveAssumptions:WaveAssumptions={defaultLifetime:defaultModel.defaultLifetime as 25|18|15|12,loss:defaultModel.loss,shapes:defaultModel.shapes,panelWeightLb:seededOurSolutionData.scenario.panel_weight_lb,panelRating:Number(seededOurSolutionData.assumptions[10]["Panel rating"][0]),tonnesPerMw:defaultModel.kgPerMw/1000};
 
 const sections = [
-  ["overview", "Solution"],
+  ["overview", "Overview"],
   ["wave", "Wave"],
   ["stakes", "Stakes"],
   ["system", "Solution"],
-  ["conventional", "Methods"],
-  ["regulation", "Rules"],
   ["first-principles", "Principle"],
+  ["conventional", "Methods"],
+  ["regulation", "Impact"],
   ["materials", "Materials"],
   ["value", "Value"],
   ["economic", "Economic"],
@@ -247,6 +247,17 @@ type TrendPoint = { year: string; total: number; totalLabel: string; values: rea
 const seededCapacityRows = seededOurSolutionData;
 const defaultCapacityTrend: CapacityTrendPoint[] = buildCapacityTrend(seededCapacityRows);
 const defaultRetirementWave: RetirementWave = defaultModel.retirementWave;
+const retirementMarkets = ["United States", "Japan", "Europe", "Australia"] as const;
+type RetirementMarket = (typeof retirementMarkets)[number];
+type RetirementMarketWaves = Record<RetirementMarket | "World", RetirementWave>;
+type RetirementSeriesKey = Exclude<keyof RetirementWave, "years" | "crossings">;
+const defaultRetirementMarketWaves: RetirementMarketWaves = {
+  World: defaultRetirementWave,
+  "United States": defaultRetirementWave,
+  Japan: defaultRetirementWave,
+  Europe: defaultRetirementWave,
+  Australia: defaultRetirementWave,
+};
 
 
 const pressureSeries = [
@@ -287,6 +298,73 @@ function StackedTrendChart({ data, max, label, tone }: { data: TrendPoint[]; max
       <small aria-hidden={!isMajor}>{isMajor ? point.year : ""}</small>
     </div>})}</div>
     <div className="os-stacked-legend" aria-label="Highlight a market" onMouseLeave={() => setHighlightedRegion(null)}>{trendRegions.map((region, index) => <button type="button" key={region} aria-pressed={highlightedRegion === index} onMouseEnter={() => setHighlightedRegion(index)} onFocus={() => setHighlightedRegion(index)} onBlur={() => setHighlightedRegion(null)} onClick={() => setHighlightedRegion(index)}><i className={`is-region-${index + 1}`} aria-hidden="true" /><span>{region}</span></button>)}</div>
+  </div>;
+}
+
+function GlobalCumulativeRetirementChart({ wave }: { wave: RetirementWave }) {
+  const annual = wave.years.map((year, index) => ({ year, tonnes: wave.early_T18[index] })).filter((point) => point.year >= 2025);
+  const data = annual.reduce<{ year: number; total: number }[]>((points, point) => {
+    points.push({ year: point.year, total: (points.at(-1)?.total ?? 0) + point.tonnes / 1e6 });
+    return points;
+  }, []);
+  const width = 960, height = 370, left = 62, right = 22, top = 28, bottom = 50;
+  const last = data.at(-1)!;
+  const max = Math.max(1, Math.ceil(last.total / 50) * 50);
+  const x = (index: number) => left + index / (data.length - 1) * (width - left - right);
+  const y = (value: number) => top + (1 - value / max) * (height - top - bottom);
+  const plotWidth = width - left - right;
+  const barGap = 3;
+  const barWidth = plotWidth / data.length - barGap;
+  const yTicks = Array.from({ length: 5 }, (_, index) => max / 4 * index);
+  const majorYears = data.filter((point) => point.year % 5 === 0);
+  return <figure className="os-wave-global-chart">
+    <figcaption>Cumulative retired-panel mass · global projection</figcaption>
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Projected global cumulative retired-panel mass reaches ${last.total.toFixed(0)} million tonnes from 2025 through 2050.`}>
+      <defs><linearGradient id="global-retirement-bars" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#eb7941" /><stop offset="1" stopColor="#9b1f2d" /></linearGradient></defs>
+      <g className="os-wave-grid" aria-hidden="true">{yTicks.map((tick) => <g key={tick}><line x1={left} x2={width - right} y1={y(tick)} y2={y(tick)} /><text x={left - 12} y={y(tick) + 4} textAnchor="end">{tick.toFixed(0)}</text></g>)}</g>
+      <g className="os-wave-bars">{data.map((point, index) => <rect key={point.year} x={left + index / data.length * plotWidth + barGap / 2} y={y(point.total)} width={barWidth} height={height - bottom - y(point.total)} />)}</g>
+      <g className="os-wave-years" aria-hidden="true">{majorYears.map((point) => <text key={point.year} x={x(data.indexOf(point))} y={height - 18} textAnchor="middle">{point.year}</text>)}</g>
+      <g className="os-wave-endpoint" transform={`translate(${x(data.length - 1)} ${y(last.total)})`}><circle r="6" /><text x="-12" y="-14" textAnchor="end">{last.total.toFixed(0)}m t</text></g>
+      <text className="os-wave-unit" x="0" y="12">million tonnes</text>
+    </svg>
+    <small>Fixed basis: 18-year lifetime + early-loss scenario. Source: Capacity History in the published Our Solution workbook.</small>
+  </figure>;
+}
+
+function CountryRetirementExplorer({ waves }: { waves: RetirementMarketWaves }) {
+  const [country, setCountry] = useState<RetirementMarket>("United States");
+  const [lifetime, setLifetime] = useState<25 | 18 | 15 | 12>(18);
+  const series = (market: RetirementMarket, loss: "early" | "regular") => {
+    const key = `${loss}_T${lifetime}` as RetirementSeriesKey;
+    return waves[market].years.map((year, index) => ({ year, tonnes: waves[market][key][index] })).filter((point) => point.year >= 2025);
+  };
+  const early = series(country, "early"), regular = series(country, "regular");
+  const width = 520, height = 300, left = 48, right = 18, top = 25, bottom = 42;
+  const maxTonnes = Math.max(...retirementMarkets.flatMap((market) => [...series(market, "early"), ...series(market, "regular")].map((point) => point.tonnes)));
+  const max = Math.max(0.5, Math.ceil(maxTonnes / 500000) * 0.5);
+  const x = (index: number) => left + index / (early.length - 1) * (width - left - right);
+  const y = (tonnes: number) => top + (1 - tonnes / 1e6 / max) * (height - top - bottom);
+  const path = (data: { year: number; tonnes: number }[]) => `M ${data.map((point, index) => `${x(index)},${y(point.tonnes)}`).join(" L ")}`;
+  const lastEarly = early.at(-1)!, lastRegular = regular.at(-1)!;
+  const majorYears = early.filter((point) => point.year % 5 === 0);
+  const labels: Record<RetirementMarket, string> = { "United States": "US", Japan: "Japan", Europe: "Europe", Australia: "Australia" };
+  return <div className="os-wave-country-explorer">
+    <div className="os-wave-country-tabs" role="group" aria-label="Choose a market">{retirementMarkets.map((market) => <button type="button" key={market} aria-pressed={country === market} onClick={() => setCountry(market)}>{labels[market]}</button>)}</div>
+    <div className="os-wave-lifetime" role="group" aria-label="Choose modeled panel lifetime"><span>Lifetime</span>{([25, 18, 15, 12] as const).map((years) => <button type="button" key={years} aria-pressed={lifetime === years} onClick={() => setLifetime(years)}>{years} years</button>)}</div>
+    <div className="os-wave-country-copy" aria-live="polite"><h3>When will {labels[country]} solar panels reach end of life?</h3><p>Annual end-of-life PV panel mass, {country}.</p></div>
+    <figure className="os-wave-country-chart">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${country}, ${lifetime}-year lifetime: early-loss annual end-of-life mass reaches ${(lastEarly.tonnes / 1e6).toFixed(2)} million tonnes in 2050; regular-loss reaches ${(lastRegular.tonnes / 1e6).toFixed(2)} million tonnes.`}>
+        <g className="os-wave-country-grid" aria-hidden="true">{Array.from({ length: 6 }, (_, index) => max / 5 * index).map((tick) => <g key={tick}><line x1={left} x2={width - right} y1={y(tick * 1e6)} y2={y(tick * 1e6)} /><text x={left - 10} y={y(tick * 1e6) + 4} textAnchor="end">{tick.toFixed(tick < 1 ? 1 : 0)}</text></g>)}</g>
+        <path className="os-wave-country-line is-regular" d={path(regular)} />
+        <path className="os-wave-country-line is-early" d={path(early)} />
+        <g className="os-wave-country-years" aria-hidden="true">{majorYears.map((point) => <text key={point.year} x={x(early.indexOf(point))} y={height - 14} textAnchor="middle">{point.year}</text>)}</g>
+        <g className="os-wave-country-endpoint is-regular" transform={`translate(${x(regular.length - 1)} ${y(lastRegular.tonnes)})`}><circle r="4" /><text x="-10" y="16" textAnchor="end">{(lastRegular.tonnes / 1e6).toFixed(2)}m t</text></g>
+        <g className="os-wave-country-endpoint is-early" transform={`translate(${x(early.length - 1)} ${y(lastEarly.tonnes)})`}><circle r="5" /><text x="-10" y="-12" textAnchor="end">{(lastEarly.tonnes / 1e6).toFixed(2)}m t</text></g>
+        <text className="os-wave-country-unit" x="0" y="12">million tonnes / year</text>
+      </svg>
+      <figcaption className="os-wave-country-legend"><span className="is-early">Early loss</span><span className="is-regular">Regular loss</span></figcaption>
+    </figure>
+    <p className="os-wave-country-note">Both lines use the selected lifetime. All four markets share one vertical scale. Values are projections, not measured retirements.</p>
   </div>;
 }
 
@@ -577,7 +655,7 @@ function MaterialsSection() {
   </section>;
 }
 
-export function OurSolution({ economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices" }: { economicsData?: OurSolutionView; routeMetrics?: RouteEnvironmentalMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string }) {
+export function OurSolution({ economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices" }: { economicsData?: OurSolutionView; routeMetrics?: RouteEnvironmentalMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string }) {
   const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
   const capacityFirst = capacityTrend[0], capacityLast = capacityTrend[capacityTrend.length - 1];
   const [active, setActive] = useState<SectionId>("overview");
@@ -604,10 +682,9 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
   const selectedStake = stakeSolutions[stake];
   const selectedAudience = audienceTopics[audience];
 
-  const [waveLifetime, setWaveLifetime] = useState<25 | 18 | 15 | 12>(waveAssumptions.defaultLifetime);
   const waveSlides: DeckSlide[] = [
     { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from {capacityFirst.totalLabel} to {capacityLast.totalLabel} by {capacityLast.year}.</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Today’s installations define tomorrow’s retirement geography.", note: <p>Every annual column represents the infrastructure already being built toward a much larger retirement market. The market mix shows where future collection and processing capacity will be needed.</p> },
-    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-market-slide os-us-retirement"><h2>When will US solar panels reach end of life?</h2><RetirementLineChart lifetime={waveLifetime} onLifetimeChange={setWaveLifetime} wave={retirementWave} assumptions={waveAssumptions} /></div>, noteTitle: "The retirement scenario you choose.", note: <RetirementContext lifetime={waveLifetime} wave={retirementWave} assumptions={waveAssumptions} /> },
+    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-wave-global-slide"><h2>The global retirement wave compounds through 2050.</h2><GlobalCumulativeRetirementChart wave={retirementMarketWaves.World} /></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} /> },
     { label: "Per-capita processing pressure", navigationLabel: "Per-capita pressure", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>Per-capita processing pressure rises unevenly through 2050.</h2><PressureTrendChart data={pressureData} /></div>, noteTitle: "Processing pressure grows at a different pace in every market.", note: <p>Our projection shows {pressureSeries[pressureData[pressureData.length-1].values.indexOf(Math.max(...pressureData[pressureData.length-1].values))].label} reaching {Math.max(...pressureData[pressureData.length-1].values).toFixed(2)} kg per person by 2050, the highest of the modeled markets. The long view strengthens the case for regional and deployable capacity rather than planning from a single global endpoint. Population source: UN World Population Prospects 2022, Medium variant.</p> },
   ];
 
@@ -629,9 +706,9 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
       <section id="wave" className="pv-screen os-deck-section" aria-label="The coming decommissioning wave"><StoryDeck id="wave-deck" title="The coming decommissioning wave" slides={waveSlides} variant="split" autoAdvanceMs={30000} /></section>
       <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div><div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
       <section id="system" className="pv-screen os-system" aria-labelledby="system-title"><div className="os-system-stage"><div className="os-system-heading"><h2 id="system-title">Our solution</h2><p>One circular system answers the four shared needs: lower cost, provable compliance, material circularity and defensible reputation.</p></div><div className="os-system-flow" role="list" aria-label="The PV Circonomy circular value system">{(Object.keys(systemTopics) as SystemTopic[]).map((topic) => <article key={topic} role="listitem"><figure><img src={systemVisuals[topic].src} alt={systemVisuals[topic].alt} /></figure><div className="os-system-card-copy"><div><strong>{systemTopics[topic][0]}</strong><span> | {systemCardContent[topic].tagline}</span></div><ul>{systemCardContent[topic].bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul></div></article>)}</div></div></section>
+      <ProcessPlaylist active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" />
       <section id="conventional" className="pv-screen os-deck-section" aria-label="Why conventional recycling destroys value"><StoryDeck id="conventional-deck" title="Why conventional recycling destroys value" slides={conventionalSlides} variant="split" autoAdvanceMs={10000} /></section>
       <RegulationSection metrics={routeMetrics} assumptions={waveAssumptions} />
-      <ProcessPlaylist active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" />
       <MaterialsSection />
       <ValueSection economicsData={economicsData} />
       <EconomicSection economicsData={economicsData} breakeven={breakeven} priceSources={priceSources} />
