@@ -12,12 +12,13 @@ import { model } from "../../lib/our-solution/model";
 import type { RouteEnvironmentalMetric } from "../../lib/route-comparison";
 
 import type { EconomicsView } from "../../lib/our-solution-data";
-import { REFERENCE_CASE } from "../../lib/route-comparison/config";
+import { websiteNumber, websiteString } from "../../lib/our-solution/public-data";
 import "./review-home.css";
 
 export type BreakevenView = { region: string; feeUnit: string; currency: string; panelsPerMonth: number; panelWeightLb: number; source: string; fees: { code: string; breakevenFee: number | null }[] } | null;
-const KG_PER_LB = 0.45359237;
-const referenceTonnesPerMw = 1e6 / REFERENCE_CASE.panelWatts * REFERENCE_CASE.panelWeightLb * KG_PER_LB / 1000;
+const webNum=(data:OurSolutionView,key:string)=>websiteNumber(data.websiteData,key);
+const webText=(data:OurSolutionView,key:string)=>websiteString(data.websiteData,key);
+const compactNumber=(value:number)=>Number.isInteger(value)?String(value):value.toLocaleString("en-US",{maximumFractionDigits:2});
 
 // Only fields used by the public story cross the server/client boundary.
 export type OurSolutionView = EconomicsView;
@@ -210,12 +211,12 @@ const systemVisuals: Record<SystemTopic, { src: string; alt: string }> = {
   upcycle: { src: "/images/system-upcycling-hd.png", alt: "Material Upcycling loop from PV Circulator through hydrogen to fuel-cell power" },
   trace: { src: "/images/system-easycycle-hd.png", alt: "EasyCycle digital recycling passport and secure blockchain record" },
 };
-const systemCardContent: Record<SystemTopic, { tagline: string; bullets: readonly string[] }> = {
+const staticSystemCardContent: Record<SystemTopic, { tagline: string; bullets: readonly string[] }> = {
   process: {
     tagline: "Clean × Compliant × Low-carbon",
     bullets: [
       "No chemicals, no heat, no process water; no secondary pollution",
-      ">99% recovery, 1 panel/min throughput, <1 kWh/panel",
+      "Product recovery, throughput and energy use are published from the Solution master data",
       "Modular design for on-site and near-site deployment",
     ],
   },
@@ -236,6 +237,15 @@ const systemCardContent: Record<SystemTopic, { tagline: string; bullets: readonl
     ],
   },
 };
+
+function systemCardContent(data:OurSolutionView):Record<SystemTopic,{tagline:string;bullets:readonly string[]}>{
+  const recovery=webNum(data,"methods.circulator.product_recovery_percent"),throughput=webNum(data,"methods.circulator.throughput_panels_per_hour")/60,energy=webNum(data,"methods.circulator.energy_max_kwh_per_panel");
+  return {...staticSystemCardContent,process:{...staticSystemCardContent.process,bullets:[
+    staticSystemCardContent.process.bullets[0],
+    `${recovery>99?">":""}${compactNumber(recovery)}% recovery, ${compactNumber(throughput)} panel/min throughput, ${energy<1?"<1":compactNumber(energy)} kWh/panel`,
+    staticSystemCardContent.process.bullets[2],
+  ]}};
+}
 
 const audienceTopics = {
   owner: ["Owner / EPC / Contractor", "Retire panels at lower cost, with records you can prove.", "Prepare a project estimate", "/#pricing", "Plan quantity, condition, logistics and reporting requirements."],
@@ -320,14 +330,15 @@ function StackedTrendChart({ data, max, label, tone }: { data: TrendPoint[]; max
   </div>;
 }
 
-function GlobalCumulativeRetirementChart({ waves }: { waves: RetirementMarketWaves }) {
+function GlobalCumulativeRetirementChart({ waves, assumptions }: { waves: RetirementMarketWaves; assumptions:WaveAssumptions }) {
   const cumulative = retirementStackMarkets.map(() => 0);
   let cumulativeWorld = 0;
+  const seriesKey=`${assumptions.loss}_T${assumptions.defaultLifetime}` as RetirementSeriesKey;
   const data = waves.World.years.flatMap((year, waveIndex) => {
     if (year < 2025) return [];
-    cumulativeWorld += waves.World.early_T18[waveIndex] / 1e6;
+    cumulativeWorld += waves.World[seriesKey][waveIndex] / 1e6;
     const rawValues = retirementStackMarkets.map((market, marketIndex) => {
-      cumulative[marketIndex] += waves[market].early_T18[waveIndex] / 1e6;
+      cumulative[marketIndex] += waves[market][seriesKey][waveIndex] / 1e6;
       return cumulative[marketIndex];
     });
     const rawTotal = rawValues.reduce((sum, value) => sum + value, 0);
@@ -354,13 +365,13 @@ function GlobalCumulativeRetirementChart({ waves }: { waves: RetirementMarketWav
       <text className="os-wave-unit" x="0" y="12">million tonnes</text>
     </svg>
     <div className="os-wave-stack-legend" aria-label="Markets in the cumulative retirement bars">{retirementStackMarkets.map((market, index) => <span key={market}><i className={`is-region-${index + 1}`} />{market}</span>)}</div>
-    <small>Fixed basis: 18-year lifetime + early-loss scenario. Source: Capacity History in the published Our Solution workbook.</small>
+    <small>Basis: {assumptions.defaultLifetime}-year lifetime + {assumptions.loss}-loss scenario. Source: Capacity History and Assumptions in the published Our Solution workbook.</small>
   </figure>;
 }
 
-function CountryRetirementExplorer({ waves }: { waves: RetirementMarketWaves }) {
+function CountryRetirementExplorer({ waves, assumptions }: { waves: RetirementMarketWaves;assumptions:WaveAssumptions }) {
   const [country, setCountry] = useState<RetirementMarket>("United States");
-  const [lifetime, setLifetime] = useState<25 | 18 | 15 | 12>(18);
+  const [lifetime, setLifetime] = useState<25 | 18 | 15 | 12>(assumptions.defaultLifetime);
   const series = (market: RetirementMarket, loss: "early" | "regular") => {
     const key = `${loss}_T${lifetime}` as RetirementSeriesKey;
     return waves[market].years.map((year, index) => ({ year, tonnes: waves[market][key][index] })).filter((point) => point.year >= 2025);
@@ -411,15 +422,21 @@ function MethodTable({ caption, rows, columns = THREE_METHODS }: { caption: stri
   return <div className="os-method-detail-table"><table><caption className="pv-sr-only">{caption}</caption><thead><tr><th scope="col">Item</th>{columns.map((column, index) => <th scope="col" key={column} className={index === columns.length - 1 ? "is-circulator" : undefined}>{column}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.shredding}</td><td>{row.thermal}</td><td>{row.circulator}</td></tr>)}</tbody></table></div>;
 }
 
-const technologyRows: MethodRow[] = [
-  { label: "Footprint", shredding: "~480 m²", thermal: "160 m²", circulator: "~30–40 m²" },
-  { label: "Energy", shredding: "~5 kWh / panel", thermal: "—", circulator: "<1 kWh / panel" },
-  { label: "Throughput", shredding: "~50–60 panels / h", thermal: "~40 panels / h (~90 s per panel)", circulator: "~60 panels / h" },
-  { label: "Staff", shredding: "5 / shift", thermal: "—", circulator: "1 direct + 2 indirect" },
-  { label: "Product recovery", shredding: "~19%", thermal: "~88%", circulator: "SGS-measured 99.3%" },
-  { label: "By-products", shredding: "Mixed fragments need further treatment", thermal: "Cell laminate (EVA, backsheet, cells) needs further treatment", circulator: "No off-gas or wastewater" },
-];
-const methodSources = "Sources: Shredding — TNO 2022 R10860 (Späth et al.) pp. 8, 12, 19; NEDO 2026 A1-2-14 (MRI) p. 8. Thermal processing — TNO 2022 App. D.1 pp. 25–26 (NPC ~90 s per panel); IEA-PVPS T12-25:2023; NEDO 2026 p. 8. Product recovery = sellable output by purity. — = no public data.";
+function methodSources(data:OurSolutionView){return `Sources: ${[...new Set(Object.entries(data.websiteData).filter(([key])=>key.startsWith("methods.")).map(([,row])=>row.source).filter(source=>!source.startsWith("No public")))].join("; ")}. Product recovery = sellable output by purity. — = no public data.`;}
+
+function technologyRows(data:OurSolutionView):MethodRow[]{
+  const n=(key:string)=>webNum(data,key),t=(key:string)=>webText(data,key);
+  const shredMin=n("methods.shredding.throughput_min_panels_per_hour"),shredMax=n("methods.shredding.throughput_max_panels_per_hour");
+  const pvMin=n("methods.circulator.footprint_min_m2"),pvMax=n("methods.circulator.footprint_max_m2");
+  return [
+    {label:"Footprint",shredding:`~${compactNumber(n("methods.shredding.footprint_m2"))} m²`,thermal:`${compactNumber(n("methods.thermal.footprint_m2"))} m²`,circulator:`~${compactNumber(pvMin)}–${compactNumber(pvMax)} m²`},
+    {label:"Energy",shredding:`~${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:t("methods.thermal.energy_display"),circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
+    {label:"Throughput",shredding:`~${compactNumber(shredMin)}–${compactNumber(shredMax)} panels / h`,thermal:`~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))} panels / h (~${compactNumber(n("methods.thermal.seconds_per_panel"))} s per panel)`,circulator:`~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))} panels / h`},
+    {label:"Staff",shredding:`${compactNumber(n("methods.shredding.staff_per_shift"))} / shift`,thermal:t("methods.thermal.staff_display"),circulator:`${compactNumber(n("methods.circulator.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.circulator.indirect_staff_per_shift"))} indirect`},
+    {label:"Product recovery",shredding:`~${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator:`SGS-measured ${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
+    {label:"By-products",shredding:"Mixed fragments need further treatment",thermal:"Cell laminate (EVA, backsheet, cells) needs further treatment",circulator:"No off-gas or wastewater"},
+  ];
+}
 
 const usd = (value: number, digits = 0) => value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits });
 function economicsSolutions(data: OurSolutionView) { return {
@@ -428,16 +445,18 @@ function economicsSolutions(data: OurSolutionView) { return {
   circulator: data.solutions.find((solution) => solution.code === "PVCIRCULATOR")!,
 }; }
 
-const materialRows: MethodRow[] = [
-  { label: "Glass", shredding: "Mixed glass cullet", thermal: "Separated from the encapsulant", circulator: "Graded by particle size and purity" },
-  { label: "Silver", shredding: "Stays mixed in the fragments", thermal: "Stays in the cell laminate", circulator: "Ends in the silicon (cell) powder" },
-  { label: "EVA / backsheet", shredding: "Mixed into fragments", thermal: "Stay attached to the cell laminate", circulator: "Separated and recovered" },
-  { label: "By-products", shredding: "Mixed fragments need further treatment", thermal: "Cell laminate needs further treatment", circulator: "No off-gas or wastewater" },
-  { label: "Secondary treatment", shredding: "~54 t / MW", thermal: "—", circulator: "~0.5 t / MW" },
-];
+function materialRows(data:OurSolutionView):MethodRow[]{return [
+  {label:"Glass",shredding:"Mixed glass cullet",thermal:"Separated from the encapsulant",circulator:"Graded by particle size and purity"},
+  {label:"Silver",shredding:"Stays mixed in the fragments",thermal:"Stays in the cell laminate",circulator:"Ends in the silicon (cell) powder"},
+  {label:"EVA / backsheet",shredding:"Mixed into fragments",thermal:"Stay attached to the cell laminate",circulator:"Separated and recovered"},
+  {label:"By-products",shredding:"Mixed fragments need further treatment",thermal:"Cell laminate needs further treatment",circulator:"No off-gas or wastewater"},
+  {label:"Secondary treatment",shredding:`~${compactNumber(webNum(data,"methods.shredding.secondary_treatment_t_per_mw"))} t / MW`,thermal:webText(data,"methods.thermal.secondary_treatment_display"),circulator:`~${compactNumber(webNum(data,"methods.circulator.secondary_treatment_t_per_mw"))} t / MW`},
+];}
 
-function FootprintMethodVisual() {
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only ~30–40 m²—about 92–94% less footprint than shredding and about 75–81% less than thermal processing. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label="Equipment footprint comparison: shredding 480 square metres, thermal processing 160, PV Circulator 30 to 40"><div><span>Shredding</span><i style={{ width: "100%" }} /><strong>~480 m²</strong></div><div><span>Thermal processing</span><i style={{ width: "33.3%" }} /><strong>160 m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: "8.3%" }} /><strong>~30–40 m²</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows} /><p className="os-chart-source">{methodSources}</p></div>;
+function FootprintMethodVisual({data}:{data:OurSolutionView}) {
+  const shredding=webNum(data,"methods.shredding.footprint_m2"),thermal=webNum(data,"methods.thermal.footprint_m2"),pvMin=webNum(data,"methods.circulator.footprint_min_m2"),pvMax=webNum(data,"methods.circulator.footprint_max_m2");
+  const reduction=(base:number,value:number)=>Math.round((1-value/base)*100),pvLabel=`~${compactNumber(pvMin)}–${compactNumber(pvMax)} m²`;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only {pvLabel}—about {reduction(shredding,pvMax)}–{reduction(shredding,pvMin)}% less footprint than shredding and about {reduction(thermal,pvMax)}–{reduction(thermal,pvMin)}% less than thermal processing. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pvMin} to ${pvMax}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pvMax/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 
 function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSolutionView }) {
@@ -456,11 +475,12 @@ function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSoluti
     { label: "Thermal processing", total: usd(hotKnife.opexPerPanel.total, 2), width: `${hotKnife.opexPerPanel.total / peak * 100}%`, values: [hotKnife.opexPerPanel.electricity, hotKnife.opexPerPanel.laborAndBurden, hotKnife.opexPerPanel.facility, hotKnife.opexPerPanel.other], className: "" },
     { label: "PV Circulator", total: usd(circulator.opexPerPanel.total, 2), width: `${circulator.opexPerPanel.total / peak * 100}%`, values: [circulator.opexPerPanel.electricity, circulator.opexPerPanel.laborAndBurden, circulator.opexPerPanel.facility, circulator.opexPerPanel.other], className: "is-circulator" },
   ];
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Operating cost per processed panel (USD), using the California business-case scenario at 5,000 panels per month.</p><small>Annual OPEX divided by 60,000 panels. CAPEX and equipment depreciation are excluded; maintenance is included.</small></div><div className="os-cost-bars" role="img" aria-label={`Operating cost per panel in US dollars: Shredding ${operatingBars[0].total}, Thermal processing ${operatingBars[1].total}, PV Circulator ${operatingBars[2].total}`}>{operatingBars.map((bar) => <div className={bar.className} key={bar.label}><span>{bar.label}</span><div className="os-cost-track"><div className="os-cost-stack" style={{ width: bar.width }}>{bar.values.map((value, index) => <i className={`is-part-${index + 1}`} style={{ flexGrow: value }} key={index} />)}</div></div><strong>{bar.total}</strong></div>)}</div><div className="os-cost-legend" aria-label="Operating cost categories">{["Electricity", "Labor + burden", "Facility / rent", "Other OPEX"].map((item, index) => <span key={item}><i className={`is-part-${index + 1}`} />{item}</span>)}</div></div><MethodTable caption="Operating cost breakdown in US dollars per panel" rows={operatingCostRows} columns={THREE_METHODS} /></div>;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Operating cost per processed panel (USD), using the {economicsData.scenario.region} business-case scenario at {economicsData.scenario.panelsPerMonth.toLocaleString()} panels per month.</p><small>Annual OPEX divided by {economicsData.scenario.annualPanels.toLocaleString()} panels. CAPEX and equipment depreciation are excluded; maintenance is included.</small></div><div className="os-cost-bars" role="img" aria-label={`Operating cost per panel in US dollars: Shredding ${operatingBars[0].total}, Thermal processing ${operatingBars[1].total}, PV Circulator ${operatingBars[2].total}`}>{operatingBars.map((bar) => <div className={bar.className} key={bar.label}><span>{bar.label}</span><div className="os-cost-track"><div className="os-cost-stack" style={{ width: bar.width }}>{bar.values.map((value, index) => <i className={`is-part-${index + 1}`} style={{ flexGrow: value }} key={index} />)}</div></div><strong>{bar.total}</strong></div>)}</div><div className="os-cost-legend" aria-label="Operating cost categories">{["Electricity", "Labor + burden", "Facility / rent", "Other OPEX"].map((item, index) => <span key={item}><i className={`is-part-${index + 1}`} />{item}</span>)}</div></div><MethodTable caption="Operating cost breakdown in US dollars per panel" rows={operatingCostRows} columns={THREE_METHODS} /></div>;
 }
 
-function MaterialMethodVisual() {
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Material requiring secondary treatment per MW. Shorter bars mean less material needs added processing or disposal.</p></div><div className="os-method-bars is-secondary" role="img" aria-label="Material requiring secondary treatment per megawatt: shredding 54 tonnes, PV Circulator about 0.5 tonnes"><div><span>Shredding</span><i style={{ width: "100%" }} /><strong>~54 t</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: "1%" }} /><strong>~0.5 t</strong></div></div></div><MethodTable caption="Recovered materials comparison by technology" rows={materialRows} /><p className="os-chart-source">{methodSources}</p></div>;
+function MaterialMethodVisual({data}:{data:OurSolutionView}) {
+  const shredding=webNum(data,"methods.shredding.secondary_treatment_t_per_mw"),circulator=webNum(data,"methods.circulator.secondary_treatment_t_per_mw");
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Material requiring secondary treatment per MW. Shorter bars mean less material needs added processing or disposal.</p></div><div className="os-method-bars is-secondary" role="img" aria-label={`Material requiring secondary treatment per megawatt: shredding ${shredding} tonnes, PV Circulator about ${circulator} tonnes`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} t</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${circulator/shredding*100}%`}} /><strong>~{compactNumber(circulator)} t</strong></div></div></div><MethodTable caption="Recovered materials comparison by technology" rows={materialRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 
 function SilverValueVisual({economicsData}:{economicsData:OurSolutionView}) {
@@ -538,8 +558,8 @@ function RetirementLineChart({ lifetime, onLifetimeChange, wave: retirementWave,
 
 function RetirementContext({ lifetime, wave: retirementWave, assumptions = defaultWaveAssumptions }: { assumptions?:WaveAssumptions; lifetime: 25 | 18 | 15 | 12; wave: RetirementWave }) {
   const sources = {
-    25: <>IRENA 2026 (25-year lifetime).</>,
-    18: <>Intermediate modeled case between the 12- and 25-year scenarios (default).</>,
+    25: <>IRENA 2026 (25-year lifetime){assumptions.defaultLifetime===25?" (default)":""}.</>,
+    18: <>Intermediate modeled case between the 12- and 25-year scenarios{assumptions.defaultLifetime===18?" (default)":""}.</>,
     15: <><a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović, Joule 2019</a> (initial life under 15 years).</>,
     12: <><a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124, p. 8 (PDF p. 19)</a> (industry observations of possible 10–12-year commercial and utility-scale repowering).</>,
   };
@@ -551,7 +571,7 @@ function RetirementContext({ lifetime, wave: retirementWave, assumptions = defau
   </div>;
 }
 
-function RegulationSection({ metrics, assumptions }: { metrics: RouteEnvironmentalMetric[]; assumptions:WaveAssumptions }) {
+function RegulationSection({ metrics, assumptions, data }: { metrics: RouteEnvironmentalMetric[]; assumptions:WaveAssumptions;data:OurSolutionView }) {
   const ordered = ["SHREDDING", "HOT_KNIFE", "PVCIRCULATOR"].map(code => metrics.find(item => item.code === code));
   const values = (key: "landfillTPerMw" | "co2eTPerMw") => ordered.map(item => item ? item[key].toFixed(2) : "Unavailable");
   const rows = [["Landfilled residue, t per MW", ...values("landfillTPerMw")], ["Process CO2e, t per MW", ...values("co2eTPerMw")]].map(([label, shredding, thermal, circulator]) => ({ label, shredding, thermal, circulator }));
@@ -565,7 +585,7 @@ function RegulationSection({ metrics, assumptions }: { metrics: RouteEnvironment
     <h2 id="regulation-title">Less to landfill. Less carbon in the process.</h2>
     <p>Per MW of retired panels ({assumptions.panelRating} W modules at {assumptions.panelWeightLb} lb each, about {assumptions.tonnesPerMw.toFixed(1)} t), gate-to-gate: from panels arriving at the plant to separated materials leaving it. Process CO2e covers process electricity only.</p>
     <MethodTable caption="Environmental metrics per MW of retired panels" columns={THREE_METHODS} rows={rows} />
-    <p className="os-chart-source">Landfill = unrecovered material from the Our Solution parameter engine; CO2e = process electricity (kWh per panel, Our Solution parameters) × US grid average 0.3497 kg CO2e/kWh (<a href="https://www.epa.gov/egrid/summary-data">EPA eGRID2023</a>). Transport, downstream refining and avoided emissions are excluded. Thermal-processing routes leave an encapsulant–cell layer that still needs further treatment before its metals are recovered.</p>
+    <p className="os-chart-source">Landfill = unrecovered material from the Our Solution parameter engine; CO2e = process electricity (kWh per panel, Our Solution parameters) × US grid average {compactNumber(webNum(data,"impact.grid_kg_co2e_per_kwh"))} kg CO2e/kWh (<a href="https://www.epa.gov/egrid/summary-data">EPA eGRID2023</a>). Transport, downstream refining and avoided emissions are excluded. Thermal-processing routes leave an encapsulant–cell layer that still needs further treatment before its metals are recovered.</p>
   </div><div className="os-regulation-rules">{rules.map(([title, copy, href, source]) => <article key={title}><h3>{title}</h3><p>{copy}</p><a href={href}>{source} <Arrow /></a></article>)}</div></section>;
 }
 
@@ -672,17 +692,20 @@ const materialPathways = [
   { material: "EVA + backsheet", routes: [{ destination: "Recycled plastics", detail: "The goal is zero waste: turn every separated output into feedstock." }] },
 ] as const;
 
-function MaterialsSection() {
+function MaterialsSection({data}:{data:OurSolutionView}) {
+  const silver=webNum(data,"materials.silver_demand_recovered_percent"),other=webNum(data,"materials.other_demand_recovered_percent"),start=webNum(data,"materials.demand_horizon_start_year"),end=webNum(data,"materials.demand_horizon_end_year"),aluminiumCarbon=webNum(data,"materials.recycled_aluminium_primary_carbon_percent");
+  const glassShare=data.productMaterials.find(material=>material.name==="Glass")!.share*100;
+  const pathways=materialPathways.map(pathway=>pathway.material==="Aluminum frame"?{...pathway,routes:[{...pathway.routes[0],detail:`Around ${compactNumber(aluminiumCarbon)}% of the carbon emissions of primary aluminum.`}]}:pathway.material==="Glass"?{...pathway,routes:[{...pathway.routes[0],detail:`About ${compactNumber(glassShare)}% of panel weight, prepared for pozzolan applications.`}]}:pathway);
   return <section id="materials" className="pv-screen os-materials-section" aria-labelledby="materials-title">
     <div className="os-materials-overview">
       <h2 id="materials-title">Recycling ends where feedstock begins.</h2>
       <div className="os-materials-overview-grid">
-        <div className="os-materials-demand"><strong><small>Nearly</small><span>70%</span></strong><h3>of solar-industry silver demand could be supplied by recovered material.</h3><p>Aluminum, copper, glass and silicon could each exceed 20% by 2040–2050 in the IEA assessment—if the recovered materials are clean enough to return as feedstock.</p></div>
-        <div className="os-material-pathways" aria-label="Recovered materials and their upstream applications">{materialPathways.map(({ material, routes }) => <div className={`os-material-pathway${routes.length > 1 ? " is-grouped" : ""}`} key={material}><strong>{material}</strong>{routes.map(({ destination, detail }) => <div className="os-material-route" key={destination}><b>{destination}</b><span>{detail}</span></div>)}</div>)}</div>
+        <div className="os-materials-demand"><strong><small>Nearly</small><span>{compactNumber(silver)}%</span></strong><h3>of solar-industry silver demand could be supplied by recovered material.</h3><p>Aluminum, copper, glass and silicon could each exceed {compactNumber(other)}% by {compactNumber(start)}–{compactNumber(end)} in the IEA assessment—if the recovered materials are clean enough to return as feedstock.</p></div>
+        <div className="os-material-pathways" aria-label="Recovered materials and their upstream applications">{pathways.map(({ material, routes }) => <div className={`os-material-pathway${routes.length > 1 ? " is-grouped" : ""}`} key={material}><strong>{material}</strong>{routes.map(({ destination, detail }) => <div className="os-material-route" key={destination}><b>{destination}</b><span>{detail}</span></div>)}</div>)}</div>
       </div>
     </div>
     <aside className="os-materials-scroll" tabIndex={0} aria-label="Recovered material streams. Scroll for all six materials.">
-      <div className="os-materials-scroll-intro"><h3>Six outputs.<br />Six routes back into industry.</h3><p>PV Circulator separates the module layer by layer at room temperature, preserving distinct streams for downstream recovery and qualification.</p></div>
+      <div className="os-materials-scroll-intro"><h3>{materialOutputs.length} outputs.<br />{materialOutputs.length} routes back into industry.</h3><p>PV Circulator separates the module layer by layer at room temperature, preserving distinct streams for downstream recovery and qualification.</p></div>
       {materialOutputs.map(([label, image, imageAlt, route, note]) => <article key={label}><figure><img src={image} alt={imageAlt} loading="lazy" /></figure><div><span>{route}</span><h3>{label}</h3><p>{note}</p></div></article>)}
     </aside>
   </section>;
@@ -714,21 +737,23 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
   const lightNavigation = ["wave", "stakes", "conventional", "regulation", "materials", "value", "economic", "system", "evidence", "scale", "pathways"].includes(active);
   const selectedStake = stakeSolutions[stake];
   const selectedAudience = audienceTopics[audience];
+  const selectedGoal=stake==="cost"?`Recycling at the price of landfill in ${compactNumber(webNum(economicsData,"stakes.cost_goal_years_min"))}–${compactNumber(webNum(economicsData,"stakes.cost_goal_years_max"))} years`:stake==="circularity"?`${compactNumber(webNum(economicsData,"stakes.circularity_goal_percent"))}% reusable.`:selectedStake.goal;
+  const cards=systemCardContent(economicsData);
 
   const waveSlides: DeckSlide[] = [
     { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from {capacityFirst.totalLabel} to {capacityLast.totalLabel} by {capacityLast.year}.</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Today’s installations define tomorrow’s retirement geography.", note: <p>Every annual column represents the infrastructure already being built toward a much larger retirement market. The market mix shows where future collection and processing capacity will be needed.</p> },
-    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-wave-global-slide"><h2>The global retirement wave compounds through 2050.</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} /></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} /> },
+    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-wave-global-slide"><h2>The global retirement wave compounds through 2050.</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} assumptions={waveAssumptions} /></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} assumptions={waveAssumptions} /> },
     { label: "Per-capita processing pressure", navigationLabel: "Per-capita pressure", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>Per-capita processing pressure rises unevenly through 2050.</h2><PressureTrendChart data={pressureData} /></div>, noteTitle: "Processing pressure grows at a different pace in every market.", note: <p>Our projection shows {pressureSeries[pressureData[pressureData.length-1].values.indexOf(Math.max(...pressureData[pressureData.length-1].values))].label} reaching {Math.max(...pressureData[pressureData.length-1].values).toFixed(2)} kg per person by 2050, the highest of the modeled markets. The long view strengthens the case for regional and deployable capacity rather than planning from a single global endpoint. Population source: UN World Population Prospects 2022, Medium variant.</p> },
   ];
 
   const conventionalSlides: DeckSlide[] = [
-    { label: "Space and technology", navigationLabel: "Footprint", visual: <FootprintMethodVisual />, noteTitle: "A small footprint changes where recycling can happen.", note: <p>PV Circulator is modular and deployable, so capacity can be installed on-site or near-site as volumes shift. The idea is simple: move the machine, not the panels.</p> },
+    { label: "Space and technology", navigationLabel: "Footprint", visual: <FootprintMethodVisual data={economicsData} />, noteTitle: "A small footprint changes where recycling can happen.", note: <p>PV Circulator is modular and deployable, so capacity can be installed on-site or near-site as volumes shift. The idea is simple: move the machine, not the panels.</p> },
     { label: "Operating cost", navigationLabel: "OPEX", visual: <OperatingCostMethodVisual economicsData={economicsData} />, noteTitle: "PV Circulator changes the operating-cost structure.", note: <p>Automation comes first. Integrated handling, measurement and layer separation reduce repetitive labor and support consistent output. In our California operating scenario, lower labor, electricity and floor-space requirements reduce the modeled cost per panel; equipment depreciation and logistics remain outside the comparison.</p> },
-    { label: "Secondary treatment and materials", navigationLabel: "Secondary treatment", visual: <MaterialMethodVisual />, noteTitle: "The real difference is what still needs treatment.", note: <p>PV Circulator starts from first principles: panels are built in layers, so reverse the manufacturing process and separate them layer by layer. This preserves glass, silicon (cell) powder and polymers as distinct outputs and leaves less material requiring secondary treatment.</p> },
+    { label: "Secondary treatment and materials", navigationLabel: "Secondary treatment", visual: <MaterialMethodVisual data={economicsData} />, noteTitle: "The real difference is what still needs treatment.", note: <p>PV Circulator starts from first principles: panels are built in layers, so reverse the manufacturing process and separate them layer by layer. This preserves glass, silicon (cell) powder and polymers as distinct outputs and leaves less material requiring secondary treatment.</p> },
   ];
 
   const scaleSlides: DeckSlide[] = [
-    { label: "Commercial footprint", visual: <div className="os-data-slide os-scale-map-slide"><h2>PV Circulator global commercialization</h2><GlobalDeploymentMap /></div>, noteTitle: "", note: <div className="os-scale-market-list"><article><strong>USA | Deployed</strong><span>Permitted by California DTSC</span><p>Permitted by the California Department of Toxic Substances Control (DTSC) to receive, process and recycle end-of-life PV panels; R2v3 and ISO 9001/14001/45001 management systems.</p></article><article><strong>Australia | Launch in 2027</strong><p>An integrated solution combining PV Circulator and Material Upcycling technologies with downstream utilization pathways.</p></article><article><strong>Japan | Market development in progress</strong><p>Working with a Japanese trading company to promote PV Circulator in Japan.</p></article><article><strong>Europe | Partnership in progress</strong><p>Working with local partners to integrate PV Circulator into existing processes.</p></article><article><strong>Taiwan | Launch end of 2027</strong><p>Planned for the Miaoli hydrogen zone, the alkaline route converts recovered silicon into hydrogen for fuel-cell power.</p></article></div> },
+    { label: "Commercial footprint", visual: <div className="os-data-slide os-scale-map-slide"><h2>PV Circulator global commercialization</h2><GlobalDeploymentMap /></div>, noteTitle: "", note: <div className="os-scale-market-list"><article><strong>USA | Deployed</strong><span>Permitted by California DTSC</span><p>Permitted by the California Department of Toxic Substances Control (DTSC) to receive, process and recycle end-of-life PV panels; R2v3 and ISO 9001/14001/45001 management systems.</p></article><article><strong>Australia | Launch in {compactNumber(webNum(economicsData,"scale.australia_launch_year"))}</strong><p>An integrated solution combining PV Circulator and Material Upcycling technologies with downstream utilization pathways.</p></article><article><strong>Japan | Market development in progress</strong><p>Working with a Japanese trading company to promote PV Circulator in Japan.</p></article><article><strong>Europe | Partnership in progress</strong><p>Working with local partners to integrate PV Circulator into existing processes.</p></article><article><strong>Taiwan | Launch end of {compactNumber(webNum(economicsData,"scale.taiwan_launch_year"))}</strong><p>Planned for the Miaoli hydrogen zone, the alkaline route converts recovered silicon into hydrogen for fuel-cell power.</p></article></div> },
   ];
 
   return <div className={`pv-review os-page${lightNavigation ? " pv-light-nav" : ""}`}>
@@ -737,12 +762,12 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
     <main>
       <section id="overview" className="pv-screen pv-hero os-hero" aria-labelledby="os-title"><video autoPlay muted loop playsInline poster="/images/pvcirculator-oursolution-poster.jpg"><source src="/videos/pvcirculator-oursolution.mp4" type="video/mp4" /></video><div className="pv-hero-shade" /><div className="pv-hero-copy"><h1 id="os-title">Owners pay less.<br />Recyclers earn more.<br />Materials stay in circulation.</h1><p className="os-legacy-line">The next solar industry challenge begins when generation ends.</p><p className="os-hero-context">For owners, recyclers and investors, decommissioning brings cost, compliance, reputation and material value into the same decision.</p></div><a className="pv-down" href="#wave" aria-label="Continue to the coming decommissioning wave"><Arrow /></a></section>
       <section id="wave" className="pv-screen os-deck-section" aria-label="The coming decommissioning wave"><StoryDeck id="wave-deck" title="The coming decommissioning wave" slides={waveSlides} variant="split" autoAdvanceMs={30000} /></section>
-      <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div><div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><p className="os-stake-goal"><strong>Our goal</strong><span>{selectedStake.goal}</span></p><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
-      <section id="system" className="pv-screen os-system" aria-labelledby="system-title"><div className="os-system-stage"><div className="os-system-heading"><h2 id="system-title">Our solution</h2><p>One circular system answers the four shared needs: lower cost, provable compliance, material circularity and defensible reputation.</p></div><div className="os-system-flow" role="list" aria-label="The PV Circonomy circular value system">{(Object.keys(systemTopics) as SystemTopic[]).map((topic) => <article key={topic} role="listitem"><figure><img src={systemVisuals[topic].src} alt={systemVisuals[topic].alt} /></figure><div className="os-system-card-copy"><div><strong>{systemTopics[topic][0]}</strong><span> | {systemCardContent[topic].tagline}</span></div><ul>{systemCardContent[topic].bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul></div></article>)}</div></div></section>
+      <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div><div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><p className="os-stake-goal"><strong>Our goal</strong><span>{selectedGoal}</span></p><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
+      <section id="system" className="pv-screen os-system" aria-labelledby="system-title"><div className="os-system-stage"><div className="os-system-heading"><h2 id="system-title">Our solution</h2><p>One circular system answers the four shared needs: lower cost, provable compliance, material circularity and defensible reputation.</p></div><div className="os-system-flow" role="list" aria-label="The PV Circonomy circular value system">{(Object.keys(systemTopics) as SystemTopic[]).map((topic) => <article key={topic} role="listitem"><figure><img src={systemVisuals[topic].src} alt={systemVisuals[topic].alt} /></figure><div className="os-system-card-copy"><div><strong>{systemTopics[topic][0]}</strong><span> | {cards[topic].tagline}</span></div><ul>{cards[topic].bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul></div></article>)}</div></div></section>
       <ProcessPlaylist active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" />
       <section id="conventional" className="pv-screen os-deck-section" aria-label="Why conventional recycling destroys value"><StoryDeck id="conventional-deck" title="Why conventional recycling destroys value" slides={conventionalSlides} variant="split" autoAdvanceMs={10000} /></section>
-      <RegulationSection metrics={routeMetrics} assumptions={waveAssumptions} />
-      <MaterialsSection />
+      <RegulationSection metrics={routeMetrics} assumptions={waveAssumptions} data={economicsData} />
+      <MaterialsSection data={economicsData} />
       <ValueSection economicsData={economicsData} />
       <EconomicSection economicsData={economicsData} breakeven={breakeven} priceSources={priceSources} />
       <section id="evidence" className="pv-screen os-evidence-section os-passport-section" aria-labelledby="evidence-title"><div className="os-evidence-list os-passport-main"><div><h2 id="evidence-title">Every panel gets a record:<br /><span>origin, process, destination.</span></h2><p className="os-passport-intro">Lower recycling cost and higher material value are only the beginning. A verifiable record makes the act of recycling valuable in its own right.</p></div><div className="os-passport-flow" role="list" aria-label="The three parts of a panel recycling record"><article role="listitem"><strong>Origin</strong><p>Site, owner, quantity and module identity.</p></article><article role="listitem"><strong>Process</strong><p>Treatment path, energy use and recovery results.</p></article><article role="listitem"><strong>Destination</strong><p>The receiver and next use of every material stream.</p></article></div><div className="os-passport-value"><p><strong>Owners</strong> receive audit-ready data for ESG, EPR and digital product passports.</p><p><strong>Material buyers</strong> receive traceable origin, composition and intended-use data.</p></div></div><aside className="os-speaker-notes"><div><h3>From physical action to verifiable record.</h3><div className="os-note-copy"><p>EasyCycle creates the record at the machine, distributes it across the network and makes it efficient to verify at scale.</p></div><div className="os-passport-tech"><div><strong>Generate at the machine</strong><p>Sensors and edge computing automatically create the process record as the machine operates—reducing reliance on manual entry.</p></div><div><strong>Lock data integrity</strong><p>Cryptographic hashes, trusted timestamps and IPFS create a tamper-evident sequence of records.</p></div><div><strong>Scale storage with every machine</strong><p>Each PV Circulator acts as a decentralized edge node and contributes storage capacity as the network grows.</p></div><div><strong>Verify efficiently at scale</strong><p>Distributed capacity expands with each node; Merkle Tree batch proofs lower the incremental cost of verifying each record.</p></div><div><strong>Disclose selectively</strong><p>Ontology and role-based access connect the record while protecting raw data and commercial information.</p></div></div></div><Link className="pv-text-button" href="/easycycle/">Explore EasyCycle <Arrow /></Link></aside></section>

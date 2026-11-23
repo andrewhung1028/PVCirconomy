@@ -10,7 +10,7 @@ const assert=require('node:assert/strict'),{PGlite}=require('@electric-sql/pglit
  query.transaction=qs=>db.transaction(async tx=>{const out=[];for(const q of qs)out.push(await q.execute(tx));return out;});
  require('../server/db/client.ts').database=()=>query;
  try{
-  const store=require('../server/our-solution/store.ts'),seed=require('../data/our-solution-parameters.json');
+  const store=require('../server/our-solution/store.ts'),{seededOurSolutionData:seed}=require('../lib/our-solution-data.ts');
   const initial=await store.activeOurSolutionData();assert.deepEqual(initial.data,seed);
   // Simulate current production's legacy result-format row without altering its version ID.
   await db.query('UPDATE pv_our_solution_versions SET data=$1::jsonb WHERE id=$2',[JSON.stringify({solutions:[],scenario:{legacy:true}}),initial.version]);

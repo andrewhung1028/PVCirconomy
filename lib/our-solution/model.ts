@@ -1,5 +1,5 @@
 import { labels, markets, parameter as n, solutionCodes, type Parameters } from './parameters';
-import { GRID_KG_CO2E_PER_KWH } from '../route-comparison/config';
+import { websiteNumber } from './public-data';
 import { retirementSeries, computeRetirementWave } from '../us-retirement-wave';
 export type EffectivePrice = { price: number; unit: string; source: string; asOf: string; workbookValue?:boolean };
 export type EffectivePrices = Record<string, EffectivePrice>;
@@ -14,6 +14,7 @@ export function capacityHistory(p: Parameters) {
   return cap;
 }
 export function model(p: Parameters, effective: EffectivePrices = {}) {
+  const gridKgCo2ePerKwh=websiteNumber(p.publicData,'impact.grid_kg_co2e_per_kwh');
   const sc=p.scenario, annualPanels=sc.panels_per_month*12, inputT=annualPanels*sc.panel_weight_lb*n(p,3,'Kilograms per pound')/1000;
   const operatingDays=sc.working_weeks_per_year*sc.working_days_per_week/12;
   const panelsPerMw=1e6/n(p,10,'Panel rating'), kgPerMw=sc.panel_weight_lb*n(p,3,'Kilograms per pound')*panelsPerMw;
@@ -38,7 +39,7 @@ export function model(p: Parameters, effective: EffectivePrices = {}) {
     const perPanel={materialRevenue:materialRevenue/annualPanels,opex:opexTotal/annualPanels,ebitda:ebitda/annualPanels,residualT:residualT/annualPanels,processingRevenue:n(p,11,'Recovery fee')*sc.panel_weight_lb};
     const perMw=Object.fromEntries(Object.entries(perPanel).map(([k,v])=>[k,v*panelsPerMw]));
     return [code,{perPanel,perMw,code,label:labels[i],shifts,lines,storageM2,equipmentM2,opex,opexTotal,revenue,materialRevenue,ebitda,capex:s('Capex per line')*lines,recoveredT,residualT,recoveryRate:recoveredT/inputT,materials:rows,
-      feeSens:p.assumptions[11]['Processing fee steps (USD/lb)'].map(f=>ebitda+(f as number)*annualPanels*sc.panel_weight_lb),silverSens:p.assumptions[11]['Silver price change steps'].map(c=>ebitda+(c as number)*revenue.silver),breakevenFeePerLb:Math.max(0,-ebitda/(annualPanels*sc.panel_weight_lb)),perPanelOpex:opexTotal/annualPanels,residualTPerMw:residualT/annualPanels*panelsPerMw,kwh:s('Electricity'),co2eTPerMw:s('Electricity')*panelsPerMw*GRID_KG_CO2E_PER_KWH/1000,silverUpperPct:material('Silver').share/(flagged+material('Silver').share)*100}];
+      feeSens:p.assumptions[11]['Processing fee steps (USD/lb)'].map(f=>ebitda+(f as number)*annualPanels*sc.panel_weight_lb),silverSens:p.assumptions[11]['Silver price change steps'].map(c=>ebitda+(c as number)*revenue.silver),breakevenFeePerLb:Math.max(0,-ebitda/(annualPanels*sc.panel_weight_lb)),perPanelOpex:opexTotal/annualPanels,residualTPerMw:residualT/annualPanels*panelsPerMw,kwh:s('Electricity'),co2eTPerMw:s('Electricity')*panelsPerMw*gridKgCo2ePerKwh/1000,silverUpperPct:material('Silver').share/(flagged+material('Silver').share)*100}];
   })) as unknown as Record<typeof solutionCodes[number], {code:typeof solutionCodes[number];label:string;perPanel:{materialRevenue:number;opex:number;ebitda:number;residualT:number;processingRevenue:number};perMw:Record<string,number>;shifts:number;lines:number;storageM2:number;equipmentM2:number;opex:Record<string,number>;opexTotal:number;revenue:{silver:number;alcu:number;other:number};materialRevenue:number;ebitda:number;capex:number;recoveredT:number;residualT:number;recoveryRate:number;materials: {name:string;share:number;price:number;unit:string;source:string;inputT:number;recoveredT:number;residualT:number;revenue:number}[];feeSens:number[];silverSens:number[];breakevenFeePerLb:number;perPanelOpex:number;residualTPerMw:number;kwh:number;co2eTPerMw:number;silverUpperPct:number}>;
   const ag=inputT*material('Silver').share*n(p,6,'Silver',6),si=inputT*material('Silicon').share*n(p,6,'Silicon',6),agp=pricePerTonne(material('Silver').price,material('Silver').unit,p),sip=pricePerTonne(material('Silicon').price,material('Silicon').unit,p);
   const cp=(l:string)=>n(p,9,l),MAg=cp('Molar mass Ag'),MCu=cp('Molar mass Cu'),MAl=cp('Molar mass Al');

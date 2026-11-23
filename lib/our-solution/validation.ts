@@ -1,5 +1,6 @@
 import schema from '../../data/our-solution-parameter-schema.json';
 import { eu27Countries, markets, parameter as n, type Parameters } from './parameters';
+import { websiteDataDefaults } from './public-data';
 export function validateParameters(value: unknown):string[] {
   const errors:string[]=[];
   const fail=(s:string)=>errors.push(s);
@@ -39,6 +40,13 @@ export function validateParameters(value: unknown):string[] {
       if(p.capacityHistory.World[y]+1e-9<markets.slice(1).reduce((s,m)=>s+p.capacityHistory[m][y],0))fail(`Capacity History ${y} World 不得小於六個市場總和。`);
     }
     for(const m of markets)if(p.capacityHistory[m][2024]<=0)fail(`Capacity History ${m} 2024 必須大於零以計算成長率。`);
+    const publicKeys=Object.keys(websiteDataDefaults),actualPublicKeys=Object.keys(p.publicData??{});
+    if(actualPublicKeys.length!==publicKeys.length||publicKeys.some(k=>!p.publicData?.[k])||actualPublicKeys.some(k=>!websiteDataDefaults[k]))fail('Website Data 欄位不完整或包含未知欄位。');
+    for(const key of publicKeys){const expected=websiteDataDefaults[key],row=p.publicData?.[key];if(!row)continue;
+      if(row.section!==expected.section||row.label!==expected.label||row.unit!==expected.unit)fail(`Website Data ${key} 的 Section、Label 或 Unit 不可變更。`);
+      if(typeof expected.value==='number'?(typeof row.value!=='number'||!Number.isFinite(row.value)||row.value<0):(typeof row.value!=='string'||!row.value.trim()))fail(`Website Data ${key} 的 Value 類型或數值無效。`);
+      if(typeof row.source!=='string'||!row.source.trim())fail(`Website Data ${key} 必須有 Source。`);
+    }
     if(Object.keys(p.population.eu27).length!==27||eu27Countries.some(c=>!p.population.eu27[c]))fail('EU-27 Population 必須有 27 個國家。');
     for(let y=2020;y<=2050;y++){
       for(const [m,values] of [...markets.map(m=>[m,p.population[m]] as const),...Object.entries(p.population.eu27)])if(typeof values?.[y]!=='number'||!Number.isFinite(values[y])||values[y]<=0)fail(`Population ${m} ${y} 必須是正有限數字。`);

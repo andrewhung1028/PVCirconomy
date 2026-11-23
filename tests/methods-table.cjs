@@ -1,23 +1,24 @@
 // /solutions Methods/Materials tables: existing verified figures stay as-is (AGENTS.md content rules, Andrew t526u).
 const assert=require('node:assert/strict'),fs=require('node:fs');
+require('./helpers/typescript.cjs');
 const src=fs.readFileSync('app/components/our-solution.tsx','utf8');
+const {websiteDataDefaults:data}=require('../lib/our-solution/public-data.ts');
 {const m=src.match(/.{0,80}(To be confirmed|No operating data).{0,40}/i);assert.equal(m,null,'placeholder: '+(m&&m[0]));}
 assert.doesNotMatch(src,/pyroly|熱裂解|burn-off|burned off/i);
 assert.doesNotMatch(src,/label: "Process"/,'Methods comparison tables should not include a Process row');
-const row=label=>{const m=src.match(new RegExp(`\\{ label: "${label}", shredding: "([^"]*)", thermal: "([^"]*)", circulator: "([^"]*)" \\}`));assert.ok(m,label);return m.slice(1);};
-assert.deepEqual(row('Footprint'),['~480 m²','160 m²','~30–40 m²']);
-assert.deepEqual(row('Energy'),['~5 kWh / panel','—','<1 kWh / panel']);
-assert.deepEqual(row('Throughput'),['~50–60 panels / h','~40 panels / h (~90 s per panel)','~60 panels / h']);
-assert.deepEqual(row('Staff'),['5 / shift','—','1 direct + 2 indirect']);
-assert.deepEqual(row('Secondary treatment'),['~54 t / MW','—','~0.5 t / MW']);
-assert.match(src,/92–94% less footprint than shredding/);
+assert.equal(data['methods.shredding.footprint_m2'].value,480);
+assert.equal(data['methods.thermal.footprint_m2'].value,160);
+assert.equal(data['methods.circulator.footprint_min_m2'].value,30);
+assert.equal(data['methods.circulator.footprint_max_m2'].value,40);
+assert.equal(data['methods.shredding.secondary_treatment_t_per_mw'].value,54);
+assert.equal(data['methods.circulator.secondary_treatment_t_per_mw'].value,.5);
+assert.match(src,/function technologyRows\(data:OurSolutionView\)/);
+assert.match(src,/function materialRows\(data:OurSolutionView\)/);
+assert.match(src,/reduction\(shredding,pvMax\)/);
 assert.doesNotMatch(src,/~57 m²|three machines|hot[- ]knife|熱刀/i);
-assert.match(src,/width: "33.3%"/);
-assert.match(src,/thermal processing 160/);
-assert.match(src,/75–81% less than thermal processing/);
-assert.match(src,/~90 s per panel/);
+assert.doesNotMatch(src,/shredding: "~480 m²"|"~54 t \/ MW"/);
 assert.match(fs.readFileSync('AGENTS.md','utf8'),/Existing website content was already verified by Andrew/);
-console.log('Methods table: existing figures kept, Thermal processing 160 m² / ~90 s, no "To be confirmed".');
+console.log('Methods table: values come from published Website Data; no hard-coded comparison figures or Process row.');
 
 // Check server-rendered visible text without browser automation or a database.
 (async()=>{

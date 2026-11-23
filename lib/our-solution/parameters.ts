@@ -3,6 +3,7 @@ export type SolutionCode = typeof solutionCodes[number];
 export const labels = ['Shredding', 'Thermal processing', 'PV Circulator'] as const;
 export const markets = ['World', 'Europe', 'United States', 'Japan', 'Taiwan', 'China', 'Australia'] as const;
 export type Market = typeof markets[number];
+import type { WebsiteData } from './public-data';
 export type Parameters = {
   format: 'parameters-v2';
   scenario: { region_code: string; region: string; panels_per_month: number; panel_weight_lb: number; operating_hours_per_day: number; working_weeks_per_year: number; working_days_per_week: number };
@@ -10,6 +11,7 @@ export type Parameters = {
   assumptions: Record<string, Record<string, (number | string)[]>>;
   capacityHistory: Record<Market, Record<string, number>>;
   population: Record<Market, Record<string, number>> & { eu27: Record<string, Record<string, number>> };
+  publicData: WebsiteData;
   meta: { currency: 'USD'; extractedAt: string; sourceSite: string; note: string };
 };
 export const parameter = (p: Parameters, section: number, label: string, index = 0): number => {

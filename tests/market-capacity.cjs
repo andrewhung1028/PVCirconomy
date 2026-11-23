@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');require('./helpers/typescript.cjs');
 const {capacityHistory,model}=require('../lib/our-solution/model.ts'),{validateParameters}=require('../lib/our-solution/validation.ts'),{capacityTrend}=require('../lib/market-capacity.ts');
-const p=require('../data/our-solution-parameters.json'),ref=require('./fixtures/our-solution-reference.json'),cap=capacityHistory(p),trend=capacityTrend(p);
+const {seededOurSolutionData:p}=require('../lib/our-solution-data.ts'),ref=require('./fixtures/our-solution-reference.json'),cap=capacityHistory(p),trend=capacityTrend(p);
 assert.deepEqual(validateParameters(p),[]);assert.equal(trend.length,26);
 for(const [m,v]of Object.entries(ref.capacity2025))assert.ok(Math.abs(cap[m][2025]-v)<1e-6);
 for(const m of Object.keys(p.capacityHistory))for(let y=2025;y<2050;y++)assert.equal(cap[m][y],cap[m][2024]*(cap[m][2050]/cap[m][2024])**((y-2024)/26));
