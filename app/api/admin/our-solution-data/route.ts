@@ -1,6 +1,6 @@
 import {adminAccess} from "../../../../server/auth/microsoft";
 import { staffSession, trustedOrigin } from "../../../../server/auth/microsoft";
-import { activeOurSolutionData, ourSolutionHistory, ourSolutionMarket, saveOurSolutionData } from "../../../../server/our-solution/store";
+import { activeOurSolutionData, assertOurSolutionMarketRegion, ourSolutionHistory, ourSolutionMarket, saveOurSolutionData } from "../../../../server/our-solution/store";
 import { validateOurSolutionData } from "../../../../lib/our-solution-data";
 
 import { effectiveMetalPrices } from "../../../../server/metal-prices/store";
@@ -31,6 +31,8 @@ export async function POST(request: Request) {const denied=await adminAccess("ou
   const payload = body as { data?: unknown; expectedVersion?: unknown; note?: unknown };
   const checked = validateOurSolutionData(payload.data);
   if (!checked.valid) return reply({ error: "invalid_data", details: checked.errors }, 400);
+  try { assertOurSolutionMarketRegion(market, checked.data.scenario.region_code); }
+  catch (error) { return reply({ error: "region_mismatch", details: [error instanceof Error ? error.message : "Scenario.region_code 與目標市場不符。"] }, 400); }
   if (typeof payload.expectedVersion !== "string" || !/^[a-f\d-]{36}$/i.test(payload.expectedVersion) || (payload.note !== undefined && (typeof payload.note !== "string" || payload.note.length > 500 || payload.note.includes("\0")))) return reply({ error: "invalid_request" }, 400);
   try {
     const saved = await saveOurSolutionData(checked.data, payload.expectedVersion, staff, typeof payload.note === "string" ? payload.note : "",market);

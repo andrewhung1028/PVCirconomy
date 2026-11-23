@@ -1,6 +1,6 @@
 import {adminAccess} from "../../../../../server/auth/microsoft";
 import { staffSession, trustedOrigin } from "../../../../../server/auth/microsoft";
-import { activeOurSolutionData, ourSolutionMarket } from "../../../../../server/our-solution/store";
+import { activeOurSolutionData, assertOurSolutionMarketRegion, ourSolutionMarket } from "../../../../../server/our-solution/store";
 import { diffOurSolutionData } from "../../../../../lib/our-solution-data";
 import { parseOurSolutionWorkbook } from "../../../../../server/our-solution/workbook";
 
@@ -22,6 +22,8 @@ export async function POST(request: Request) {const denied=await adminAccess("ou
     if (!file.name.toLowerCase().endsWith(".xlsx")) return reply({ error: "xlsx_required" }, 415);
     const active = await activeOurSolutionData(market);
     const data = await parseOurSolutionWorkbook(Buffer.from(await file.arrayBuffer()), active.data);
+    try { assertOurSolutionMarketRegion(market, data.scenario.region_code); }
+    catch (error) { return reply({ error: "region_mismatch", details: [error instanceof Error ? error.message : "Scenario.region_code 與目標市場不符。"] }, 400); }
     const prices = await effectiveMetalPrices(data);
     const preview = model(data, prices);
     return reply({ market,data, preview, prices, diff: diffOurSolutionData(active.data, data, prices), expectedVersion: active.version, fileName: file.name });

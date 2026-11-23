@@ -19,3 +19,4 @@
 .pa-diff-sheet summary { cursor: pointer; padding-block: .75rem; font-weight: 600; }
 .pa-diff-sheet td { overflow-wrap: anywhere; white-space: normal; max-width: 32rem; }
 .pa-diff-sheet summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.pa-market-confirmation{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px!important;padding:12px 14px;border-left:4px solid var(--pa-yellow);background:#fff8dc}.pa-market-confirmation strong,.pa-market-confirmation span{font-size:13px}.pa-market-confirmation code{font:700 13px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace}

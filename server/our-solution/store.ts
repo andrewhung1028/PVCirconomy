@@ -1,17 +1,15 @@
 import { database } from "../db/client";
 import { seededOurSolutionData, effectiveParameters, validateOurSolutionData, type OurSolutionEconomics } from "../../lib/our-solution-data";
 import { seededJapanOurSolutionData } from "../../lib/our-solution-japan-data";
+import type { OurSolutionMarket } from "../../lib/our-solution/market";
+
+export { assertOurSolutionMarketRegion, ourSolutionMarket, ourSolutionMarkets } from "../../lib/our-solution/market";
+export type { OurSolutionMarket } from "../../lib/our-solution/market";
 
 const seedId = "923a41c8-d7dc-4d25-bbc8-31ca7d6964eb";
 const japanSeedId = "f0f87bb1-99a1-4ed2-b5cb-7ea1c72065f4";
 let initializing: Promise<void> | null = null;
 let initializingJapan: Promise<void> | null = null;
-
-export const ourSolutionMarkets = ["US", "JP"] as const;
-export type OurSolutionMarket = typeof ourSolutionMarkets[number];
-export function ourSolutionMarket(value: unknown): OurSolutionMarket {
-  return value === "JP" ? "JP" : "US";
-}
 
 export type OurSolutionSnapshot = { version: string; createdAt: string; data: OurSolutionEconomics };
 
