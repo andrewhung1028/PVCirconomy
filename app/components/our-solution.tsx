@@ -354,16 +354,17 @@ function StackedTrendChart({ data, max, label, tone }: { data: TrendPoint[]; max
   const [highlightedRegion, setHighlightedRegion] = useState<number | null>(null);
   const ceiling=Math.max(5000,Math.ceil(max/5000)*5000);
   const yTicks=Array.from({length:ceiling/5000+1},(_,index)=>index*5000);
+  const width=900,height=600,left=66,right=18,top=34,bottom=54,plotWidth=width-left-right,plotHeight=height-top-bottom;
+  const barWidth=plotWidth/data.length;
+  const x=(index:number)=>left+(index+.5)*barWidth,y=(value:number)=>top+(1-value/ceiling)*plotHeight;
+  const majorPoints=data.map((point,index)=>({point,index})).filter(({point})=>Number(point.year)%5===0);
   return <div className={`os-stacked-chart is-${tone}${highlightedRegion === null ? "" : " has-highlight"}`} role="group" aria-label={label}>
-    <div className="os-stacked-plot">
-      <div className="os-stacked-axis" aria-hidden="true">{yTicks.map(tick=><span key={tick} style={{bottom:`${tick/ceiling*100}%`}}>{tick===0?"0":`${tick/1000} TW`}</span>)}</div>
-      <div className="os-stacked-guides" aria-hidden="true">{yTicks.map(tick=><i key={tick} style={{bottom:`${tick/ceiling*100}%`}} />)}</div>
-      <div className="os-stacked-bars is-annual">{data.map((point) => { const isMajor = Number(point.year) % 5 === 0; return <div className={`os-stacked-column${isMajor ? " is-major" : ""}`} key={point.year} aria-label={`${point.year}: ${point.totalLabel}`} title={`${point.year}: ${point.totalLabel}`}>
-        <strong aria-hidden={!isMajor}>{isMajor ? point.totalLabel : ""}</strong>
-        <span className="os-stack" style={{ height: `${Math.max(3, (point.total / ceiling) * 100)}%` }} aria-hidden="true">{point.values.map((value, index) => <i className={`is-region-${index + 1}${highlightedRegion === index ? " is-highlighted" : ""}`} style={{ flexGrow: value }} key={`${point.year}-${trendRegions[index]}`} />)}</span>
-        <small aria-hidden={!isMajor}>{isMajor ? point.year : ""}</small>
-      </div>})}</div>
-    </div>
+    <svg className="os-stacked-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+      <g className="os-stacked-grid" aria-hidden="true">{yTicks.map(tick=><g key={tick}><line x1={left} x2={width-right} y1={y(tick)} y2={y(tick)}/><text x={left-12} y={y(tick)+4} textAnchor="end">{tick===0?"0":`${tick/1000} TW`}</text></g>)}</g>
+      <g className="os-stacked-svg-bars">{data.map((point,index)=>{let running=0;return <g key={point.year}><title>{point.year}: {point.totalLabel}</title>{point.values.map((value,regionIndex)=>{const bottomValue=running;running+=value;return <rect className={`is-region-${regionIndex+1}${highlightedRegion===regionIndex?" is-highlighted":""}`} key={`${point.year}-${trendRegions[regionIndex]}`} x={left+index*barWidth} y={y(running)} width={barWidth} height={y(bottomValue)-y(running)}/>})}</g>})}</g>
+      <g className="os-stacked-totals" aria-hidden="true">{majorPoints.map(({point,index})=><text key={point.year} x={x(index)} y={y(point.total)-9} textAnchor="middle">{point.totalLabel}</text>)}</g>
+      <g className="os-stacked-years" aria-hidden="true">{majorPoints.map(({point,index})=><text key={point.year} x={x(index)} y={height-18} textAnchor="middle">{point.year}</text>)}</g>
+    </svg>
     <div className="os-stacked-legend" aria-label="Highlight a market" onMouseLeave={() => setHighlightedRegion(null)}>{trendRegions.map((region, index) => <button type="button" key={region} aria-pressed={highlightedRegion === index} onMouseEnter={() => setHighlightedRegion(index)} onFocus={() => setHighlightedRegion(index)} onBlur={() => setHighlightedRegion(null)} onClick={() => setHighlightedRegion(index)}><i className={`is-region-${index + 1}`} aria-hidden="true" /><span>{region}</span></button>)}</div>
   </div>;
 }
@@ -383,10 +384,10 @@ function GlobalCumulativeRetirementChart({ waves, assumptions }: { waves: Retire
     const values = rawValues.map((value) => rawTotal > 0 ? value * cumulativeWorld / rawTotal : 0);
     return [{ year, values, total: cumulativeWorld }];
   });
-  const width = 960, height = 370, left = 62, right = 22, top = 28, bottom = 50;
+  const width = 960, height = 640, left = 62, right = 22, top = 34, bottom = 54;
   const last = data.at(-1)!;
   const max = Math.max(1, Math.ceil(last.total / 50) * 50);
-  const x = (index: number) => left + index / (data.length - 1) * (width - left - right);
+  const x = (index: number) => left + (index + .5) / data.length * (width - left - right);
   const y = (value: number) => top + (1 - value / max) * (height - top - bottom);
   const plotWidth = width - left - right;
   const barGap = 0;
@@ -467,8 +468,8 @@ function technologyRows(data:OurSolutionView):MethodRow[]{
   const shredMin=n("methods.shredding.throughput_min_panels_per_hour"),shredMax=n("methods.shredding.throughput_max_panels_per_hour");
   const pv=n("methods.circulator.footprint_m2");
   return [
-    {label:"Footprint",shredding:`~${compactNumber(n("methods.shredding.footprint_m2"))} m²`,thermal:`${compactNumber(n("methods.thermal.footprint_m2"))} m²`,circulator:`${compactNumber(pv)} m²`},
-    {label:"Energy",shredding:`~${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:`${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} kWh / panel`,circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
+    {label:"Footprint",shredding:`${compactNumber(n("methods.shredding.footprint_m2"))} m²`,thermal:`${compactNumber(n("methods.thermal.footprint_m2"))} m²`,circulator:`${compactNumber(pv)} m²`},
+    {label:"Energy",shredding:`${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:`${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} kWh / panel`,circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
     {label:"Throughput",shredding:`~${compactNumber(shredMin)}–${compactNumber(shredMax)} panels / h`,thermal:`~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))} panels / h (~${compactNumber(n("methods.thermal.seconds_per_panel"))} s per panel)`,circulator:`~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))} panels / h`},
     {label:"Staff",shredding:`${compactNumber(n("methods.shredding.staff_per_shift"))} / shift`,thermal:`${compactNumber(n("methods.thermal.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.thermal.indirect_staff_per_shift"))} indirect`,circulator:`${compactNumber(n("methods.circulator.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.circulator.indirect_staff_per_shift"))} indirect`},
     {label:"Product recovery",shredding:`~${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator:`${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
@@ -494,7 +495,7 @@ function materialRows(data:OurSolutionView):MethodRow[]{return [
 function FootprintMethodVisual({data}:{data:OurSolutionView}) {
   const shredding=webNum(data,"methods.shredding.footprint_m2"),thermal=webNum(data,"methods.thermal.footprint_m2"),pv=webNum(data,"methods.circulator.footprint_m2");
   const reduction=(base:number,value:number)=>Math.round((1-value/base)*100),pvLabel=`${compactNumber(pv)} m²`;
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only {pvLabel}—about {reduction(shredding,pv)}% less footprint than shredding and about {reduction(thermal,pv)}% less than thermal processing. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pv}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pv/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only {pvLabel}—about {reduction(shredding,pv)}% less footprint than shredding and about {reduction(thermal,pv)}% less than thermal processing. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pv}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pv/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 
 function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSolutionView }) {
@@ -834,11 +835,15 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
   const demand=(loss:"early"|"regular")=>demandIndex.map(index=>Math.ceil(demandWave[`${loss}_T${waveAssumptions.defaultLifetime}`][index]/waveAssumptions.tonnesPerMw/lineCapacityMw));
   const earlyDemand=demand("early"),regularDemand=demand("regular");
   const demandMarketLabel=demandMarkets.find(item=>item.key===demandMarket)?.label??demandMarket;
+  const pressureFirst=pressureData[0],pressureLast=pressureData[pressureData.length-1];
+  const pressureMultiples=pressureLast.values.map((value,index)=>pressureFirst.values[index]>0?value/pressureFirst.values[index]:0);
+  const positivePressureMultiples=pressureMultiples.filter(value=>value>0),pressureMultipleLow=Math.round(Math.min(...positivePressureMultiples)),pressureMultipleHigh=Math.round(Math.max(...positivePressureMultiples));
+  const highestPressureIndex=pressureLast.values.indexOf(Math.max(...pressureLast.values));
 
   const waveSlides: DeckSlide[] = [
-    { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from {capacityFirst.totalLabel} to {capacityLast.totalLabel} by {capacityLast.year}.</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Tomorrow’s pressure is several times larger—and it will not be evenly distributed.", note: <p>Global installed capacity rises from {capacityFirst.totalLabel} in {capacityFirst.year} to {capacityLast.totalLabel} in {capacityLast.year}—about nine times today’s base. Because growth differs by market, future collection and processing pressure will also arrive at different times and scales.</p> },
+    { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from {capacityFirst.totalLabel} to {capacityLast.totalLabel} by {capacityLast.year}.</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Today’s installations define tomorrow’s retirement geography.", note: <p>Every annual column represents the infrastructure already being built toward a much larger retirement market. The market mix shows where future collection and processing capacity will be needed.</p> },
     { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-wave-global-slide"><h2>The global retirement wave compounds through 2050.</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} assumptions={waveAssumptions} /></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} assumptions={waveAssumptions} /> },
-    { label: "Per-capita processing pressure", navigationLabel: "Per-capita pressure", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>Per-capita processing pressure rises unevenly through 2050.</h2><PressureTrendChart data={pressureData} /></div>, noteTitle: "Processing pressure grows at a different pace in every market.", note: <p>Our projection shows {pressureSeries[pressureData[pressureData.length-1].values.indexOf(Math.max(...pressureData[pressureData.length-1].values))].label} reaching {Math.max(...pressureData[pressureData.length-1].values).toFixed(2)} kg per person by 2050, the highest of the modeled markets. The long view strengthens the case for regional and deployable capacity rather than planning from a single global endpoint. Population source: UN World Population Prospects 2022, Medium variant.</p> },
+    { label: "Per-capita processing pressure", navigationLabel: "Per-capita pressure", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>Per-capita processing pressure rises unevenly through 2050.</h2><PressureTrendChart data={pressureData} /></div>, noteTitle: `By 2050, per-capita pressure is ${pressureMultipleLow}–${pressureMultipleHigh}× its 2025 level.`, note: <p>{pressureSeries[highestPressureIndex].label} rises from {pressureFirst.values[highestPressureIndex].toFixed(1)} to {pressureLast.values[highestPressureIndex].toFixed(1)} kg per person—about {Math.round(pressureMultiples[highestPressureIndex])}×—the highest pressure among the modeled markets. The divergence strengthens the case for regional and deployable capacity rather than planning from a single global endpoint. Population source: UN World Population Prospects 2022, Medium variant.</p> },
   ];
 
   const conventionalSlides: DeckSlide[] = [
