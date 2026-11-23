@@ -8,17 +8,16 @@ assert.doesNotMatch(src,/pyroly|熱裂解|burn-off|burned off/i);
 assert.doesNotMatch(src,/label: "Process"/,'Methods comparison tables should not include a Process row');
 assert.equal(data['methods.shredding.footprint_m2'].value,480);
 assert.equal(data['methods.thermal.footprint_m2'].value,160);
-assert.equal(data['methods.circulator.footprint_min_m2'].value,30);
-assert.equal(data['methods.circulator.footprint_max_m2'].value,40);
+assert.equal(data['methods.circulator.footprint_m2'].value,40);
 assert.equal(data['methods.shredding.secondary_treatment_t_per_mw'].value,54);
 assert.equal(data['methods.circulator.secondary_treatment_t_per_mw'].value,.5);
 assert.match(src,/function technologyRows\(data:OurSolutionView\)/);
 assert.match(src,/function materialRows\(data:OurSolutionView\)/);
-assert.match(src,/reduction\(shredding,pvMax\)/);
+assert.match(src,/reduction\(shredding,pv\)/);
 assert.doesNotMatch(src,/~57 m²|three machines|hot[- ]knife|熱刀/i);
 assert.doesNotMatch(src,/shredding: "~480 m²"|"~54 t \/ MW"/);
 assert.match(fs.readFileSync('AGENTS.md','utf8'),/Existing website content was already verified by Andrew/);
-console.log('Methods table: values come from published Website Data; no hard-coded comparison figures or Process row.');
+console.log('Methods table: values come from published Assumptions section 12; no hard-coded comparison figures or Process row.');
 
 // Check server-rendered visible text without browser automation or a database.
 (async()=>{

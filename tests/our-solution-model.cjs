@@ -8,7 +8,7 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
 (async()=>{
  const fixture=fs.readFileSync('tests/fixtures/our-solution-master-2026-11-22.xlsx');
  const parsed=await parse(fixture);assert.deepEqual(parsed,seed,'parse(fixture) = generated seed');
- await assert.rejects(parse(fixture,parsed),/缺少工作表：Website Data/,'admin uploads must use the current workbook with Website Data');
+ await assert.rejects(parse(fixture,parsed),/Assumptions 缺少區段 12/,'admin uploads must use the current workbook with Assumptions section 12');
  const m=model(parsed);
  compare(m,{annualPanels:ref.annualPanels,inputT:ref.inputT,operatingDays:ref.operatingDays,solutions:ref.solutions,cellPowder:ref.cellPowder,kgPerMw:ref.kgPerMw,perCapitaKg:ref.perCapitaKg});
  for(const [key,years]of Object.entries(ref.usRetirementT))for(const [year,value]of Object.entries(years))assert.equal(m.retirementWave[key][m.retirementWave.years.indexOf(Number(year))],value);
@@ -16,7 +16,7 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
  for(const [market,v]of Object.entries(ref.capacity2025))close(m.capacity[market][2025],v,market+' 2025');
  for(const [market,v]of Object.entries(ref.capacity2050))close(m.capacity[market][2050],v,market+' 2050');
  assert.deepEqual(await parse(await exportBook(parsed)),parsed,'export → parse lossless');
- assert.deepEqual(await parse(await exportBook(parsed),parsed),parsed,'current admin export includes required Website Data');
+ assert.deepEqual(await parse(await exportBook(parsed),parsed),parsed,'current admin export includes required Assumptions section 12');
  assert.deepEqual(await parse(await exportBook(parsed,false,require('../server/metal-prices/service.ts').workbookPrices(parsed))),parsed,'DB-unavailable API export → parse lossless');
  assert.deepEqual(await parse(await exportBook(parsed,true)),parsed,'template is a complete parameter master');
  assert.deepEqual(diff(parsed,seed),[]);assert.equal(effectiveParameters({solutions:[]}),seed);
@@ -24,10 +24,9 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
  const renamed=await edit(w=>{for(const sheet of w.worksheets)sheet.eachRow(row=>row.eachCell(cell=>{if(typeof cell.value==='string')cell.value=cell.value.replace(/Hot knife/g,'Thermal processing').replace(/hot-knife/g,'thermal-processing');}));});
  assert.deepEqual(renamed,parsed,'Thermal processing workbook labels preserve every parameter');
  const template=new ExcelJS.Workbook();await template.xlsx.load(await exportBook(parsed,true));
- const website=template.getWorksheet('Website Data');assert.ok(website,'export includes Website Data');assert.deepEqual(website.getRow(1).values.slice(1),['field_key','section','label','value','unit','source']);
- const footprintRow=website.getRows(2,website.rowCount-1).find(row=>row.getCell(1).value==='methods.shredding.footprint_m2');assert.equal(footprintRow.getCell(4).value,480);footprintRow.getCell(4).value=481;
- const websiteEdited=await parse(Buffer.from(await template.xlsx.writeBuffer()));assert.equal(websiteEdited.publicData['methods.shredding.footprint_m2'].value,481);assert.ok(diff(parsed,websiteEdited).some(row=>row.field.includes('publicData.methods.shredding.footprint_m2.value')));
- const missingWebsite=new ExcelJS.Workbook();await missingWebsite.xlsx.load(await exportBook(parsed,true));const websiteSheet=missingWebsite.getWorksheet('Website Data');websiteSheet.spliceRows(websiteSheet.rowCount,1);await assert.rejects(parse(Buffer.from(await missingWebsite.xlsx.writeBuffer())),/Website Data 缺少必要欄位/);
+ const assumptionsSheet=template.getWorksheet('Assumptions');const footprintRow=assumptionsSheet.getRows(1,assumptionsSheet.rowCount).find(row=>row.getCell(1).value==='methods.shredding.footprint_m2');assert.equal(footprintRow.getCell(2).value,480);footprintRow.getCell(2).value=481;
+ const websiteEdited=await parse(Buffer.from(await template.xlsx.writeBuffer()));assert.equal(websiteEdited.assumptions[12]['methods.shredding.footprint_m2'][0],481);assert.ok(diff(parsed,websiteEdited).some(row=>row.field.includes('assumptions.12.methods.shredding.footprint_m2.0')));
+ const missingWebsite=new ExcelJS.Workbook();await missingWebsite.xlsx.load(await exportBook(parsed,true));const missingAssumptions=missingWebsite.getWorksheet('Assumptions'),missingRow=missingAssumptions.getRows(1,missingAssumptions.rowCount).find(row=>row.getCell(1).value==='methods.shredding.footprint_m2');missingAssumptions.spliceRows(missingRow.number,1);await assert.rejects(parse(Buffer.from(await missingWebsite.xlsx.writeBuffer())),/Assumptions 缺少欄位 methods.shredding.footprint_m2/);
  const headerLabels=[];template.getWorksheet('Assumptions').eachRow(row=>row.eachCell(cell=>{if(typeof cell.value==='string')headerLabels.push(cell.value);}));assert.ok(headerLabels.includes('Thermal processing'));assert.ok(!headerLabels.some(v=>/hot[- ]knife/i.test(v)));
  await assert.rejects(edit(w=>w.getWorksheet('Scenario').getCell('C4').value={formula:'5000',result:5000}),/Scenario!C4.*公式/);
  await assert.rejects(edit(w=>w.getWorksheet('Instructions').getCell('B2').value={formula:'1'}),/Instructions!B2.*公式/);

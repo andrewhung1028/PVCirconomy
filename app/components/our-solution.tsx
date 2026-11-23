@@ -12,12 +12,11 @@ import { model } from "../../lib/our-solution/model";
 import type { RouteEnvironmentalMetric } from "../../lib/route-comparison";
 
 import type { EconomicsView } from "../../lib/our-solution-data";
-import { websiteNumber, websiteString } from "../../lib/our-solution/public-data";
+import { websiteNumber } from "../../lib/our-solution/public-data";
 import "./review-home.css";
 
 export type BreakevenView = { region: string; feeUnit: string; currency: string; panelsPerMonth: number; panelWeightLb: number; source: string; fees: { code: string; breakevenFee: number | null }[] } | null;
 const webNum=(data:OurSolutionView,key:string)=>websiteNumber(data.websiteData,key);
-const webText=(data:OurSolutionView,key:string)=>websiteString(data.websiteData,key);
 const compactNumber=(value:number)=>Number.isInteger(value)?String(value):value.toLocaleString("en-US",{maximumFractionDigits:2});
 
 // Only fields used by the public story cross the server/client boundary.
@@ -425,14 +424,14 @@ function MethodTable({ caption, rows, columns = THREE_METHODS }: { caption: stri
 function methodSources(data:OurSolutionView){return `Sources: ${[...new Set(Object.entries(data.websiteData).filter(([key])=>key.startsWith("methods.")).map(([,row])=>row.source).filter(source=>!source.startsWith("No public")))].join("; ")}. Product recovery = sellable output by purity. — = no public data.`;}
 
 function technologyRows(data:OurSolutionView):MethodRow[]{
-  const n=(key:string)=>webNum(data,key),t=(key:string)=>webText(data,key);
+  const n=(key:string)=>webNum(data,key);
   const shredMin=n("methods.shredding.throughput_min_panels_per_hour"),shredMax=n("methods.shredding.throughput_max_panels_per_hour");
-  const pvMin=n("methods.circulator.footprint_min_m2"),pvMax=n("methods.circulator.footprint_max_m2");
+  const pv=n("methods.circulator.footprint_m2");
   return [
-    {label:"Footprint",shredding:`~${compactNumber(n("methods.shredding.footprint_m2"))} m²`,thermal:`${compactNumber(n("methods.thermal.footprint_m2"))} m²`,circulator:`~${compactNumber(pvMin)}–${compactNumber(pvMax)} m²`},
-    {label:"Energy",shredding:`~${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:t("methods.thermal.energy_display"),circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
+    {label:"Footprint",shredding:`~${compactNumber(n("methods.shredding.footprint_m2"))} m²`,thermal:`${compactNumber(n("methods.thermal.footprint_m2"))} m²`,circulator:`${compactNumber(pv)} m²`},
+    {label:"Energy",shredding:`~${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:`${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} kWh / panel`,circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
     {label:"Throughput",shredding:`~${compactNumber(shredMin)}–${compactNumber(shredMax)} panels / h`,thermal:`~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))} panels / h (~${compactNumber(n("methods.thermal.seconds_per_panel"))} s per panel)`,circulator:`~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))} panels / h`},
-    {label:"Staff",shredding:`${compactNumber(n("methods.shredding.staff_per_shift"))} / shift`,thermal:t("methods.thermal.staff_display"),circulator:`${compactNumber(n("methods.circulator.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.circulator.indirect_staff_per_shift"))} indirect`},
+    {label:"Staff",shredding:`${compactNumber(n("methods.shredding.staff_per_shift"))} / shift`,thermal:`${compactNumber(n("methods.thermal.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.thermal.indirect_staff_per_shift"))} indirect`,circulator:`${compactNumber(n("methods.circulator.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.circulator.indirect_staff_per_shift"))} indirect`},
     {label:"Product recovery",shredding:`~${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator:`SGS-measured ${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
     {label:"By-products",shredding:"Mixed fragments need further treatment",thermal:"Cell laminate (EVA, backsheet, cells) needs further treatment",circulator:"No off-gas or wastewater"},
   ];
@@ -450,13 +449,13 @@ function materialRows(data:OurSolutionView):MethodRow[]{return [
   {label:"Silver",shredding:"Stays mixed in the fragments",thermal:"Stays in the cell laminate",circulator:"Ends in the silicon (cell) powder"},
   {label:"EVA / backsheet",shredding:"Mixed into fragments",thermal:"Stay attached to the cell laminate",circulator:"Separated and recovered"},
   {label:"By-products",shredding:"Mixed fragments need further treatment",thermal:"Cell laminate needs further treatment",circulator:"No off-gas or wastewater"},
-  {label:"Secondary treatment",shredding:`~${compactNumber(webNum(data,"methods.shredding.secondary_treatment_t_per_mw"))} t / MW`,thermal:webText(data,"methods.thermal.secondary_treatment_display"),circulator:`~${compactNumber(webNum(data,"methods.circulator.secondary_treatment_t_per_mw"))} t / MW`},
+  {label:"Secondary treatment",shredding:`~${compactNumber(webNum(data,"methods.shredding.secondary_treatment_t_per_mw"))} t / MW`,thermal:`~${compactNumber(data.thermalSecondaryTreatmentTPerMw)} t / MW`,circulator:`~${compactNumber(webNum(data,"methods.circulator.secondary_treatment_t_per_mw"))} t / MW`},
 ];}
 
 function FootprintMethodVisual({data}:{data:OurSolutionView}) {
-  const shredding=webNum(data,"methods.shredding.footprint_m2"),thermal=webNum(data,"methods.thermal.footprint_m2"),pvMin=webNum(data,"methods.circulator.footprint_min_m2"),pvMax=webNum(data,"methods.circulator.footprint_max_m2");
-  const reduction=(base:number,value:number)=>Math.round((1-value/base)*100),pvLabel=`~${compactNumber(pvMin)}–${compactNumber(pvMax)} m²`;
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only {pvLabel}—about {reduction(shredding,pvMax)}–{reduction(shredding,pvMin)}% less footprint than shredding and about {reduction(thermal,pvMax)}–{reduction(thermal,pvMin)}% less than thermal processing. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pvMin} to ${pvMax}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pvMax/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
+  const shredding=webNum(data,"methods.shredding.footprint_m2"),thermal=webNum(data,"methods.thermal.footprint_m2"),pv=webNum(data,"methods.circulator.footprint_m2");
+  const reduction=(base:number,value:number)=>Math.round((1-value/base)*100),pvLabel=`${compactNumber(pv)} m²`;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only {pvLabel}—about {reduction(shredding,pv)}% less footprint than shredding and about {reduction(thermal,pv)}% less than thermal processing. The compact footprint makes near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pv}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pv/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 
 function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSolutionView }) {
@@ -479,8 +478,8 @@ function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSoluti
 }
 
 function MaterialMethodVisual({data}:{data:OurSolutionView}) {
-  const shredding=webNum(data,"methods.shredding.secondary_treatment_t_per_mw"),circulator=webNum(data,"methods.circulator.secondary_treatment_t_per_mw");
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Material requiring secondary treatment per MW. Shorter bars mean less material needs added processing or disposal.</p></div><div className="os-method-bars is-secondary" role="img" aria-label={`Material requiring secondary treatment per megawatt: shredding ${shredding} tonnes, PV Circulator about ${circulator} tonnes`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} t</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${circulator/shredding*100}%`}} /><strong>~{compactNumber(circulator)} t</strong></div></div></div><MethodTable caption="Recovered materials comparison by technology" rows={materialRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
+  const shredding=webNum(data,"methods.shredding.secondary_treatment_t_per_mw"),thermal=data.thermalSecondaryTreatmentTPerMw,circulator=webNum(data,"methods.circulator.secondary_treatment_t_per_mw");
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Material requiring secondary treatment per MW. Shorter bars mean less material needs added processing or disposal.</p></div><div className="os-method-bars is-secondary" role="img" aria-label={`Material requiring secondary treatment per megawatt: shredding ${shredding} tonnes, thermal processing about ${thermal} tonnes, PV Circulator about ${circulator} tonnes`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>~{compactNumber(shredding)} t</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>~{compactNumber(thermal)} t</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${circulator/shredding*100}%`}} /><strong>~{compactNumber(circulator)} t</strong></div></div></div><MethodTable caption="Recovered materials comparison by technology" rows={materialRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 
 function SilverValueVisual({economicsData}:{economicsData:OurSolutionView}) {

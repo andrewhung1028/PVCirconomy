@@ -4,12 +4,11 @@ import schema from '../../data/our-solution-parameter-schema.json';
 import { markets, type Parameters } from '../../lib/our-solution/parameters';
 import { validateParameters } from '../../lib/our-solution/validation';
 import { model, type EffectivePrices } from '../../lib/our-solution/model';
-import { websiteDataDefaults, websiteDataWithDefaults, type WebsiteData } from '../../lib/our-solution/public-data';
-const sections = schema as Record<string,Record<string,(string|number)[]>>;
+import { websiteAssumptionRows } from '../../lib/our-solution/public-data';
+const sections = {...(schema as Record<string,Record<string,(string|number)[]>>),'12':websiteAssumptionRows};
 const streamMaterial: Record<string,string>={'Glass':'Glass','Aluminium frame':'Aluminium','Junction box + cable':'Junction box','EVA':'EVA','Backsheet':'Backsheet','Silicon cell':'Silicon','Copper ribbon':'Copper','Other':'Residual / mixed fraction'};
 const canonicalLabel = (value: string | number) => typeof value === 'string' ? value.replace(/hot[- ]knife/gi, match => match.includes('-') ? 'thermal-processing' : 'Thermal processing') : value;
 const scenarioKeys=['region_code','region','panels_per_month','panel_weight_lb','operating_hours_per_day','working_weeks_per_year','working_days_per_week'];
-const websiteSheetName='Website Data';
 function raw(c:ExcelJS.Cell):string|number {
   if(typeof c.value==='number'||typeof c.value==='string') return c.value;
   throw Error(`欄位 ${c.worksheet.name}!${c.address} 必須是數值或文字，不可使用公式、連結或複合格式。`);
@@ -33,27 +32,19 @@ function table(sheet:ExcelJS.Worksheet, headers:string[], years:number[]) {
     for(const h of headers){const c=row.getCell(columns.get(h)!);const v=raw(c);if(typeof v!=='number'||!Number.isFinite(v))throw Error(`欄位 ${sheet.name}!${c.address} 必須是有限數字。`);out[h][y]=v;}
   });for(const y of years)if(!seen.has(y))throw Error(`${sheet.name} 缺少年份 ${y}。`);return out;
 }
-function parseWebsiteData(sheet:ExcelJS.Worksheet|undefined,requireSheet=false):WebsiteData {
-  if(!sheet){if(requireSheet)throw Error(`缺少工作表：${websiteSheetName}。`);return websiteDataWithDefaults(undefined);} // Fixture/read compatibility only; admin uploads require the sheet.
-  const expectedHeaders=['field_key','section','label','value','unit','source'];
-  expectedHeaders.forEach((header,index)=>{if(sheet.getRow(1).getCell(index+1).value!==header)throw Error(`${websiteSheetName} 標題必須是 ${expectedHeaders.join('、')}。`);});
-  const output:WebsiteData={};
-  sheet.eachRow((row,rowNumber)=>{if(rowNumber===1)return;const key=raw(row.getCell(1));if(typeof key!=='string'||!key.trim())throw Error(`${websiteSheetName}!A${rowNumber} field_key 不可空白。`);if(output[key])throw Error(`${websiteSheetName} 包含重複欄位 ${key}。`);
-    const fallback=websiteDataDefaults[key];if(!fallback)throw Error(`${websiteSheetName} 包含未知欄位 ${key}。`);
-    const section=raw(row.getCell(2)),label=raw(row.getCell(3)),value=raw(row.getCell(4)),unit=raw(row.getCell(5)),source=raw(row.getCell(6));
-    if(section!==fallback.section||label!==fallback.label||unit!==fallback.unit)throw Error(`${websiteSheetName} ${key} 的 section、label 或 unit 不可變更。`);
-    if(typeof value!==typeof fallback.value)throw Error(`${websiteSheetName} ${key} 的 value 類型不正確。`);
-    output[key]={section:String(section),label:String(label),value,unit:String(unit),source:String(source)};
-  });
-  const expected=Object.keys(websiteDataDefaults),actual=Object.keys(output);if(actual.length!==expected.length||expected.some(key=>!output[key]))throw Error(`${websiteSheetName} 缺少必要欄位。`);
-  return output;
+function appendWebsiteAssumptions(sheet:ExcelJS.Worksheet){
+  if(rows(sheet)['12'])return;
+  sheet.addRow([]);const heading=sheet.addRow(['12. Website data — public benchmarks and targets']);heading.getCell(1).font={bold:true,size:11};
+  const header=sheet.addRow(['Field key','Value','Unit','Source','Section','Label']);header.font={bold:true,color:{argb:'FFFFFFFF'}};header.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF151719'}};
+  for(const [key,values] of Object.entries(websiteAssumptionRows))sheet.addRow([key,...values]);
 }
 export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters):Promise<Parameters> {
   const w=new ExcelJS.Workbook();await w.xlsx.load(buffer as never);
   if(w.getWorksheet('Annual Summary')||!w.getWorksheet('Assumptions'))throw Error('舊版結果格式工作簿不再支援，請下載現行參數範本後重新匯入。');
   for(const s of layout)if(!w.getWorksheet(s.name))throw Error(`缺少工作表：${s.name}。`);
-  if(w.worksheets.some(s=>!layout.some(l=>l.name===s.name)&&s.name!==websiteSheetName))throw Error('工作表格式不符，請下載現行範本。');
+  if(w.worksheets.some(s=>!layout.some(l=>l.name===s.name)))throw Error('工作表格式不符，請下載現行範本。');
   const a=w.getWorksheet('Assumptions')!,groups=rows(a),materialRows=groups['5'];
+  if(!groups['12']&&base)throw Error('Assumptions 缺少區段 12. Website data。請下載現行版本後再修改。');
   // A formula is allowed only in Product Value, or the designated Section 8 cells.
   for(const s of w.worksheets)s.eachRow(row=>row.eachCell(c=>{
     if(c.type!==ExcelJS.ValueType.Formula)return;
@@ -83,6 +74,7 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters):
   for(const section of ['8'])for(const label of ['Theoretical silver content upper limit (%)','Theoretical silver content upper limit (g/t)'])get(groups[section],label,'Assumptions');
   const assumptions:Parameters['assumptions']={};
   for(const [section,defs] of Object.entries(sections)){
+    if(section==='12'&&!groups['12']){assumptions[section]=structuredClone(websiteAssumptionRows);continue;}
     assumptions[section]={};
     for(const [label,values] of Object.entries(defs)){
       const row=get(groups[section],label,'Assumptions');
@@ -98,7 +90,7 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters):
   const euHeaders=euLayout.rows.find(r=>r.cells[0]?.value==='Year')!.cells.slice(1).map(c=>String(c.value));
   const population=table(w.getWorksheet('Population')!,markets.filter(m=>m!=='Europe'),years) as unknown as Parameters['population'];
   population.eu27=table(w.getWorksheet('EU-27 Population')!,euHeaders,years);population.Europe=Object.fromEntries(years.map(y=>[y,Object.values(population.eu27).reduce((s,v)=>s+v[y],0)]));
-  const data:Parameters={format:'parameters-v2',scenario,assumptions,capacityHistory:cap,population,publicData:parseWebsiteData(w.getWorksheet(websiteSheetName),Boolean(base)),meta:{currency:'USD',extractedAt:'2026-11-22T00:00:00.000Z',sourceSite:'https://businesscase.pvcirconomy.com/',note:'Illustrative business-case scenario; not a quotation or guarantee.'}};
+  const data:Parameters={format:'parameters-v2',scenario,assumptions,capacityHistory:cap,population,meta:{currency:'USD',extractedAt:'2026-11-22T00:00:00.000Z',sourceSite:'https://businesscase.pvcirconomy.com/',note:'Illustrative business-case scenario; not a quotation or guarantee.'}};
   const errors=validateParameters(data);if(errors.length)throw Error(errors.join('\n'));return data;
 }
 
@@ -108,22 +100,19 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
     template.rows.forEach((r,i)=>{const row=s.getRow(i+1);if(r.height)row.height=r.height;r.cells.forEach((c,j)=>{const cell=row.getCell(j+1);cell.value=structuredClone(c.value) as ExcelJS.CellValue;cell.style=structuredClone(c.style) as ExcelJS.Style;});});
     template.merges.forEach(m=>s.mergeCells(m));
   }
-  const a=w.getWorksheet('Assumptions')!,groups=rows(a);
+  const a=w.getWorksheet('Assumptions')!;appendWebsiteAssumptions(a);const groups=rows(a);
   for(const [section,defs] of Object.entries(data.assumptions))for(const [label,vals] of Object.entries(defs)){
-    const row=get(groups[section],label,'Assumptions');vals.forEach((v,i)=>{const cell=row.getCell(i+(section==='8'?3:2));cell.value=v;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};});
+    const row=get(groups[section],label,'Assumptions');vals.forEach((v,i)=>{const cell=row.getCell(i+(section==='8'?3:2));cell.value=v;if(section!=='12'||i===0||i===2)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};});
   }
   for(const [name,v] of Object.entries(effective)) {if(v.workbookValue)continue;const row=groups['5'].get(name);if(row){row.getCell(3).value=v.price;row.getCell(4).value=v.unit;row.getCell(5).value=`${v.source}; as of ${v.asOf}`;}}
   const sr=rows(w.getWorksheet('Scenario')!)['0'];for(const [k,v] of Object.entries(data.scenario))get(sr,k,'Scenario').getCell(3).value=v;
   for(const name of ['Capacity History','Population','EU-27 Population']){
     const s=w.getWorksheet(name)!;const header=s.getRow(4);s.eachRow(row=>{const y=row.getCell(1).value;if(typeof y!=='number')return;header.eachCell(c=>{if(Number(c.col)===1)return;const key=String(c.value);const values=name==='Capacity History'?data.capacityHistory[key as keyof typeof data.capacityHistory]:name==='Population'?data.population[key as keyof typeof data.population]:data.population.eu27[key];row.getCell(c.col).value=(values as Record<string,number>)[y];});});
   }
-  const website=w.addWorksheet(websiteSheetName);website.views=[{state:'frozen',ySplit:1}];website.columns=[{width:52},{width:16},{width:52},{width:18},{width:18},{width:64}];
-  const header=website.addRow(['field_key','section','label','value','unit','source']);header.font={bold:true,color:{argb:'FFFFFFFF'}};header.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF151719'}};
-  for(const [key,row] of Object.entries(websiteDataWithDefaults(data.publicData))){const added=website.addRow([key,row.section,row.label,row.value,row.unit,row.source]);for(const column of [4,6])added.getCell(column).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}};}
   const instructions=rows(w.getWorksheet('Instructions')!)['0'];
-  get(instructions,'Contents','Instructions').getCell(2).value='Assumptions, Scenario, Capacity History, Population, EU-27 Population and Website Data are the single sources for every editable market, operating, technical and benchmark value shown on Our Solution. The program calculates operating cost, material revenue, recovery, EBITDA, sensitivities, retirement, per-capita and per-MW results. Website Data holds externally sourced public benchmarks and targets that are not calculated by the engine.';
-  get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions (model parameters) · Scenario (volume and schedule) · Website Data (public benchmarks, targets and sources) · Product Value (live formulas) · Capacity History · Population · EU-27 Population.';
-  get(instructions,'Edit rule','Instructions').getCell(2).value='Change yellow cells only. In Website Data, edit value and source only. Do not rename sheets, field keys, labels or units.';
+  get(instructions,'Contents','Instructions').getCell(2).value='Assumptions, Scenario, Capacity History, Population and EU-27 Population are the single sources for every editable market, operating, technical and benchmark value shown on Our Solution. Assumptions section 12 holds externally sourced public benchmarks, targets and their sources.';
+  get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions (model parameters plus section 12 public benchmarks) · Scenario (volume and schedule) · Product Value (live formulas) · Capacity History · Population · EU-27 Population.';
+  get(instructions,'Edit rule','Instructions').getCell(2).value='Change yellow cells only. In Assumptions section 12, edit Value and Source only. Do not rename sheets, field keys, labels or units.';
   // Product Value and Section 8 formulas retain the template's live references.
   const result=model(data,effective);
   for(const [label,mat] of Object.entries(streamMaterial))get(groups['8'],label,'Assumptions').getCell(2).value={formula:`B${get(groups['5'],mat,'Assumptions').number}`,result:data.assumptions[5][mat][0] as number};

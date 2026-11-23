@@ -1,5 +1,5 @@
 import { labels, markets, parameter as n, solutionCodes, type Parameters } from './parameters';
-import { websiteNumber } from './public-data';
+import { websiteDataFromAssumptions, websiteNumber } from './public-data';
 import { retirementSeries, computeRetirementWave } from '../us-retirement-wave';
 export type EffectivePrice = { price: number; unit: string; source: string; asOf: string; workbookValue?:boolean };
 export type EffectivePrices = Record<string, EffectivePrice>;
@@ -14,7 +14,7 @@ export function capacityHistory(p: Parameters) {
   return cap;
 }
 export function model(p: Parameters, effective: EffectivePrices = {}) {
-  const gridKgCo2ePerKwh=websiteNumber(p.publicData,'impact.grid_kg_co2e_per_kwh');
+  const gridKgCo2ePerKwh=websiteNumber(websiteDataFromAssumptions(p.assumptions),'impact.grid_kg_co2e_per_kwh');
   const sc=p.scenario, annualPanels=sc.panels_per_month*12, inputT=annualPanels*sc.panel_weight_lb*n(p,3,'Kilograms per pound')/1000;
   const operatingDays=sc.working_weeks_per_year*sc.working_days_per_week/12;
   const panelsPerMw=1e6/n(p,10,'Panel rating'), kgPerMw=sc.panel_weight_lb*n(p,3,'Kilograms per pound')*panelsPerMw;

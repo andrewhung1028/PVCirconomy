@@ -7,25 +7,22 @@ The public `/solutions/` page uses the published **Our Solution** master workboo
 | Page area | Workbook source |
 | --- | --- |
 | Wave: installed capacity, retirement volume, per-capita pressure | `Capacity History`, `Population`, `EU-27 Population`, Assumptions section 10 |
-| Methods: footprint, energy, throughput, staff, product recovery, secondary treatment | `Website Data` |
+| Methods: footprint, energy, throughput, staff, product recovery, secondary treatment | Assumptions section 12 |
 | Methods: operating cost | `Scenario` and Assumptions sections 1–7 |
-| Impact: landfill residue and process CO2e | Assumptions sections 4–6 and `Website Data` grid factor |
-| Materials: module shares and public demand/carbon claims | Assumptions section 5 and `Website Data` |
+| Impact: landfill residue and process CO2e | Assumptions sections 4–6 and section 12 grid factor |
+| Materials: module shares and public demand/carbon claims | Assumptions sections 5 and 12 |
 | Value: material mass and benchmark value | Assumptions sections 3, 5 and 6 |
 | Economic: OPEX, revenue, EBITDA and sensitivities | `Scenario` and Assumptions sections 1–7 and 11 |
-| Stakes numeric goals, Solution performance line, Scale launch years | `Website Data` |
+| Stakes numeric goals, Solution performance line, Scale launch years | Assumptions section 12 |
 
-`Website Data` uses stable `field_key` values. The importer rejects missing keys, unknown keys, renamed labels or units, wrong value types, blank sources and formulas. Only `value` and `source` cells are highlighted for editing.
+Assumptions section 12 uses stable field keys. The importer rejects missing keys, unknown keys, renamed labels or units, wrong value types, blank sources and formulas. Only Value and Source cells are highlighted for editing.
 
-## Data still unavailable or needing stronger evidence
+## Source documentation still needing stronger evidence
 
-These are not hidden hard-coded values. They are explicit gaps or source-quality gaps in `Website Data`:
+These are not hidden hard-coded values. They are explicit gaps or source-quality gaps in Assumptions section 12:
 
 | Field | Current state | Needed |
 | --- | --- | --- |
-| Thermal-processing energy per panel | `—` | Comparable public kWh/panel value and citation |
-| Thermal-processing staff per shift | `—` | Comparable staffing basis and citation |
-| Thermal-processing secondary treatment per MW | `—` | Comparable t/MW value and citation |
 | IEA recovered-material demand claims (70%, 20%, 2040–2050) | Generic “IEA assessment” source | Publication title, edition, page/table and URL |
 | Recycled-aluminium carbon claim (3%) | Internal reference label | External publication, year, page/table and URL |
 | SGS product-recovery claim (99.3%) | “SGS verification” | SGS report/certificate identifier, date and test boundary |
