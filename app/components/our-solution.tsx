@@ -471,8 +471,8 @@ function technologyRows(data:OurSolutionView):MethodRow[]{
     {label:"Footprint",shredding:`${compactNumber(n("methods.shredding.footprint_m2"))} m²`,thermal:`${compactNumber(n("methods.thermal.footprint_m2"))} m²`,circulator:`${compactNumber(pv)} m²`},
     {label:"Energy",shredding:`${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:`${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} kWh / panel`,circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
     {label:"Throughput",shredding:`~${compactNumber(shredMin)}–${compactNumber(shredMax)} panels / h`,thermal:`~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))} panels / h (~${compactNumber(n("methods.thermal.seconds_per_panel"))} s per panel)`,circulator:`~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))} panels / h`},
-    {label:"Staff",shredding:`${compactNumber(n("methods.shredding.staff_per_shift"))} / shift`,thermal:`${compactNumber(n("methods.thermal.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.thermal.indirect_staff_per_shift"))} indirect`,circulator:`${compactNumber(n("methods.circulator.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.circulator.indirect_staff_per_shift"))} indirect`},
-    {label:"Product recovery",shredding:`~${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator:`${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
+    {label:"Staff",shredding:`${compactNumber(n("methods.shredding.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.shredding.indirect_staff_per_shift"))} indirect`,thermal:`${compactNumber(n("methods.thermal.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.thermal.indirect_staff_per_shift"))} indirect`,circulator:`${compactNumber(n("methods.circulator.direct_staff_per_shift"))} direct + ${compactNumber(n("methods.circulator.indirect_staff_per_shift"))} indirect`},
+    {label:"Product recovery",shredding:`<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator:`${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
     {label:"By-products",shredding:"Mixed fragments need further treatment",thermal:"Cell laminate (EVA, backsheet, cells) needs further treatment",circulator:"No off-gas or wastewater"},
   ];
 }
@@ -537,7 +537,7 @@ function SilverValueVisual({economicsData}:{economicsData:OurSolutionView}) {
 function SilverGradeTable({economicsData}:{economicsData:OurSolutionView}) {
   const upper=(code:string,digits:number)=>economicsData.solutions.find(s=>s.code===code)!.silverUpperPct.toFixed(digits)+"%";
   const silverRows=[
-    {method:"Shredding",fraction:"Mixed fragments",silver:upper("SHREDDING",4),recovery:"~19%"},
+    {method:"Shredding",fraction:"Mixed fragments",silver:upper("SHREDDING",4),recovery:`<${compactNumber(webNum(economicsData,"methods.shredding.product_recovery_percent"))}%`},
     {method:"Thermal processing",fraction:"Cell laminate",silver:upper("HOT_KNIFE",3),recovery:"~88%"},
     {method:"PV Circulator",fraction:"Silicon (cell) powder",silver:upper("PVCIRCULATOR",3)+" · Elkem-measured 1.5%",recovery:"99.3%"}
   ];

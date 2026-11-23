@@ -9,6 +9,9 @@ assert.doesNotMatch(src,/label: "Process"/,'Methods comparison tables should not
 assert.equal(data['methods.shredding.footprint_m2'].value,480);
 assert.equal(data['methods.thermal.footprint_m2'].value,160);
 assert.equal(data['methods.circulator.footprint_m2'].value,40);
+assert.equal(data['methods.shredding.direct_staff_per_shift'].value,3);
+assert.equal(data['methods.shredding.indirect_staff_per_shift'].value,2);
+assert.equal(data['methods.shredding.product_recovery_percent'].value,80);
 assert.equal(data['methods.shredding.secondary_treatment_t_per_mw'].value,54);
 assert.equal(data['methods.circulator.secondary_treatment_t_per_mw'].value,.5);
 assert.match(src,/function technologyRows\(data:OurSolutionView\)/);
