@@ -13,6 +13,11 @@ export type WebsiteData = Record<string, WebsiteDataRecord>;
 // written to Assumptions section 12 in every newly exported workbook.
 export const websiteDataDefaults: WebsiteData = {
   "stakes.circularity_goal_percent": { section: "Stakes", label: "Circularity goal", value: 100, unit: "%", source: "PV Circonomy goal" },
+  "stakes.cost.reference_panel_watts": { section: "Stakes", label: "Cost comparison reference module rating", value: 350, unit: "W", source: "PV Circonomy comparison basis" },
+  "stakes.cost.nrel_recycling_low_usd_per_panel": { section: "Stakes", label: "NREL recycling cost, low", value: 15, unit: "USD/panel", source: "NREL/TP-6A20-74550" },
+  "stakes.cost.nrel_recycling_high_usd_per_panel": { section: "Stakes", label: "NREL recycling cost, high", value: 45, unit: "USD/panel", source: "NREL/TP-6A20-74550" },
+  "stakes.cost.nrel_landfill_low_usd_per_panel": { section: "Stakes", label: "NREL landfill cost, low", value: 1, unit: "USD/panel", source: "NREL/TP-6A20-74550" },
+  "stakes.cost.nrel_landfill_high_usd_per_panel": { section: "Stakes", label: "NREL landfill cost, high", value: 5, unit: "USD/panel", source: "NREL/TP-6A20-74550" },
   "methods.shredding.footprint_m2": { section: "Methods", label: "Shredding footprint", value: 480, unit: "m²", source: "TNO 2022 R10860 (Späth et al.), pp. 8, 12, 19" },
   "methods.thermal.footprint_m2": { section: "Methods", label: "Thermal processing footprint", value: 160, unit: "m²", source: "NEDO 2026 A1-2-14 (MRI), p. 8" },
   "methods.circulator.footprint_m2": { section: "Methods", label: "PV Circulator footprint", value: 40, unit: "m²", source: "PV Circulator product specification" },
@@ -40,6 +45,11 @@ export const websiteDataDefaults: WebsiteData = {
   "materials.demand_horizon_start_year": { section: "Materials", label: "Recovered-material demand horizon, start", value: 2040, unit: "year", source: "IEA assessment" },
   "materials.demand_horizon_end_year": { section: "Materials", label: "Recovered-material demand horizon, end", value: 2050, unit: "year", source: "IEA assessment" },
   "materials.recycled_aluminium_primary_carbon_percent": { section: "Materials", label: "Recycled aluminium carbon emissions versus primary", value: 3, unit: "%", source: "PV Circonomy materials pathway reference" },
+  "value.silver_industry_2024_mg_per_w": { section: "Value", label: "Industry-average silver use, 2024", value: 13, unit: "mg/W", source: "IRENA 2026" },
+  "value.silver_topcon_2025_mg_per_w": { section: "Value", label: "TOPCon median silver use, 2025", value: 10, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
+  "value.silver_topcon_2035_mg_per_w": { section: "Value", label: "TOPCon expected silver use, 2035", value: 6.3, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
+  "value.silver_hjt_2025_mg_per_w": { section: "Value", label: "HJT median silver use, 2025", value: 12, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
+  "value.silver_hjt_2035_mg_per_w": { section: "Value", label: "HJT expected silver use, 2035", value: 4.3, unit: "mg/W", source: "ITRPV, 17th edition (2026)" },
   "scale.australia_launch_year": { section: "Scale", label: "Australia launch year", value: 2027, unit: "year", source: "PV Circonomy commercialization plan" },
   "scale.taiwan_launch_year": { section: "Scale", label: "Taiwan launch year", value: 2027, unit: "year", source: "PV Circonomy commercialization plan" },
 };

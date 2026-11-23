@@ -13,6 +13,7 @@ import type { RouteEnvironmentalMetric } from "../../lib/route-comparison";
 
 import type { EconomicsView } from "../../lib/our-solution-data";
 import { websiteNumber } from "../../lib/our-solution/public-data";
+import { initialRules, tierRate, type PricingRules } from "../../lib/pricing-rules";
 import "./review-home.css";
 
 export type BreakevenView = { region: string; feeUnit: string; currency: string; panelsPerMonth: number; panelWeightLb: number; source: string; fees: { code: string; breakevenFee: number | null }[] } | null;
@@ -46,6 +47,25 @@ type DeckSlide = { label: string; navigationLabel?: string; visual: ReactNode; n
 
 function Arrow({ direction = "right" }: { direction?: "left" | "right" }) {
   return <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d={direction === "right" ? "M3 9h11M10 5l4 4-4 4" : "M15 9H4m4-4L4 9l4 4"} stroke="currentColor" strokeWidth="1.3" /></svg>;
+}
+
+function CostBenchmarkChart({data,rules}:{data:OurSolutionView;rules:PricingRules}) {
+  const watts=webNum(data,"stakes.cost.reference_panel_watts"),panelsPerMw=1e6/watts,weightLb=data.scenario.panelWeightLb;
+  const truckRate=tierRate(watts,"panel",{},rules)?.rate??0,trailerRate=tierRate(watts,"lb",{},rules)?.rate??0;
+  const truck=truckRate*panelsPerMw,trailer=trailerRate*weightLb*panelsPerMw;
+  const nrelLow=webNum(data,"stakes.cost.nrel_recycling_low_usd_per_panel")*panelsPerMw,nrelHigh=webNum(data,"stakes.cost.nrel_recycling_high_usd_per_panel")*panelsPerMw;
+  const landfillLow=webNum(data,"stakes.cost.nrel_landfill_low_usd_per_panel")*panelsPerMw,landfillHigh=webNum(data,"stakes.cost.nrel_landfill_high_usd_per_panel")*panelsPerMw;
+  const max=nrelHigh*1.08,baseY=174,topY=20,y=(value:number)=>baseY-value/max*(baseY-topY),money=(value:number)=>`$${Math.round(value).toLocaleString("en-US")}`;
+  return <figure className="os-cost-benchmark">
+    <figcaption><strong>Owner / EPC / O&amp;M: processing cost per MW</strong><span>{compactNumber(watts)} W modules · current pricing</span></figcaption>
+    <svg viewBox="0 0 560 220" role="img" aria-label={`Current processing cost per megawatt: Truck ${money(truck)}, Trailer ${money(trailer)}. NREL published recycling range ${money(nrelLow)} to ${money(nrelHigh)}. NREL published landfill range ${money(landfillLow)} to ${money(landfillHigh)}.`}>
+      <rect className="os-cost-landfill-band" x="56" width="480" y={y(landfillHigh)} height={Math.max(2,y(landfillLow)-y(landfillHigh))}/><text className="os-cost-landfill-label" x="60" y={y(landfillHigh)-5}>NREL landfill range · {money(landfillLow)}–{money(landfillHigh)}</text>
+      {[{value:nrelLow,label:`NREL low · ${money(nrelLow)}`},{value:nrelHigh,label:`NREL high · ${money(nrelHigh)}`}].map(item=><g className="os-cost-nrel" key={item.label}><line x1="56" x2="536" y1={y(item.value)} y2={y(item.value)}/><text x="532" y={y(item.value)-5} textAnchor="end">{item.label}</text></g>)}
+      <line className="os-cost-axis" x1="56" x2="536" y1={baseY} y2={baseY}/>
+      {[{x:188,label:"Truck · per panel",value:truck,rate:`${usd(truckRate,2)}/panel`},{x:362,label:"Trailer · per lb",value:trailer,rate:`${usd(trailerRate,3)}/lb`}].map(item=><g className="os-cost-current-bar" key={item.label}><rect x={item.x} y={y(item.value)} width="86" height={baseY-y(item.value)}/><text className="is-value" x={item.x+43} y={y(item.value)-8} textAnchor="middle">{money(item.value)}</text><text x={item.x+43} y="193" textAnchor="middle">{item.label}</text><text x={item.x+43} y="207" textAnchor="middle">{item.rate}</text></g>)}
+    </svg>
+    <small>Processing only; transport and taxes excluded. Trailer conversion uses {compactNumber(weightLb)} lb per panel. NREL’s published recycling and landfill estimates exclude transport.</small>
+  </figure>;
 }
 
 function GlobalDeploymentMap() {
@@ -504,7 +524,27 @@ function SilverGradeTable({economicsData}:{economicsData:OurSolutionView}) {
   return <div className="os-method-detail-table os-silver-grade-table"><table><caption className="pv-sr-only">Where silver ends up and product recovery, by method</caption><thead><tr><th scope="col">Method</th><th scope="col">Silver-bearing fraction</th><th scope="col">Silver content</th><th scope="col">Product recovery</th></tr></thead><tbody>{silverRows.map(row => <tr key={row.method} className={row.method === "PV Circulator" ? "is-circulator" : undefined}><th scope="row">{row.method}</th><td>{row.fraction}</td><td>{row.silver}</td><td>{row.recovery}</td></tr>)}</tbody></table></div>;
 }
 
+function SilverTechnologyTrend({data}:{data:OurSolutionView}) {
+  const industry=webNum(data,"value.silver_industry_2024_mg_per_w");
+  const topcon=[webNum(data,"value.silver_topcon_2025_mg_per_w"),webNum(data,"value.silver_topcon_2035_mg_per_w")];
+  const hjt=[webNum(data,"value.silver_hjt_2025_mg_per_w"),webNum(data,"value.silver_hjt_2035_mg_per_w")];
+  const top=15,left=36,right=420,y=(value:number)=>24+(top-value)/top*126;
+  return <figure className="os-silver-intensity-chart">
+    <figcaption><strong>Silver use is falling by cell technology.</strong><span>milligrams per watt</span></figcaption>
+    <svg viewBox="0 0 460 188" role="img" aria-label={`Silver use: 2024 industry average ${industry} milligrams per watt. TOPCon falls from ${topcon[0]} in 2025 to ${topcon[1]} in 2035. HJT falls from ${hjt[0]} in 2025 to ${hjt[1]} in 2035.`}>
+      {[0,5,10,15].map(value=><g key={value}><line className="os-silver-intensity-grid" x1={left} x2="438" y1={y(value)} y2={y(value)}/><text x="27" y={y(value)+3} textAnchor="end">{value}</text></g>)}
+      <g className="is-industry"><circle cx="54" cy={y(industry)} r="4"/><text x="64" y={y(industry)-7}>2024 average · {compactNumber(industry)}</text></g>
+      <g className="is-topcon"><polyline points={`128,${y(topcon[0])} ${right},${y(topcon[1])}`}/><circle cx="128" cy={y(topcon[0])} r="4"/><circle cx={right} cy={y(topcon[1])} r="4"/><text x="128" y={y(topcon[0])-8} textAnchor="middle">{compactNumber(topcon[0])}</text><text x={right-8} y={y(topcon[1])-9} textAnchor="end">TOPCon · {compactNumber(topcon[1])}</text></g>
+      <g className="is-hjt"><polyline points={`128,${y(hjt[0])} ${right},${y(hjt[1])}`}/><circle cx="128" cy={y(hjt[0])} r="4"/><circle cx={right} cy={y(hjt[1])} r="4"/><text x="128" y={y(hjt[0])-8} textAnchor="middle">{compactNumber(hjt[0])}</text><text x={right-8} y={y(hjt[1])+15} textAnchor="end">HJT · {compactNumber(hjt[1])}</text></g>
+      <text className="os-silver-intensity-year" x="54" y="178" textAnchor="middle">2024</text><text className="os-silver-intensity-year" x="128" y="178" textAnchor="middle">2025</text><text className="os-silver-intensity-year" x={right} y="178" textAnchor="middle">2035</text>
+    </svg>
+  </figure>;
+}
+
 function ValueSection({economicsData}:{economicsData:OurSolutionView}) {
+  const industry=webNum(economicsData,"value.silver_industry_2024_mg_per_w");
+  const topconNow=webNum(economicsData,"value.silver_topcon_2025_mg_per_w"),topconFuture=webNum(economicsData,"value.silver_topcon_2035_mg_per_w");
+  const hjtNow=webNum(economicsData,"value.silver_hjt_2025_mg_per_w"),hjtFuture=webNum(economicsData,"value.silver_hjt_2035_mg_per_w");
   return <section id="value" className="pv-screen os-value-section" aria-labelledby="value-title">
     <div className="os-value-visual"><SilverValueVisual economicsData={economicsData} /></div>
     <aside className="os-value-explanation">
@@ -513,7 +553,8 @@ function ValueSection({economicsData}:{economicsData:OurSolutionView}) {
         <p className="os-chart-source">Theoretical upper bound = silver ÷ (silver + the module components that end up in the product), with all module silver assumed in the product. Membership and module shares: Our Solution parameter master, Section 8. Elkem-measured 1.5% is shown alongside the PV Circulator calculation.</p></div>
       <div id="silver-trend" className="os-silver-trend">
         <h3>Less silver in every panel. Recovery has to keep up.</h3>
-        <p>Panel makers keep cutting silver to lower cost. Solar panels used about 13 g of silver per kW in 2024—less than half the 2014 level (IRENA, 2026). In 2025 the median TOPCon cell used about 10 mg per watt, and the industry roadmap expects about 6.3 mg per watt within ten years; heterojunction cells, 12.0 mg today, are expected to fall to 4.3 mg (ITRPV, 17th edition, 2026).</p>
+        <SilverTechnologyTrend data={economicsData} />
+        <p>Panel makers keep cutting silver to lower cost. Solar panels used about {compactNumber(industry)} g of silver per kW in 2024—less than half the 2014 level (IRENA, 2026). In 2025 the median TOPCon cell used about {compactNumber(topconNow)} mg per watt, and the industry roadmap expects about {compactNumber(topconFuture)} mg per watt within ten years; heterojunction cells, {compactNumber(hjtNow)} mg today, are expected to fall to {compactNumber(hjtFuture)} mg (ITRPV, 17th edition, 2026).</p>
         <p>Each retired panel will carry less silver than the one before. Recycling stays profitable only if far more of that silver is recovered, in a concentrated stream a refiner will pay for. Routes that grind silver into mixed glass or leave it inside a polymer layer lose that value first.</p>
         <p className="os-chart-source">Sources: <a href="https://www.irena.org/Publications">IRENA (2026)</a> · <a href="https://www.vdma.eu/documents/d/group-34568/en-press-release-itrpv-17-edition">ITRPV, 17th edition (2026)</a>.</p>
       </div>
@@ -579,6 +620,8 @@ function RegulationSection({ metrics, assumptions, data }: { metrics: RouteEnvir
     ["California.", "Since 1 January 2021, hazardous end-of-life PV modules may be managed as universal waste under 22 CCR Chapter 23. Handlers and treatment facilities must notify DTSC and report annually.", "https://dtsc.ca.gov/photovoltaic-modules-pv-modules-universal-waste-management-regulations/", "DTSC"],
     ["North Carolina.", "From 1 December 2026, PV modules may not be disposed of in unlined landfills, including construction-and-demolition debris landfills.", "https://www.deq.nc.gov/north-carolina-landfill-disposal-bans", "NC DEQ"],
     ["European Union (WEEE Directive 2012/19/EU).", "PV panels are covered as large equipment: at least 85% must be recovered and 80% prepared for re-use and recycled.", "https://eur-lex.europa.eu/eli/dir/2012/19/oj", "EUR-Lex"],
+    ["Japan.", "Used PV panels must be properly managed under the Waste Management Act. FIT/FIP business systems of 10 kW or more are subject to the decommissioning-cost reserve mechanism under the Renewable Energy Special Measures Act.", "https://www.env.go.jp/content/000378443.pdf", "MOE / METI"],
+    ["Australia (Victoria).", "Photovoltaic panels are e-waste under the Environment Protection Regulations 2021. Victoria landfills cannot receive e-waste; generators, transporters and receivers have duties under the Environment Protection Act 2017.", "https://www.epa.vic.gov.au/electronic-waste", "EPA Victoria"],
   ];
   return <section id="regulation" className="pv-screen os-regulation" aria-labelledby="regulation-title"><div>
     <h2 id="regulation-title">Less to landfill. Less carbon in the process.</h2>
@@ -588,7 +631,7 @@ function RegulationSection({ metrics, assumptions, data }: { metrics: RouteEnvir
   </div><div className="os-regulation-rules">{rules.map(([title, copy, href, source]) => <article key={title}><h3>{title}</h3><p>{copy}</p><a href={href}>{source} <Arrow /></a></article>)}</div></section>;
 }
 
-function EconomicLineChart({ title, subtitle, labels, series }: { title: string; subtitle: string; labels: string[]; series: EconomicSeries[] }) {
+function EconomicLineChart({ title, subtitle, labels, series, highlightIndex }: { title: string; subtitle: string; labels: string[]; series: EconomicSeries[]; highlightIndex?:number }) {
   const values=series.flatMap(s=>s.values);
   let min=Math.min(0,...values),max=Math.max(0,...values);
   const padding=Math.max(1,(max-min)*0.15);min-=padding;max+=padding;
@@ -605,24 +648,33 @@ function EconomicLineChart({ title, subtitle, labels, series }: { title: string;
     <div className="os-economic-legend" aria-hidden="true">{series.map((item) => <span className={item.className} key={item.label}><i />{item.label}</span>)}</div>
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${title}. ${series.map((item) => `${item.label}: ${item.values.join(", ")}`).join(". ")}`}>
       {[0, 0.25, 0.5, 0.75, 1].map((ratio) => <line key={ratio} x1={left} x2={width - right} y1={top + ratio * (height - top - bottom)} y2={top + ratio * (height - top - bottom)} className="os-economic-grid" />)}
+      {highlightIndex!==undefined&&<g className="os-economic-current"><line x1={x(highlightIndex)} x2={x(highlightIndex)} y1={top-4} y2={height-bottom}/><text x={x(highlightIndex)} y="13" textAnchor="middle">Current fee</text></g>}
       {series.map((item) => <g className={item.className} key={item.label}>
         <polyline points={item.values.map((value, index) => `${x(index)},${y(value)}`).join(" ")} />
-        {item.values.map((value, index) => <g key={`${item.label}-${labels[index]}`}><circle cx={x(index)} cy={y(value)} r="3" /><text x={x(index)} y={y(value) - 8} textAnchor="middle">{value.toLocaleString()}</text></g>)}
+        {item.values.map((value, index) => <g className={index===highlightIndex?"is-current-point":undefined} key={`${item.label}-${labels[index]}`}><circle cx={x(index)} cy={y(value)} r={index===highlightIndex?5:3} /><text x={x(index)} y={y(value) - 8} textAnchor="middle">{value.toLocaleString()}</text></g>)}
       </g>)}
       {labels.map((label, index) => <text className="os-economic-axis-label" x={x(index)} y={height - 8} textAnchor="middle" key={label}>{label}</text>)}
     </svg>
   </figure>;
 }
 
+function PurificationUpliftChart({directSale,purifiedNet}:{directSale:number;purifiedNet:number}) {
+  const peak=Math.max(directSale,purifiedNet),values=[{label:"Direct cell-powder sale",value:directSale,className:"is-direct"},{label:"Modeled purification net",value:purifiedNet,className:"is-purified"}];
+  return <figure className="os-purification-chart"><figcaption>Annual cell-stream value · USD</figcaption><div role="img" aria-label={`Direct cell-powder sale ${usd(directSale)} per year. Modeled purification net ${usd(purifiedNet)} per year.`}>{values.map(item=><div className={item.className} key={item.label}><span>{item.label}</span><i><b style={{width:`${item.value/peak*100}%`}}/></i><strong>{usd(item.value)}</strong></div>)}</div></figure>;
+}
+
 function EconomicSection({ economicsData, breakeven, priceSources }: { economicsData: OurSolutionView; breakeven: BreakevenView; priceSources:string }) {
   const { conventional, hotKnife, circulator } = economicsSolutions(economicsData);
+  const currentFee=economicsData.scenario.processingFeeUsdPerLb,currentFeeLabel=`${usd(currentFee,2)}/lb`,feeRevenue=economicsData.scenario.annualProcessingFeeRevenue;
   const economicRows = [
     ["Material revenue — silver", usd(conventional.materialRevenue.silver), usd(hotKnife.materialRevenue.silver), usd(circulator.materialRevenue.silver)],
     ["Material revenue — Al, Cu", usd(conventional.materialRevenue.aluminumAndCopper), usd(hotKnife.materialRevenue.aluminumAndCopper), usd(circulator.materialRevenue.aluminumAndCopper)],
     ["Other recovered materials", usd(conventional.materialRevenue.other), usd(hotKnife.materialRevenue.other), usd(circulator.materialRevenue.other)],
+    ["PV Circulator cell powder (included above)", "—", "—", usd(economicsData.cellPowder.scenario1)],
     ["Total material revenue", usd(conventional.annualMaterialRevenue), usd(hotKnife.annualMaterialRevenue), usd(circulator.annualMaterialRevenue)],
+    [`Processing-fee revenue · ${currentFeeLabel}`, usd(feeRevenue), usd(feeRevenue), usd(feeRevenue)],
     ["Operating cost", usd(conventional.annualOpex), usd(hotKnife.annualOpex), usd(circulator.annualOpex)],
-    ["Annual EBITDA", usd(conventional.annualEbitda), usd(hotKnife.annualEbitda), usd(circulator.annualEbitda)],
+    ["Annual EBITDA", usd(conventional.annualEbitdaAtCurrentFee), usd(hotKnife.annualEbitdaAtCurrentFee), usd(circulator.annualEbitdaAtCurrentFee)],
   ] as const;
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -633,11 +685,7 @@ function EconomicSection({ economicsData, breakeven, priceSources }: { economics
     { label: "Thermal processing", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.HOT_KNIFE, className: "is-thermal" },
     { label: "PV Circulator", values: economicsData.feeSensitivity.annualEbitdaUsdThousands.PVCIRCULATOR, className: "is-circulator" },
   ];
-  const silverSeries: EconomicSeries[] = [
-    { label: "Shredding", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.SHREDDING, className: "is-shredding" },
-    { label: "Thermal processing", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.HOT_KNIFE, className: "is-thermal" },
-    { label: "PV Circulator", values: economicsData.silverSensitivity.annualEbitdaUsdThousands.PVCIRCULATOR, className: "is-circulator" },
-  ];
+  const currentFeeIndex=economicsData.feeSensitivity.feeUsdPerLb.findIndex(value=>Math.abs(value-currentFee)<1e-9);
   const breakevenFee = (code: string) => breakeven?.fees.find(item => item.code === code)?.breakevenFee;
   const feeText = (value: number | null | undefined) => value == null || !breakeven ? null : `${value.toLocaleString("en-US", { style: "currency", currency: breakeven.currency, minimumFractionDigits: 3, maximumFractionDigits: 3 })}${breakeven.feeUnit.replace(/^[A-Z]{3}/, "")}`;
   const shreddingBreakeven = feeText(breakevenFee("SHREDDING")), hotKnifeBreakeven = feeText(breakevenFee("HOT_KNIFE")), circulatorBreakeven = breakevenFee("PVCIRCULATOR");
@@ -646,9 +694,9 @@ function EconomicSection({ economicsData, breakeven, priceSources }: { economics
   const breakevenCopy = breakeven && shreddingBreakeven && hotKnifeBreakeven ? `Breakeven processing fee (annual EBITDA = 0): Shredding ${shreddingBreakeven}, Thermal processing ${hotKnifeBreakeven}${circulatorBreakeven === 0 ? "; PV Circulator is EBITDA-positive with no processing fee" : ""}. Across the modeled ${feeRange} range, The chart shows each route’s annual EBITDA.` : null;
   const breakevenDetail = breakeven && breakevenCopy ? `Breakeven fees from the Our Solution parameter engine on the ${breakeven.source.toLowerCase()}: ${breakeven.region}, ${breakeven.panelsPerMonth.toLocaleString("en-US")} panels/month, ${breakeven.panelWeightLb} lb/panel. CAPEX and equipment depreciation are excluded; maintenance is included.` : null;
   const slides = [
-    { label: "Annual P&L", heading: "Material recovery value sets the ranking.", copy: `At zero processing fee, Shredding models about ${usd(conventional.annualEbitda / 1000)}k, Thermal processing ${usd(hotKnife.annualEbitda / 1000)}k and PV Circulator ${usd(circulator.annualEbitda / 1000)}k in annual EBITDA.`, detail: `${economicsData.scenario.region} business-case scenario: ${economicsData.scenario.panelsPerMonth.toLocaleString()} panels/month, ${economicsData.scenario.annualPanels.toLocaleString()} panels/year and ${economicsData.scenario.panelWeightLb} lb/panel. CAPEX and equipment depreciation are excluded; maintenance is included.`, visual: <div className="os-economic-table-wrap"><table><caption>Annual profit and loss in US dollars, with no processing fee</caption><thead><tr><th scope="col">Annual · USD</th><th scope="col">Shredding</th><th scope="col">Thermal processing</th><th scope="col">PV Circulator</th></tr></thead><tbody>{economicRows.map(([label, conventionalValue, hotKnifeValue, circulatorValue]) => <tr key={label}><th scope="row">{label}</th><td>{conventionalValue}</td><td>{hotKnifeValue}</td><td>{circulatorValue}</td></tr>)}</tbody></table></div> },
-    { label: "Processing fee", heading: "Processing fees lift revenue, but do not change the order.", copy: breakevenCopy ?? `Processing fee sensitivity across ${feeRange}.`, detail: breakevenDetail ?? scenarioDetail, visual: <EconomicLineChart title="Processing fee vs. annual EBITDA" subtitle={`$1,000 per year · ${economicsData.scenario.region} · ${economicsData.scenario.panelsPerMonth.toLocaleString()} panels/month`} labels={economicsData.feeSensitivity.feeUsdPerLb.map(v=>`${usd(v,2)}/lb`)} series={feeSeries} /> },
-    { label: "Silver price", heading: "Silver price changes the spread, not the ranking.", copy: `Silver-price changes from ${Math.min(...economicsData.silverSensitivity.changePercent)}% to +${Math.max(...economicsData.silverSensitivity.changePercent)}% show the change in modeled annual EBITDA.`, detail: "This sensitivity uses no processing fee and changes only modeled silver revenue. CAPEX and equipment depreciation are excluded; maintenance is included.", visual: <EconomicLineChart title="Silver price vs. annual EBITDA" subtitle="$1,000 per year · no processing fee" labels={economicsData.silverSensitivity.changePercent.map(v=>v===0?"Base":`${v>0?"+":""}${v}%`)} series={silverSeries} /> },
+    { label: "Annual P&L", heading: "Direct cell-powder sales make the base case profitable.", copy: `PV Circulator models ${usd(circulator.annualEbitdaAtCurrentFee / 1000)}k in annual EBITDA at the current ${currentFeeLabel} processing fee. The base case sells separated cell powder directly; it does not assume in-house silver purification.`, detail: `${economicsData.scenario.region} business-case scenario: ${economicsData.scenario.panelsPerMonth.toLocaleString()} panels/month, ${economicsData.scenario.annualPanels.toLocaleString()} panels/year and ${economicsData.scenario.panelWeightLb} lb/panel. CAPEX and equipment depreciation are excluded; maintenance is included.`, visual: <div className="os-economic-table-wrap"><table><caption>Annual profit and loss in US dollars at the current {currentFeeLabel} processing fee</caption><thead><tr><th scope="col">Annual · USD</th><th scope="col">Shredding</th><th scope="col">Thermal processing</th><th scope="col">PV Circulator</th></tr></thead><tbody>{economicRows.map(([label, conventionalValue, hotKnifeValue, circulatorValue]) => <tr key={label}><th scope="row">{label}</th><td>{conventionalValue}</td><td>{hotKnifeValue}</td><td>{circulatorValue}</td></tr>)}</tbody></table></div> },
+    { label: "Processing fee", heading: "The current processing fee is the operating baseline.", copy: `At ${currentFeeLabel}, processing adds ${usd(feeRevenue)} in annual revenue at the modeled volume. The chart keeps the wider ${feeRange} range visible for sensitivity.`, detail: breakevenDetail ?? scenarioDetail, visual: <EconomicLineChart title="Processing fee vs. annual EBITDA" subtitle={`$1,000 per year · ${economicsData.scenario.region} · ${economicsData.scenario.panelsPerMonth.toLocaleString()} panels/month`} labels={economicsData.feeSensitivity.feeUsdPerLb.map(v=>`${usd(v,2)}/lb`)} series={feeSeries} highlightIndex={currentFeeIndex} /> },
+    { label: "Purification upside", heading: "Silver purification is upside—not the base case.", copy: `Direct cell-powder sale contributes ${usd(economicsData.cellPowder.scenario1)} per year in the base case. The modeled purification route increases net cell-stream value to ${usd(economicsData.cellPowder.scenario2Net)}, an indicative uplift of ${usd(economicsData.cellPowder.scenario2Net-economicsData.cellPowder.scenario1)}.`, detail: "The purification case deducts modeled reagents and electrorefining electricity only. Added refining labor, equipment depreciation, permitting, wastewater treatment, financing and product qualification are not yet included, so this is potential value—not EBITDA guidance.", visual: <PurificationUpliftChart directSale={economicsData.cellPowder.scenario1} purifiedNet={economicsData.cellPowder.scenario2Net} /> },
   ];
   const slide = slides[current];
   useEffect(() => {
@@ -664,7 +712,7 @@ function EconomicSection({ economicsData, breakeven, priceSources }: { economics
   }, [current, isPaused, isVisible, slides.length]);
   return <section ref={sectionRef} id="economic" className={`pv-screen os-economic is-auto${isPaused || !isVisible ? " is-paused" : ""}`} style={{ "--deck-duration": "10000ms" } as CSSProperties} aria-labelledby="economic-title" onFocusCapture={() => setIsPaused(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsPaused(false); }} onKeyDown={(event) => { if (event.key === "ArrowLeft") setCurrent((value) => Math.max(0, value - 1)); if (event.key === "ArrowRight") setCurrent((value) => Math.min(slides.length - 1, value + 1)); }}>
     <aside className="os-economic-copy">
-      <div className="os-economic-copy-body"><h2 id="economic-title">The lowest-impact process also delivers the highest operating profit.</h2><p>For {economicsData.scenario.annualPanels.toLocaleString()} retired panels per year in the {economicsData.scenario.region} business-case scenario, preserving material value changes the economics before any processing fee is charged.</p><strong className="os-economic-result">PV Circulator delivers about <b>{usd(circulator.annualEbitda / 1000)}k</b> annual EBITDA</strong><a className="pv-button os-economic-cta" href="/business-case/">Run the numbers for your operation <Arrow /></a><a className="pv-text-button" href="/pv-circulator/#routes">See where the profit is <Arrow /></a></div>
+      <div className="os-economic-copy-body"><h2 id="economic-title">Direct cell-powder sales support a profitable base case.</h2><p>For {economicsData.scenario.annualPanels.toLocaleString()} retired panels per year in the {economicsData.scenario.region} business-case scenario, PV Circulator preserves material value and sells the separated cell powder directly. The current processing fee is included; purification is shown separately as potential upside.</p><strong className="os-economic-result">PV Circulator delivers about <b>{usd(circulator.annualEbitdaAtCurrentFee / 1000)}k</b> annual EBITDA at {currentFeeLabel}</strong><div className="os-economic-actions"><a className="pv-button os-economic-cta" href="/business-case/">Run the numbers for your operation <Arrow /></a><a className="pv-text-button" href="/pv-circulator/#routes">See where the profit is <Arrow /></a></div></div>
       <div className="os-deck-navigation" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}><div className="os-deck-progress" aria-label="Choose an economic chart">{slides.map((item, index) => <button key={item.label} type="button" aria-label={`Show economic chart ${index + 1}: ${item.label}`} aria-pressed={current === index} onClick={() => setCurrent(index)}><span /><small>{item.label}</small></button>)}</div></div>
     </aside>
     <div className="os-economic-visual" aria-live="polite"><div key={`economic-${current}`} className="os-economic-slide"><div className="os-economic-slide-copy"><h3>{slide.heading}</h3><p>{slide.copy}</p><small>{slide.detail}</small></div><div className="os-economic-slide-graphic">{slide.visual}</div><p className="os-economic-source">{priceSources} · Weekly sources: silver XAG/USD spot via currency-api; LME aluminium cash and LME copper 3-month via Westmetall; SMM silicon #553 workbook value. Glass benchmarked to US cement {economicsData.productMaterials.find(m=>m.name === "Glass")!.value / economicsData.productMaterials.find(m=>m.name === "Glass")!.share} USD/t, USGS Mineral Commodity Summaries 2026. Scenario values are illustrative, not guaranteed commercial outcomes.</p></div></div>
@@ -710,7 +758,7 @@ function MaterialsSection({data}:{data:OurSolutionView}) {
   </section>;
 }
 
-export function OurSolution({ economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices" }: { economicsData?: OurSolutionView; routeMetrics?: RouteEnvironmentalMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string }) {
+export function OurSolution({ economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices", pricingRules=initialRules }: { economicsData?: OurSolutionView; routeMetrics?: RouteEnvironmentalMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string;pricingRules?:PricingRules }) {
   const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
   const capacityFirst = capacityTrend[0], capacityLast = capacityTrend[capacityTrend.length - 1];
   const [active, setActive] = useState<SectionId>("overview");
@@ -761,7 +809,7 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
     <main>
       <section id="overview" className="pv-screen pv-hero os-hero" aria-labelledby="os-title"><video autoPlay muted loop playsInline poster="/images/pvcirculator-oursolution-poster.jpg"><source src="/videos/pvcirculator-oursolution.mp4" type="video/mp4" /></video><div className="pv-hero-shade" /><div className="pv-hero-copy"><h1 id="os-title">Owners pay less.<br />Recyclers earn more.<br />Materials stay in circulation.</h1><p className="os-legacy-line">The next solar industry challenge begins when generation ends.</p><p className="os-hero-context">For owners, recyclers and investors, decommissioning brings cost, compliance, reputation and material value into the same decision.</p></div><a className="pv-down" href="#wave" aria-label="Continue to the coming decommissioning wave"><Arrow /></a></section>
       <section id="wave" className="pv-screen os-deck-section" aria-label="The coming decommissioning wave"><StoryDeck id="wave-deck" title="The coming decommissioning wave" slides={waveSlides} variant="split" autoAdvanceMs={30000} /></section>
-      <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div><div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><p className="os-stake-goal"><strong>Our goal</strong><span>{selectedGoal}</span></p><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
+      <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div>{stake==="cost"&&<CostBenchmarkChart data={economicsData} rules={pricingRules}/>}<div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><p className="os-stake-goal"><strong>Our goal</strong><span>{selectedGoal}</span></p><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
       <section id="system" className="pv-screen os-system" aria-labelledby="system-title"><div className="os-system-stage"><div className="os-system-heading"><h2 id="system-title">Our solution</h2><p>One circular system answers the four shared needs: lower cost, provable compliance, material circularity and defensible reputation.</p></div><div className="os-system-flow" role="list" aria-label="The PV Circonomy circular value system">{(Object.keys(systemTopics) as SystemTopic[]).map((topic) => <article key={topic} role="listitem"><figure><img src={systemVisuals[topic].src} alt={systemVisuals[topic].alt} /></figure><div className="os-system-card-copy"><div><strong>{systemTopics[topic][0]}</strong><span> | {cards[topic].tagline}</span></div><ul>{cards[topic].bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul></div></article>)}</div></div></section>
       <ProcessPlaylist active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" />
       <section id="conventional" className="pv-screen os-deck-section" aria-label="Why conventional recycling destroys value"><StoryDeck id="conventional-deck" title="Why conventional recycling destroys value" slides={conventionalSlides} variant="split" autoAdvanceMs={30000} /></section>
