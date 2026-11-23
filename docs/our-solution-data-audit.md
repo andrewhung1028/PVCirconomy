@@ -1,6 +1,6 @@
 # Our Solution dynamic-data audit
 
-The public `/solutions/` page uses the published **Our Solution** master workbook. Calculated results are never copied into page components.
+The public `/solutions/` page uses the published **Our Solution** master workbook for its editable market, operating, technical and benchmark data. Calculated results are never copied into page components.
 
 ## Data now controlled by the workbook
 
@@ -32,4 +32,4 @@ These are not hidden hard-coded values. They are explicit gaps or source-quality
 | PV Circulator footprint, energy, throughput, staffing and secondary-treatment claims | Product-specification labels | Controlled specification document number, revision and approval date |
 | Australia and Taiwan launch years | Commercialization-plan label | Plan owner, revision and approval date |
 
-Presentation constants such as SVG dimensions, chart tick counts, animation timing and map-marker coordinates are UI settings, not business data, and remain in code.
+Presentation constants such as SVG dimensions, chart tick counts, animation timing and map-marker coordinates are UI settings, not business data, and remain in code. Legal effective dates, report names/page numbers and certification identifiers remain editorial citations in page copy; the values that those sources support are stored in the workbook.
