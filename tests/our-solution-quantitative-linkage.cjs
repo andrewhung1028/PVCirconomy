@@ -15,9 +15,9 @@ assert.doesNotMatch(component,/Elkem|Actual measured value 1\.5%/,'measured silv
 assert.doesNotMatch(component,/direct_staff_per_shift|indirect_staff_per_shift/,'the current UI uses one total-staff value per method');
 
 const baseline=model(seed),edited=structuredClone(seed);
-edited.assumptions[12]['methods.thermal.total_staff_per_shift'][0]=5;
+edited.assumptions[12]['methods.thermal.total_staff_per_shift'][0]=6;
 const changed=model(edited);
-assert.equal(changed.solutions.HOT_KNIFE.opex.labor/baseline.solutions.HOT_KNIFE.opex.labor,5/4,'thermal labor follows the workbook total-staff value');
+assert.ok(Math.abs(changed.solutions.HOT_KNIFE.opex.labor/baseline.solutions.HOT_KNIFE.opex.labor-6/5)<1e-12,'thermal labor follows the workbook total-staff value');
 assert.equal(changed.solutions.SHREDDING.opex.labor,baseline.solutions.SHREDDING.opex.labor,'editing thermal staff does not alter shredding labor');
 assert.equal(changed.solutions.PVCIRCULATOR.opex.labor,baseline.solutions.PVCIRCULATOR.opex.labor,'editing thermal staff does not alter PV Circulator labor');
 
@@ -30,16 +30,33 @@ delete legacy.assumptions[12]['value.circulator_measured_silver_percent'];
 legacy.assumptions[12]['materials.silver_demand_recovered_percent'][2]='IEA assessment';
 legacy.assumptions[4]['Operators per shift']=[5,5,3,'people'];
 const normalized=effectiveParameters(legacy);
-assert.equal(normalized.assumptions[12]['methods.thermal.total_staff_per_shift'][0],4,'legacy staff fields migrate to one total');
+assert.equal(normalized.assumptions[12]['methods.thermal.total_staff_per_shift'][0],5,'legacy staff fields migrate to the approved total');
 assert.ok(!('Operators per shift' in normalized.assumptions[4]),'the obsolete duplicate staffing row is removed');
 assert.ok(!Object.keys(normalized.assumptions[12]).some(key=>/\.(direct|indirect)_staff_per_shift$/.test(key)),'legacy split staffing rows are removed');
 assert.equal(normalized.assumptions[12]['materials.silver_demand_recovered_percent'][2],'IEA, Solar PV Global Supply Chains (2022)','legacy generic IEA citation is upgraded');
 assert.equal(normalized.assumptions[12]['value.circulator_measured_silver_percent'][0],1.5,'legacy measured silver value migrates without the company name');
 
+const supersededBaseline=structuredClone(seed);
+supersededBaseline.assumptions[4].Consumables[1]=2.5;
+supersededBaseline.assumptions[12]['methods.shredding.total_staff_per_shift'][0]=5;
+supersededBaseline.assumptions[12]['methods.thermal.total_staff_per_shift'][0]=4;
+const migratedBaseline=effectiveParameters(supersededBaseline);
+assert.equal(migratedBaseline.assumptions[4].Consumables[1],1,'the superseded thermal-consumables baseline migrates to USD 1/panel');
+assert.equal(migratedBaseline.assumptions[12]['methods.shredding.total_staff_per_shift'][0],7,'the superseded shredding staffing baseline migrates to 7');
+assert.equal(migratedBaseline.assumptions[12]['methods.thermal.total_staff_per_shift'][0],5,'the superseded thermal staffing baseline migrates to 5');
+const customBaseline=structuredClone(seed);
+customBaseline.assumptions[4].Consumables[1]=1.2;
+customBaseline.assumptions[12]['methods.shredding.total_staff_per_shift'][0]=8;
+customBaseline.assumptions[12]['methods.thermal.total_staff_per_shift'][0]=6;
+const preservedCustom=effectiveParameters(customBaseline);
+assert.equal(preservedCustom.assumptions[4].Consumables[1],1.2,'a custom thermal-consumables value is preserved');
+assert.equal(preservedCustom.assumptions[12]['methods.shredding.total_staff_per_shift'][0],8,'custom shredding staffing is preserved');
+assert.equal(preservedCustom.assumptions[12]['methods.thermal.total_staff_per_shift'][0],6,'custom thermal staffing is preserved');
+
 const view=economicsView(seed);
 for(const key of Object.keys(websiteDataDefaults))assert.ok(view.websiteData[key],`view exposes Assumptions section 12 key: ${key}`);
-assert.equal(view.websiteData['methods.shredding.total_staff_per_shift'].value,5);
-assert.equal(view.websiteData['methods.thermal.total_staff_per_shift'].value,4);
+assert.equal(view.websiteData['methods.shredding.total_staff_per_shift'].value,7);
+assert.equal(view.websiteData['methods.thermal.total_staff_per_shift'].value,5);
 assert.equal(view.websiteData['methods.circulator.total_staff_per_shift'].value,3);
 assert.deepEqual(Object.keys(normalizedWebsiteAssumptionRows(seed.assumptions[12])),Object.keys(websiteDataDefaults));
 const silverShare=view.productMaterials.find(material=>material.name==='Silver').valueShare;

@@ -29,8 +29,8 @@ export const websiteDataDefaults: WebsiteData = {
   "methods.thermal.throughput_panels_per_hour": { section: "Methods", label: "Thermal processing throughput", value: 40, unit: "panels/hour", source: "TNO 2022 App. D.1, pp. 25–26" },
   "methods.thermal.seconds_per_panel": { section: "Methods", label: "Thermal processing cycle time", value: 90, unit: "seconds/panel", source: "TNO 2022 App. D.1, pp. 25–26" },
   "methods.circulator.throughput_panels_per_hour": { section: "Methods", label: "PV Circulator throughput", value: 60, unit: "panels/hour", source: "PV Circulator product specification" },
-  "methods.shredding.total_staff_per_shift": { section: "Methods", label: "Shredding staff", value: 5, unit: "people/shift", source: "PV Circonomy staffing comparison" },
-  "methods.thermal.total_staff_per_shift": { section: "Methods", label: "Thermal processing staff", value: 4, unit: "people/shift", source: "Thermal processing operating configuration" },
+  "methods.shredding.total_staff_per_shift": { section: "Methods", label: "Shredding staff", value: 7, unit: "people/shift", source: "PV Circonomy staffing comparison" },
+  "methods.thermal.total_staff_per_shift": { section: "Methods", label: "Thermal processing staff", value: 5, unit: "people/shift", source: "Thermal processing operating configuration" },
   "methods.circulator.total_staff_per_shift": { section: "Methods", label: "PV Circulator staff", value: 3, unit: "people/shift", source: "PV Circulator operating configuration" },
   "methods.shredding.product_recovery_percent": { section: "Methods", label: "Shredding product recovery upper bound", value: 80, unit: "%", source: "PV Circonomy comparison threshold" },
   "methods.thermal.product_recovery_percent": { section: "Methods", label: "Thermal processing product recovery", value: 88, unit: "%", source: "IEA-PVPS T12-25:2023" },
@@ -52,6 +52,10 @@ export const websiteDataDefaults: WebsiteData = {
   "scale.australia_launch_year": { section: "Scale", label: "Australia launch year", value: 2027, unit: "year", source: "PV Circonomy commercialization plan" },
   "scale.taiwan_launch_year": { section: "Scale", label: "Taiwan launch year", value: 2027, unit: "year", source: "PV Circonomy commercialization plan" },
   "scale.line_capacity_mw_per_year": { section: "Scale", label: "Equipment capacity per line-year", value: 50, unit: "MW/line-year", source: "PV Circonomy equipment-demand scenario" },
+  "scale.japan_recycling_capacity_t_per_year": { section: "Scale", label: "Japan dedicated PV recycling capacity", value: 150000, unit: "t/year", source: "Japan Ministry of the Environment, Solar Panel Recycling System, 23 Jan 2026, p. 6 (capacity as of Nov 2025)" },
+  "scale.japan_peak_discard_t_per_year": { section: "Scale", label: "Japan projected peak discarded PV panels", value: 500000, unit: "t/year", source: "Japan Ministry of the Environment, Solar Panel Recycling System, 23 Jan 2026, p. 1" },
+  "scale.japan_2024_collected_t": { section: "Scale", label: "Japan surveyed PV panel collection, 2024", value: 5046, unit: "t", source: "Japan Ministry of the Environment, Solar Panel Recycling System, 23 Jan 2026, p. 19" },
+  "scale.japan_2024_survey_respondents": { section: "Scale", label: "Japan PV recycling survey respondents, 2024", value: 51, unit: "companies", source: "Japan Ministry of the Environment, Solar Panel Recycling System, 23 Jan 2026, p. 19" },
 };
 
 export const websiteAssumptionRows:Record<string,(number|string)[]>=Object.fromEntries(Object.entries(websiteDataDefaults).map(([key,row])=>[key,[row.value,row.unit,row.source,row.section,row.label]]));

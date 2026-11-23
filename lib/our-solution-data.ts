@@ -10,8 +10,20 @@ export const seededOurSolutionData = { ...(seed as Parameters), assumptions:{...
 export function effectiveParameters(value:unknown):Parameters {
   if ((value as Parameters)?.format !== 'parameters-v2') return seededOurSolutionData;
   const data=value as Parameters;
-  const section4=Object.fromEntries(Object.entries(data.assumptions?.['4']??{}).filter(([key])=>key!=='Operators per shift'));
-  return {...data,assumptions:{...data.assumptions,'4':section4,'12':normalizedWebsiteAssumptionRows(data.assumptions?.['12'])}};
+  const section4=Object.fromEntries(Object.entries(data.assumptions?.['4']??{}).filter(([key])=>key!=='Operators per shift').map(([key,row])=>[key,Array.isArray(row)?[...row]:row])) as Parameters['assumptions']['4'];
+  const consumables=section4.Consumables;
+  // Migrate only the superseded published baseline; preserve any independently edited value.
+  if (Array.isArray(consumables)&&Number(consumables[1])===2.5) consumables[1]=1;
+  const section12=normalizedWebsiteAssumptionRows(data.assumptions?.['12']);
+  const approvedStaffing={
+    'methods.shredding.total_staff_per_shift':[5,7],
+    'methods.thermal.total_staff_per_shift':[4,5],
+  } as const;
+  for (const [key,[previous,current]] of Object.entries(approvedStaffing)) {
+    const row=section12[key];
+    if (row&&Number(row[0])===previous) row[0]=current;
+  }
+  return {...data,assumptions:{...data.assumptions,'4':section4,'12':section12}};
 }
 export function validateOurSolutionData(value:unknown):{valid:true;data:Parameters}|{valid:false;errors:string[]} { const errors=validateParameters(value);return errors.length?{valid:false,errors}:{valid:true,data:value as Parameters}; }
 export function economicsView(p:Parameters,effective:EffectivePrices={}) {
