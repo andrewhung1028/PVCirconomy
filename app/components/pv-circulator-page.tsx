@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type WheelEvent as ReactWheelEvent } from "react";
+import { useEffect, useRef, useState, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
 
@@ -150,7 +150,7 @@ function LoopVideo({ src, className = "" }: { src: string; className?: string })
   return <video ref={ref} className={className} autoPlay muted loop playsInline preload="metadata" aria-hidden="true"><source src={src} type="video/mp4" /></video>;
 }
 
-export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-process-title" }: { active: boolean; sectionId?: string; titleId?: string }) {
+export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-process-title", heading }: { active: boolean; sectionId?: string; titleId?: string; heading?: ReactNode }) {
   const [stage, setStage] = useState(0);
   const [progress, setProgress] = useState(0);
   const video = useRef<HTMLVideoElement>(null);
@@ -183,7 +183,7 @@ export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-
     </video>
     <div className="pvc2-media-shade" />
     <div className="pvc2-process-heading">
-      <h2 id={titleId}>Layer by layer.<br />Material by material.</h2>
+      <h2 id={titleId}>{heading ?? <>Layer by layer.<br />Material by material.</>}</h2>
       <p>Separate materials at the source. Preserve their value for what comes next.</p>
     </div>
     <div className="pvc2-process-footer">
