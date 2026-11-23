@@ -411,9 +411,7 @@ function MethodTable({ caption, rows, columns = THREE_METHODS }: { caption: stri
   return <div className="os-method-detail-table"><table><caption className="pv-sr-only">{caption}</caption><thead><tr><th scope="col">Item</th>{columns.map((column, index) => <th scope="col" key={column} className={index === columns.length - 1 ? "is-circulator" : undefined}>{column}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.shredding}</td><td>{row.thermal}</td><td>{row.circulator}</td></tr>)}</tbody></table></div>;
 }
 
-const processRow: MethodRow = { label: "Process", shredding: "Remove frame, junction box and copper cable; shred the whole module and sieve", thermal: "Remove frame and junction box; thermal processing at ~300 °C separates the glass from the encapsulant", circulator: "Remove frame and junction box; mill layer by layer, separating backsheet, EVA and glass in turn" };
 const technologyRows: MethodRow[] = [
-  processRow,
   { label: "Footprint", shredding: "~480 m²", thermal: "160 m²", circulator: "~30–40 m²" },
   { label: "Energy", shredding: "~5 kWh / panel", thermal: "—", circulator: "<1 kWh / panel" },
   { label: "Throughput", shredding: "~50–60 panels / h", thermal: "~40 panels / h (~90 s per panel)", circulator: "~60 panels / h" },
@@ -431,7 +429,6 @@ function economicsSolutions(data: OurSolutionView) { return {
 }; }
 
 const materialRows: MethodRow[] = [
-  processRow,
   { label: "Glass", shredding: "Mixed glass cullet", thermal: "Separated from the encapsulant", circulator: "Graded by particle size and purity" },
   { label: "Silver", shredding: "Stays mixed in the fragments", thermal: "Stays in the cell laminate", circulator: "Ends in the silicon (cell) powder" },
   { label: "EVA / backsheet", shredding: "Mixed into fragments", thermal: "Stay attached to the cell laminate", circulator: "Separated and recovered" },

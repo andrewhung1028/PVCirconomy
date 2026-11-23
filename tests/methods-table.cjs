@@ -3,6 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const src=fs.readFileSync('app/components/our-solution.tsx','utf8');
 {const m=src.match(/.{0,80}(To be confirmed|No operating data).{0,40}/i);assert.equal(m,null,'placeholder: '+(m&&m[0]));}
 assert.doesNotMatch(src,/pyroly|熱裂解|burn-off|burned off/i);
+assert.doesNotMatch(src,/label: "Process"/,'Methods comparison tables should not include a Process row');
 const row=label=>{const m=src.match(new RegExp(`\\{ label: "${label}", shredding: "([^"]*)", thermal: "([^"]*)", circulator: "([^"]*)" \\}`));assert.ok(m,label);return m.slice(1);};
 assert.deepEqual(row('Footprint'),['~480 m²','160 m²','~30–40 m²']);
 assert.deepEqual(row('Energy'),['~5 kWh / panel','—','<1 kWh / panel']);
