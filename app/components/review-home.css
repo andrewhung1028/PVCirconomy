@@ -631,7 +631,8 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 @media(max-width:760px){.os-scale-map-slide,.os-scale-demand-slide{justify-content:flex-start;gap:18px;padding:94px 20px 34px 35px}.os-scale-map-slide h2,.os-scale-demand-slide h2{font-size:29px}.os-global-map{width:110%;margin-left:-5%;margin-top:12px}.os-map-market{gap:4px}.os-map-market i{width:19px;height:19px;border-width:1px;font-size:8px;box-shadow:0 0 0 4px rgb(246 194 33 / 18%)}.os-map-market b{font-size:8px}.os-deck-scale .os-speaker-notes{justify-content:flex-start;padding-top:50px;padding-bottom:65px}.os-scale-market-list{gap:28px}.os-scale-market-list strong{font-size:16px}.os-scale-market-list p{font-size:12px!important}.os-equipment-demand-chart figcaption,.os-capacity-gap figcaption{align-items:flex-start;flex-direction:column;gap:3px}.os-equipment-demand-chart svg{max-height:none}.os-capacity-gap-bar b{font-size:8px}.os-scale-demand-copy p{font-size:13px}}
 
 /* Wave onward: one typographic and spatial system for every split-screen story. */
-.os-page{--os-left-title-size:clamp(38px,4vw,60px);--os-rail-title-size:clamp(30px,3vw,48px);--os-body-size:14px;--os-table-size:12px;--os-left-content-gap:34px;--os-title-body-gap:24px;--os-rail-top:90px}
+.os-page{--os-split-columns:64% 36%;--os-left-title-size:clamp(38px,4vw,60px);--os-rail-title-size:clamp(30px,3vw,48px);--os-body-size:14px;--os-table-size:12px;--os-left-content-gap:34px;--os-title-body-gap:24px;--os-rail-top:90px}
+.os-page :is(.os-story-split,.os-cost-section,.os-stakes,.os-evidence-section,.os-value-section,.os-materials-section,.os-materials,.os-economic,.os-regulation){grid-template-columns:var(--os-split-columns)}
 .os-stakes-main h2,.os-system-heading h2,.os-materials-overview h2,.os-value-intro h2,.os-passport-main h2,.os-scale-map-slide h2{font-size:var(--os-left-title-size);line-height:1.06}
 .os-stakes-main>p,.os-system-heading p,.os-materials-demand p,.os-value-intro p,.os-passport-intro,.os-economic-slide-copy p,.os-materials-scroll-intro p,.os-materials-scroll article p{font-size:var(--os-body-size);line-height:1.65}
 .os-stakeholder-needs>strong{color:var(--pv-yellow)}
@@ -741,7 +742,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 @media(min-width:1601px){
   .os-page{--os-frame-gutter:max(0px,calc((var(--pv-layout-width) - var(--pv-content-max))/2))}
 
-  .os-page :is(.os-story-split,.os-stakes,.os-evidence-section,.os-value-section,.os-materials-section,.os-materials,.os-economic){
+  .os-page :is(.os-story-split,.os-stakes,.os-evidence-section,.os-value-section,.os-materials-section,.os-materials,.os-economic,.os-regulation){
     width:100%;
     margin-inline:0;
     grid-template-columns:calc(var(--os-frame-gutter) + 1024px) calc(var(--os-frame-gutter) + 576px);
@@ -754,6 +755,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   .os-page .os-value-visual .os-silver-value-slide{padding-left:calc(var(--os-frame-gutter) + 120px)}
   .os-page .os-materials-overview{padding-left:calc(var(--os-frame-gutter) + 80px)}
   .os-page .os-economic-visual{padding-left:calc(var(--os-frame-gutter) + 68px)}
+  .os-page .os-regulation-main{padding-left:calc(var(--os-frame-gutter) + 120px)}
 
   .os-page .os-story-split>.os-speaker-notes,
   .os-page .os-stakes>.os-speaker-notes,
@@ -761,6 +763,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   .os-page .os-value-explanation{padding-right:calc(var(--os-frame-gutter) + 55px)}
   .os-page :is(.os-materials-scroll-intro,.os-materials-scroll article){padding-right:calc(var(--os-frame-gutter) + 58px)}
   .os-page .os-economic-copy{padding-right:calc(var(--os-frame-gutter) + 55px)}
+  .os-page .os-regulation-rules{padding-right:calc(var(--os-frame-gutter) + 55px)}
 
   .os-page .os-audience{grid-template-columns:calc(var(--os-frame-gutter) + 688px) calc(var(--os-frame-gutter) + 912px)}
   .os-page .os-audience-heading{padding-left:calc(var(--os-frame-gutter) + 85px)}
@@ -896,8 +899,10 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 /* Phase 2: engine-backed comparisons and the US retirement scenario. */
 .os-chart-source,.os-page .os-note-copy .os-chart-source{font-size:12px;line-height:1.6;color:#555d60}
 .os-chart-source a,.os-regulation-rules a{text-decoration:underline;text-underline-offset:3px}
-.os-regulation{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,80px);padding:110px max(35px,7vw) 65px;background:#f5f5f2;align-items:center}
-.os-regulation h2{font-size:clamp(32px,3.5vw,54px);line-height:1.06;letter-spacing:var(--pv-heading-tracking);margin:0 0 24px}
+.os-regulation{display:grid;grid-template-columns:var(--os-split-columns);gap:0;padding:0;background:#f5f5f2;align-items:stretch}
+.os-regulation-main{min-width:0;padding:84px clamp(60px,7vw,120px) 50px;display:flex;flex-direction:column;justify-content:center}
+.os-regulation-rules{min-width:0;height:100svh;overflow-y:auto;padding:var(--os-rail-top) clamp(28px,3.2vw,55px) 32px;border-left:1px solid var(--pv-line);background:#fff;display:flex;flex-direction:column;justify-content:center;scrollbar-width:thin;scrollbar-color:#8a8f8c transparent}
+.os-regulation h2{font-size:var(--os-left-title-size);line-height:1.06;letter-spacing:var(--pv-heading-tracking);margin:0 0 24px}
 .os-regulation p{font-size:14px;line-height:1.65;max-width:70ch}
 .os-regulation>div>p:first-of-type{margin:0 0 clamp(30px,4svh,46px)}
 .os-regulation .os-chart-source{font-size:12px}
@@ -932,11 +937,10 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-route-result p{margin-top:10px}
 .pvc2-routes .os-chart-source{font-size:12px}
 .pvc2-route-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
-@media(max-width:760px){.os-regulation{grid-template-columns:1fr;padding:105px 28px 65px 35px;gap:30px}.os-regulation .os-method-detail-table{overflow-x:auto}.pvc2-routes{padding:105px 28px 65px 35px;gap:24px}.pvc2-routes .os-method-detail-table{overflow-x:auto}.pvc2-routes .os-method-detail-table table{min-width:0;font-size:10px}.pvc2-routes .os-method-detail-table :is(td,th){padding:10px 5px}.pvc2-route-actions{align-items:flex-start;flex-direction:column}.os-us-retirement h2{font-size:28px!important}.os-retirement-chart .os-economic-legend{gap:8px}.os-retirement-chart text{font-size:9px}}
-.os-page main>.os-regulation{padding:110px max(35px,7vw) 65px}
+@media(max-width:760px){.os-regulation{display:flex;flex-direction:column;min-height:0}.os-regulation-main{padding:105px 28px 65px 35px}.os-regulation-rules{height:auto;overflow:visible;padding:50px 28px 65px 35px;border-left:0;border-top:1px solid var(--pv-line)}.os-regulation .os-method-detail-table{overflow-x:auto}.pvc2-routes{padding:105px 28px 65px 35px;gap:24px}.pvc2-routes .os-method-detail-table{overflow-x:auto}.pvc2-routes .os-method-detail-table table{min-width:0;font-size:10px}.pvc2-routes .os-method-detail-table :is(td,th){padding:10px 5px}.pvc2-route-actions{align-items:flex-start;flex-direction:column}.os-us-retirement h2{font-size:28px!important}.os-retirement-chart .os-economic-legend{gap:8px}.os-retirement-chart text{font-size:9px}}
 .os-regulation .os-method-detail-table table{min-width:0;font-size:11px}
 .os-page .os-retirement-chart svg{width:100%;max-width:100%;max-height:none}
-@media(max-width:760px){.os-page main>.os-regulation{padding:105px 28px 65px 35px}.os-page .os-retirement-chart figcaption,.os-page .os-retirement-chart .os-economic-legend{min-width:0}.os-regulation .os-method-detail-table :is(td,th){padding:10px 5px;font-size:10px}}
+@media(max-width:760px){.os-page .os-retirement-chart figcaption,.os-page .os-retirement-chart .os-economic-legend{min-width:0}.os-regulation .os-method-detail-table :is(td,th){padding:10px 5px;font-size:10px}}
 
 .os-lifetime-control{display:flex;align-items:center;gap:16px;margin-top:18px;font-size:14px;font-weight:800}.os-lifetime-control select{min-height:46px;padding:8px 12px;border:1px solid var(--pv-ink);border-radius:0;background:var(--pv-paper);color:var(--pv-ink);font:inherit}.os-lifetime-control select:focus-visible{outline:3px solid var(--pv-yellow);outline-offset:4px}.os-retirement-context table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;margin:24px 0}.os-retirement-context caption{text-align:left;margin-bottom:12px}.os-retirement-context :is(th,td){text-align:left;padding:10px 6px;border-bottom:1px solid currentColor}.os-retirement-context a{text-decoration:underline;text-underline-offset:3px}
 

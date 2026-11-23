@@ -90,7 +90,7 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters):
   const euHeaders=euLayout.rows.find(r=>r.cells[0]?.value==='Year')!.cells.slice(1).map(c=>String(c.value));
   const population=table(w.getWorksheet('Population')!,markets.filter(m=>m!=='Europe'),years) as unknown as Parameters['population'];
   population.eu27=table(w.getWorksheet('EU-27 Population')!,euHeaders,years);population.Europe=Object.fromEntries(years.map(y=>[y,Object.values(population.eu27).reduce((s,v)=>s+v[y],0)]));
-  const data:Parameters={format:'parameters-v2',scenario,assumptions,capacityHistory:cap,population,meta:{currency:'USD',extractedAt:'2026-11-22T00:00:00.000Z',sourceSite:'https://businesscase.pvcirconomy.com/',note:'Illustrative business-case scenario; not a quotation or guarantee.'}};
+  const data:Parameters={format:'parameters-v2',scenario,assumptions,capacityHistory:cap,population,meta:base?.meta??{currency:'USD',extractedAt:'2026-11-22T00:00:00.000Z',sourceSite:'https://businesscase.pvcirconomy.com/',note:'Illustrative business-case scenario; not a quotation or guarantee.'}};
   const errors=validateParameters(data);if(errors.length)throw Error(errors.join('\n'));return data;
 }
 

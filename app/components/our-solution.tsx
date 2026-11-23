@@ -643,7 +643,7 @@ function RegulationSection({ metrics, assumptions, data }: { metrics: RouteEnvir
     ["Japan.", "Used PV panels must be properly managed under the Waste Management Act. FIT/FIP business systems of 10 kW or more are subject to the decommissioning-cost reserve mechanism under the Renewable Energy Special Measures Act.", "https://www.env.go.jp/content/000378443.pdf", "MOE / METI"],
     ["Australia (Victoria).", "Photovoltaic panels are e-waste under the Environment Protection Regulations 2021. Victoria landfills cannot receive e-waste; generators, transporters and receivers have duties under the Environment Protection Act 2017.", "https://www.epa.vic.gov.au/electronic-waste", "EPA Victoria"],
   ];
-  return <section id="regulation" className="pv-screen os-regulation" aria-labelledby="regulation-title"><div>
+  return <section id="regulation" className="pv-screen os-regulation" aria-labelledby="regulation-title"><div className="os-regulation-main">
     <h2 id="regulation-title">Less to landfill. Less carbon in the process.</h2>
     <p>Per MW of retired panels ({assumptions.panelRating} W modules at {assumptions.panelWeightLb} lb each, about {assumptions.tonnesPerMw.toFixed(1)} t), gate-to-gate: from panels arriving at the plant to separated materials leaving it. Process CO2e covers process electricity only.</p>
     <EnvironmentalEvidenceChart metrics={metrics} />

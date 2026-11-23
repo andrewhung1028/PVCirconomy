@@ -2,6 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),ExcelJS=require
 require('./helpers/typescript.cjs');
 const {model}=require('../lib/our-solution/model.ts'),{parseOurSolutionWorkbook:parse,createOurSolutionWorkbook:exportBook}=require('../server/our-solution/workbook.ts');
 const {seededOurSolutionData:seed,diffOurSolutionData:diff,effectiveParameters}=require('../lib/our-solution-data.ts');
+ const {seededJapanOurSolutionData:japanSeed}=require('../lib/our-solution-japan-data.ts');
 const ref=require('./fixtures/our-solution-reference.json');
 function close(a,b,path){assert.ok(Math.abs(a-b)<=Math.max(1e-9,Math.abs(b)*1e-6),`${path}: ${a} != ${b}`)}
 function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==='number')close(a[k],v,path+'.'+k);else if(v&&typeof v==='object')compare(a[k],v,path+'.'+k);}}
@@ -19,6 +20,8 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
  assert.deepEqual(await parse(await exportBook(parsed),parsed),parsed,'current admin export includes required Assumptions section 12');
  assert.deepEqual(await parse(await exportBook(parsed,false,require('../server/metal-prices/service.ts').workbookPrices(parsed))),parsed,'DB-unavailable API export → parse lossless');
  assert.deepEqual(await parse(await exportBook(parsed,true)),parsed,'template is a complete parameter master');
+ assert.deepEqual(await parse(await exportBook(japanSeed),japanSeed),japanSeed,'Japan parameter export → parse is lossless and preserves Japan metadata');
+ assert.equal(model(japanSeed).annualPanels,50_000_000/300,'Japan seed models 50 MW/year at 300 W/panel');
  assert.deepEqual(diff(parsed,seed),[]);assert.equal(effectiveParameters({solutions:[]}),seed);
  const edit=async(fn)=>{const w=new ExcelJS.Workbook;await w.xlsx.load(fixture);fn(w);return parse(Buffer.from(await w.xlsx.writeBuffer()));};
  const renamed=await edit(w=>{for(const sheet of w.worksheets)sheet.eachRow(row=>row.eachCell(cell=>{if(typeof cell.value==='string')cell.value=cell.value.replace(/Hot knife/g,'Thermal processing').replace(/hot-knife/g,'thermal-processing');}));});
