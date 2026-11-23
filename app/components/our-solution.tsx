@@ -106,7 +106,7 @@ const stakeSolutions = {
       ["PV Circonomy", "A profitable model that can scale responsible recycling."],
     ],
     intro: "PV Circonomy lowers total recycling cost by cutting unnecessary processing steps and keeping the value of recovered materials in the system.",
-    goal: "Recycling at the price of landfill in 3–5 years",
+    goal: "Same price as landfill.",
     drivers: [
       ["Remove avoidable treatment", "Use room-temperature physical processing to avoid chemical, thermal and water-treatment burdens."],
       ["Automate repeatable work", "Use AI-assisted automation so one operator can run a consistent process."],
@@ -736,7 +736,7 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
   const lightNavigation = ["wave", "stakes", "conventional", "regulation", "materials", "value", "economic", "system", "evidence", "scale", "pathways"].includes(active);
   const selectedStake = stakeSolutions[stake];
   const selectedAudience = audienceTopics[audience];
-  const selectedGoal=stake==="cost"?`Recycling at the price of landfill in ${compactNumber(webNum(economicsData,"stakes.cost_goal_years_min"))}–${compactNumber(webNum(economicsData,"stakes.cost_goal_years_max"))} years`:stake==="circularity"?`${compactNumber(webNum(economicsData,"stakes.circularity_goal_percent"))}% reusable.`:selectedStake.goal;
+  const selectedGoal=stake==="circularity"?`${compactNumber(webNum(economicsData,"stakes.circularity_goal_percent"))}% reusable.`:selectedStake.goal;
   const cards=systemCardContent(economicsData);
 
   const waveSlides: DeckSlide[] = [

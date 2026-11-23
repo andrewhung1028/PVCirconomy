@@ -12,8 +12,6 @@ export type WebsiteData = Record<string, WebsiteDataRecord>;
 // These defaults preserve the currently approved website values and are also
 // written to Assumptions section 12 in every newly exported workbook.
 export const websiteDataDefaults: WebsiteData = {
-  "stakes.cost_goal_years_min": { section: "Stakes", label: "Cost goal, minimum years", value: 3, unit: "years", source: "PV Circonomy goal" },
-  "stakes.cost_goal_years_max": { section: "Stakes", label: "Cost goal, maximum years", value: 5, unit: "years", source: "PV Circonomy goal" },
   "stakes.circularity_goal_percent": { section: "Stakes", label: "Circularity goal", value: 100, unit: "%", source: "PV Circonomy goal" },
   "methods.shredding.footprint_m2": { section: "Methods", label: "Shredding footprint", value: 480, unit: "m²", source: "TNO 2022 R10860 (Späth et al.), pp. 8, 12, 19" },
   "methods.thermal.footprint_m2": { section: "Methods", label: "Thermal processing footprint", value: 160, unit: "m²", source: "NEDO 2026 A1-2-14 (MRI), p. 8" },
