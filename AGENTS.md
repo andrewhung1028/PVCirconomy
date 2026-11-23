@@ -11,6 +11,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Content rules (Andrew, 2026-11-22)
 
 - Existing website content was already verified by Andrew. Do not ask him to reconfirm it, do not require sources for it, and do not replace existing figures with "To be confirmed".
-- Keep existing numbers as-is unless Andrew explicitly changes them (for example Methods: Shredding ~480 m², ~5 kWh/panel, 5 / shift; secondary treatment ~54 / ~5 / ~0.5 t/MW; PV Circulator ~30–40 m²; Pyrolysis ~180 m², ~8 kWh/panel, ~20 panels/h, 6 / shift).
+- Keep existing numbers as-is unless Andrew explicitly changes them (for example Methods: Shredding ~480 m², ~5 kWh/panel, 5 / shift; secondary treatment ~54 / — / ~0.5 t/MW; Thermal processing 160 m² (display name: Thermal processing); PV Circulator ~30–40 m²).
 - Only new content added in a task needs a source. Never invent numbers or citations for new content.
 - Where a new column or cell has no public data, show "—" rather than "To be confirmed".
+
+- 網站不含熱裂解比較 (no Pyrolysis comparison anywhere on the website)

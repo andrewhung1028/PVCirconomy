@@ -220,7 +220,7 @@ export function PublicHeader({
                     <p>Follow the story from the coming decommissioning wave to PV Circulator, material upcycling and EasyCycle—and discover your role in the circular solar economy.</p>
                   </>
                 ) : equipmentTopic === "businesscase" ? (
-                  <><p>Model the economics of a PV recycling line for your region: processing fee, material revenue, operating cost and annual EBITDA for PV Circulator, shredding and hot-knife routes.</p><p>Results are estimates based on published operating assumptions; you can request a follow-up after running your case.</p></>
+                  <><p>Model the economics of a PV recycling line for your region: processing fee, material revenue, operating cost and annual EBITDA for PV Circulator, shredding and thermal-processing routes.</p><p>Results are estimates based on published operating assumptions; you can request a follow-up after running your case.</p></>
                 ) : equipmentTopic === "circulator" ? (
                   <>
                     <p>Automated, layer-by-layer PV recycling for cleaner material streams, lower downstream processing and more value from each panel.</p>

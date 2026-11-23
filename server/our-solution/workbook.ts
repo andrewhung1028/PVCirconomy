@@ -6,6 +6,7 @@ import { validateParameters } from '../../lib/our-solution/validation';
 import { model, type EffectivePrices } from '../../lib/our-solution/model';
 const sections = schema as Record<string,Record<string,(string|number)[]>>;
 const streamMaterial: Record<string,string>={'Glass':'Glass','Aluminium frame':'Aluminium','Junction box + cable':'Junction box','EVA':'EVA','Backsheet':'Backsheet','Silicon cell':'Silicon','Copper ribbon':'Copper','Other':'Residual / mixed fraction'};
+const canonicalLabel = (value: string | number) => typeof value === 'string' ? value.replace(/hot[- ]knife/gi, match => match.includes('-') ? 'thermal-processing' : 'Thermal processing') : value;
 const scenarioKeys=['region_code','region','panels_per_month','panel_weight_lb','operating_hours_per_day','working_weeks_per_year','working_days_per_week'];
 function raw(c:ExcelJS.Cell):string|number {
   if(typeof c.value==='number'||typeof c.value==='string') return c.value;
@@ -54,14 +55,14 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, _base?:Parameters)
   }));
   // Header rows are located by their labels, never by their row numbers.
   for(const [section,label,expected] of [
-    ['4','Parameter',['Shredding','Hot knife','PV Circulator','Unit']],
+    ['4','Parameter',['Shredding','Thermal processing','PV Circulator','Unit']],
     ['5','Material',['Share of module mass','Benchmark price','Price unit','Price source']],
     ['6','Material',['Recovery','Realization','Saleable','Recovery','Realization','Saleable','Recovery','Realization','Saleable']],
-    ['8','Component',['Mass share of module','In shredding mix','In hot-knife laminate','In PV Circulator cell powder']],
-  ] as [string,string,string[]][]){const header=get(groups[section],label,'Assumptions');expected.forEach((v,i)=>{if(raw(header.getCell(i+2))!==v)throw Error(`欄位 Assumptions!${header.getCell(i+2).address} 標題必須是 ${v}。`);});}
+    ['8','Component',['Mass share of module','In shredding mix','In thermal-processing laminate','In PV Circulator cell powder']],
+  ] as [string,string,string[]][]){const header=get(groups[section],label,'Assumptions');expected.forEach((v,i)=>{if(canonicalLabel(raw(header.getCell(i+2)))!==v)throw Error(`欄位 Assumptions!${header.getCell(i+2).address} 標題必須是 ${v}。`);});}
   const recoveryHeader=get(groups['6'],'Material','Assumptions');
   const recoveryTitles=a.getRow(recoveryHeader.number-1);
-  ['Shredding','Hot knife','PV Circulator'].forEach((label,i)=>{const c=recoveryTitles.getCell(2+i*3);if(raw(c)!==label)throw Error(`欄位 Assumptions!${c.address} 方案標題必須是 ${label}。`);});
+  ['Shredding','Thermal processing','PV Circulator'].forEach((label,i)=>{const c=recoveryTitles.getCell(2+i*3);if(canonicalLabel(raw(c))!==label)throw Error(`欄位 Assumptions!${c.address} 方案標題必須是 ${label}。`);});
   for(const section of ['8'])for(const label of ['Theoretical silver content upper limit (%)','Theoretical silver content upper limit (g/t)'])get(groups[section],label,'Assumptions');
   const assumptions:Parameters['assumptions']={};
   for(const [section,defs] of Object.entries(sections)){

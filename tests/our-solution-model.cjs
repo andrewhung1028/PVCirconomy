@@ -19,6 +19,10 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
  assert.deepEqual(await parse(await exportBook(parsed,true)),parsed,'template is a complete parameter master');
  assert.deepEqual(diff(parsed,seed),[]);assert.equal(effectiveParameters({solutions:[]}),seed);
  const edit=async(fn)=>{const w=new ExcelJS.Workbook;await w.xlsx.load(fixture);fn(w);return parse(Buffer.from(await w.xlsx.writeBuffer()));};
+ const renamed=await edit(w=>{for(const sheet of w.worksheets)sheet.eachRow(row=>row.eachCell(cell=>{if(typeof cell.value==='string')cell.value=cell.value.replace(/Hot knife/g,'Thermal processing').replace(/hot-knife/g,'thermal-processing');}));});
+ assert.deepEqual(renamed,parsed,'Thermal processing workbook labels preserve every parameter');
+ const template=new ExcelJS.Workbook();await template.xlsx.load(await exportBook(parsed,true));
+ const headerLabels=[];template.getWorksheet('Assumptions').eachRow(row=>row.eachCell(cell=>{if(typeof cell.value==='string')headerLabels.push(cell.value);}));assert.ok(headerLabels.includes('Thermal processing'));assert.ok(!headerLabels.some(v=>/hot[- ]knife/i.test(v)));
  await assert.rejects(edit(w=>w.getWorksheet('Scenario').getCell('C4').value={formula:'5000',result:5000}),/Scenario!C4.*公式/);
  await assert.rejects(edit(w=>w.getWorksheet('Instructions').getCell('B2').value={formula:'1'}),/Instructions!B2.*公式/);
  await assert.rejects(edit(w=>w.getWorksheet('Assumptions').getCell('B40').value=.69),/比例總和/);

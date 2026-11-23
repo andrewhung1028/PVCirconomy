@@ -1,6 +1,6 @@
 export const solutionCodes = ['SHREDDING', 'HOT_KNIFE', 'PVCIRCULATOR'] as const;
 export type SolutionCode = typeof solutionCodes[number];
-export const labels = ['Shredding', 'Hot knife', 'PV Circulator'] as const;
+export const labels = ['Shredding', 'Thermal processing', 'PV Circulator'] as const;
 export const markets = ['World', 'Europe', 'United States', 'Japan', 'Taiwan', 'China', 'Australia'] as const;
 export type Market = typeof markets[number];
 export type Parameters = {
