@@ -247,9 +247,11 @@ type TrendPoint = { year: string; total: number; totalLabel: string; values: rea
 const seededCapacityRows = seededOurSolutionData;
 const defaultCapacityTrend: CapacityTrendPoint[] = buildCapacityTrend(seededCapacityRows);
 const defaultRetirementWave: RetirementWave = defaultModel.retirementWave;
+const retirementStackMarkets = ["Europe", "United States", "Japan", "Taiwan", "Australia", "China", "Other markets"] as const;
 const retirementMarkets = ["United States", "Japan", "Europe", "Australia"] as const;
+type RetirementStackMarket = (typeof retirementStackMarkets)[number];
 type RetirementMarket = (typeof retirementMarkets)[number];
-type RetirementMarketWaves = Record<RetirementMarket | "World", RetirementWave>;
+type RetirementMarketWaves = Record<RetirementStackMarket | "World", RetirementWave>;
 type RetirementSeriesKey = Exclude<keyof RetirementWave, "years" | "crossings">;
 const defaultRetirementMarketWaves: RetirementMarketWaves = {
   World: defaultRetirementWave,
@@ -257,6 +259,9 @@ const defaultRetirementMarketWaves: RetirementMarketWaves = {
   Japan: defaultRetirementWave,
   Europe: defaultRetirementWave,
   Australia: defaultRetirementWave,
+  Taiwan: defaultRetirementWave,
+  China: defaultRetirementWave,
+  "Other markets": defaultRetirementWave,
 };
 
 
@@ -301,12 +306,20 @@ function StackedTrendChart({ data, max, label, tone }: { data: TrendPoint[]; max
   </div>;
 }
 
-function GlobalCumulativeRetirementChart({ wave }: { wave: RetirementWave }) {
-  const annual = wave.years.map((year, index) => ({ year, tonnes: wave.early_T18[index] })).filter((point) => point.year >= 2025);
-  const data = annual.reduce<{ year: number; total: number }[]>((points, point) => {
-    points.push({ year: point.year, total: (points.at(-1)?.total ?? 0) + point.tonnes / 1e6 });
-    return points;
-  }, []);
+function GlobalCumulativeRetirementChart({ waves }: { waves: RetirementMarketWaves }) {
+  const cumulative = retirementStackMarkets.map(() => 0);
+  let cumulativeWorld = 0;
+  const data = waves.World.years.flatMap((year, waveIndex) => {
+    if (year < 2025) return [];
+    cumulativeWorld += waves.World.early_T18[waveIndex] / 1e6;
+    const rawValues = retirementStackMarkets.map((market, marketIndex) => {
+      cumulative[marketIndex] += waves[market].early_T18[waveIndex] / 1e6;
+      return cumulative[marketIndex];
+    });
+    const rawTotal = rawValues.reduce((sum, value) => sum + value, 0);
+    const values = rawValues.map((value) => rawTotal > 0 ? value * cumulativeWorld / rawTotal : 0);
+    return [{ year, values, total: cumulativeWorld }];
+  });
   const width = 960, height = 370, left = 62, right = 22, top = 28, bottom = 50;
   const last = data.at(-1)!;
   const max = Math.max(1, Math.ceil(last.total / 50) * 50);
@@ -319,14 +332,14 @@ function GlobalCumulativeRetirementChart({ wave }: { wave: RetirementWave }) {
   const majorYears = data.filter((point) => point.year % 5 === 0);
   return <figure className="os-wave-global-chart">
     <figcaption>Cumulative retired-panel mass · global projection</figcaption>
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Projected global cumulative retired-panel mass reaches ${last.total.toFixed(0)} million tonnes from 2025 through 2050.`}>
-      <defs><linearGradient id="global-retirement-bars" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#eb7941" /><stop offset="1" stopColor="#9b1f2d" /></linearGradient></defs>
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Projected global cumulative retired-panel mass by market reaches ${last.total.toFixed(0)} million tonnes from 2025 through 2050.`}>
       <g className="os-wave-grid" aria-hidden="true">{yTicks.map((tick) => <g key={tick}><line x1={left} x2={width - right} y1={y(tick)} y2={y(tick)} /><text x={left - 12} y={y(tick) + 4} textAnchor="end">{tick.toFixed(0)}</text></g>)}</g>
-      <g className="os-wave-bars">{data.map((point, index) => <rect key={point.year} x={left + index / data.length * plotWidth + barGap / 2} y={y(point.total)} width={barWidth} height={height - bottom - y(point.total)} />)}</g>
+      <g className="os-wave-bars">{data.map((point, index) => { let running = 0; return <g key={point.year}><title>{point.year}: {point.total.toFixed(1)} million tonnes</title>{point.values.map((value, marketIndex) => { const bottomValue = running; running += value; return <rect className={`is-region-${marketIndex + 1}`} key={retirementStackMarkets[marketIndex]} x={left + index / data.length * plotWidth + barGap / 2} y={y(running)} width={barWidth} height={y(bottomValue) - y(running)} />; })}</g>; })}</g>
       <g className="os-wave-years" aria-hidden="true">{majorYears.map((point) => <text key={point.year} x={x(data.indexOf(point))} y={height - 18} textAnchor="middle">{point.year}</text>)}</g>
       <g className="os-wave-endpoint" transform={`translate(${x(data.length - 1)} ${y(last.total)})`}><circle r="6" /><text x="-12" y="-14" textAnchor="end">{last.total.toFixed(0)}m t</text></g>
       <text className="os-wave-unit" x="0" y="12">million tonnes</text>
     </svg>
+    <div className="os-wave-stack-legend" aria-label="Markets in the cumulative retirement bars">{retirementStackMarkets.map((market, index) => <span key={market}><i className={`is-region-${index + 1}`} />{market}</span>)}</div>
     <small>Fixed basis: 18-year lifetime + early-loss scenario. Source: Capacity History in the published Our Solution workbook.</small>
   </figure>;
 }
@@ -340,8 +353,14 @@ function CountryRetirementExplorer({ waves }: { waves: RetirementMarketWaves }) 
   };
   const early = series(country, "early"), regular = series(country, "regular");
   const width = 520, height = 300, left = 48, right = 18, top = 25, bottom = 42;
-  const maxTonnes = Math.max(...retirementMarkets.flatMap((market) => [...series(market, "early"), ...series(market, "regular")].map((point) => point.tonnes)));
-  const max = Math.max(0.5, Math.ceil(maxTonnes / 500000) * 0.5);
+  const peak = Math.max(...early.map((point) => point.tonnes), ...regular.map((point) => point.tonnes)) / 1e6;
+  const roughStep = Math.max(0.02, peak * 1.08 / 5);
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalizedStep = roughStep / magnitude;
+  const niceFactor = normalizedStep <= 1 ? 1 : normalizedStep <= 1.25 ? 1.25 : normalizedStep <= 2 ? 2 : normalizedStep <= 2.5 ? 2.5 : normalizedStep <= 5 ? 5 : 10;
+  const axisStep = niceFactor * magnitude;
+  const max = axisStep * 5;
+  const tickDigits = axisStep < 0.1 ? 2 : axisStep < 1 || !Number.isInteger(axisStep) ? 1 : 0;
   const x = (index: number) => left + index / (early.length - 1) * (width - left - right);
   const y = (tonnes: number) => top + (1 - tonnes / 1e6 / max) * (height - top - bottom);
   const path = (data: { year: number; tonnes: number }[]) => `M ${data.map((point, index) => `${x(index)},${y(point.tonnes)}`).join(" L ")}`;
@@ -349,12 +368,14 @@ function CountryRetirementExplorer({ waves }: { waves: RetirementMarketWaves }) 
   const majorYears = early.filter((point) => point.year % 5 === 0);
   const labels: Record<RetirementMarket, string> = { "United States": "US", Japan: "Japan", Europe: "Europe", Australia: "Australia" };
   return <div className="os-wave-country-explorer">
-    <div className="os-wave-country-tabs" role="group" aria-label="Choose a market">{retirementMarkets.map((market) => <button type="button" key={market} aria-pressed={country === market} onClick={() => setCountry(market)}>{labels[market]}</button>)}</div>
-    <div className="os-wave-lifetime" role="group" aria-label="Choose modeled panel lifetime"><span>Lifetime</span>{([25, 18, 15, 12] as const).map((years) => <button type="button" key={years} aria-pressed={lifetime === years} onClick={() => setLifetime(years)}>{years} years</button>)}</div>
     <div className="os-wave-country-copy" aria-live="polite"><h3>When will {labels[country]} solar panels reach end of life?</h3><p>Annual end-of-life PV panel mass, {country}.</p></div>
+    <div className="os-wave-country-controls">
+      <div className="os-wave-country-tabs" role="group" aria-label="Choose a market">{retirementMarkets.map((market) => <button type="button" key={market} aria-pressed={country === market} onClick={() => setCountry(market)}>{labels[market]}</button>)}</div>
+      <div className="os-wave-lifetime" role="group" aria-label="Choose modeled panel lifetime"><span>Lifetime</span>{([25, 18, 15, 12] as const).map((years) => <button type="button" key={years} aria-pressed={lifetime === years} onClick={() => setLifetime(years)}>{years} years</button>)}</div>
+    </div>
     <figure className="os-wave-country-chart">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${country}, ${lifetime}-year lifetime: early-loss annual end-of-life mass reaches ${(lastEarly.tonnes / 1e6).toFixed(2)} million tonnes in 2050; regular-loss reaches ${(lastRegular.tonnes / 1e6).toFixed(2)} million tonnes.`}>
-        <g className="os-wave-country-grid" aria-hidden="true">{Array.from({ length: 6 }, (_, index) => max / 5 * index).map((tick) => <g key={tick}><line x1={left} x2={width - right} y1={y(tick * 1e6)} y2={y(tick * 1e6)} /><text x={left - 10} y={y(tick * 1e6) + 4} textAnchor="end">{tick.toFixed(tick < 1 ? 1 : 0)}</text></g>)}</g>
+        <g className="os-wave-country-grid" aria-hidden="true">{Array.from({ length: 6 }, (_, index) => axisStep * index).map((tick) => <g key={tick}><line x1={left} x2={width - right} y1={y(tick * 1e6)} y2={y(tick * 1e6)} /><text x={left - 10} y={y(tick * 1e6) + 4} textAnchor="end">{tick.toFixed(tickDigits)}</text></g>)}</g>
         <path className="os-wave-country-line is-regular" d={path(regular)} />
         <path className="os-wave-country-line is-early" d={path(early)} />
         <g className="os-wave-country-years" aria-hidden="true">{majorYears.map((point) => <text key={point.year} x={x(early.indexOf(point))} y={height - 14} textAnchor="middle">{point.year}</text>)}</g>
@@ -364,7 +385,7 @@ function CountryRetirementExplorer({ waves }: { waves: RetirementMarketWaves }) 
       </svg>
       <figcaption className="os-wave-country-legend"><span className="is-early">Early loss</span><span className="is-regular">Regular loss</span></figcaption>
     </figure>
-    <p className="os-wave-country-note">Both lines use the selected lifetime. All four markets share one vertical scale. Values are projections, not measured retirements.</p>
+    <p className="os-wave-country-note">Both lines use the selected lifetime. The vertical scale adjusts to the selected market and scenario. Values are projections, not measured retirements.</p>
   </div>;
 }
 
@@ -684,7 +705,7 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
 
   const waveSlides: DeckSlide[] = [
     { label: "Installation trend", navigationLabel: "Installed capacity", visual: <div className="os-data-slide os-market-slide"><h2>Installed solar capacity grows from {capacityFirst.totalLabel} to {capacityLast.totalLabel} by {capacityLast.year}.</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="Cumulative installed solar capacity by market, with one stacked column for every year from 2025 to 2050" /></div>, noteTitle: "Today’s installations define tomorrow’s retirement geography.", note: <p>Every annual column represents the infrastructure already being built toward a much larger retirement market. The market mix shows where future collection and processing capacity will be needed.</p> },
-    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-wave-global-slide"><h2>The global retirement wave compounds through 2050.</h2><GlobalCumulativeRetirementChart wave={retirementMarketWaves.World} /></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} /> },
+    { label: "Retirement volume", navigationLabel: "Retirement volume", visual: <div className="os-data-slide os-wave-global-slide"><h2>The global retirement wave compounds through 2050.</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} /></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} /> },
     { label: "Per-capita processing pressure", navigationLabel: "Per-capita pressure", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>Per-capita processing pressure rises unevenly through 2050.</h2><PressureTrendChart data={pressureData} /></div>, noteTitle: "Processing pressure grows at a different pace in every market.", note: <p>Our projection shows {pressureSeries[pressureData[pressureData.length-1].values.indexOf(Math.max(...pressureData[pressureData.length-1].values))].label} reaching {Math.max(...pressureData[pressureData.length-1].values).toFixed(2)} kg per person by 2050, the highest of the modeled markets. The long view strengthens the case for regional and deployable capacity rather than planning from a single global endpoint. Population source: UN World Population Prospects 2022, Medium variant.</p> },
   ];
 
