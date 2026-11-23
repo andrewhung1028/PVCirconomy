@@ -106,6 +106,7 @@ const stakeSolutions = {
       ["PV Circonomy", "A profitable model that can scale responsible recycling."],
     ],
     intro: "PV Circonomy lowers total recycling cost by cutting unnecessary processing steps and keeping the value of recovered materials in the system.",
+    goal: "Recycling at the price of landfill in 3–5 years",
     drivers: [
       ["Remove avoidable treatment", "Use room-temperature physical processing to avoid chemical, thermal and water-treatment burdens."],
       ["Automate repeatable work", "Use AI-assisted automation so one operator can run a consistent process."],
@@ -128,6 +129,7 @@ const stakeSolutions = {
       ["PV Circonomy", "Evidence that supports EPR, ESG, DPP and customer reporting."],
     ],
     intro: "PV Circonomy makes compliance part of the operating flow, connecting each panel, process step and material destination.",
+    goal: "Toward zero pollution.",
     drivers: [
       ["Define required evidence", "Start with the records owners, regulators and material buyers need to receive."],
       ["Capture at intake", "Link source, condition, quantity and batch identity before treatment begins."],
@@ -150,6 +152,7 @@ const stakeSolutions = {
       ["PV Circonomy", "A closed-loop market that supports the energy transition."],
     ],
     intro: "PV Circonomy designs recovery around the next use of each material—not only the percentage leaving the machine.",
+    goal: "100% reusable.",
     drivers: [
       ["Design from the next use", "Begin with downstream specifications and work backward to the required output."],
       ["Keep materials distinct", "Use layer-by-layer separation to prevent valuable fractions from becoming mixed waste."],
@@ -172,6 +175,7 @@ const stakeSolutions = {
       ["PV Circonomy", "Trust built through transparent, verifiable results."],
     ],
     intro: "Trust comes from evidence: responsible end-of-life outcomes must be visible, independently verifiable and ready for stakeholder reporting.",
+    goal: "Proof, not paperwork.",
     drivers: [
       ["Measure before claiming", "Capture recovery, energy and carbon data before making environmental claims."],
       ["Verify independently", "Use third-party validation for recovery performance and material quality."],
@@ -736,7 +740,7 @@ export function OurSolution({ economicsData = economicsView(seededOurSolutionDat
     <main>
       <section id="overview" className="pv-screen pv-hero os-hero" aria-labelledby="os-title"><video autoPlay muted loop playsInline poster="/images/pvcirculator-oursolution-poster.jpg"><source src="/videos/pvcirculator-oursolution.mp4" type="video/mp4" /></video><div className="pv-hero-shade" /><div className="pv-hero-copy"><h1 id="os-title">Owners pay less.<br />Recyclers earn more.<br />Materials stay in circulation.</h1><p className="os-legacy-line">The next solar industry challenge begins when generation ends.</p><p className="os-hero-context">For owners, recyclers and investors, decommissioning brings cost, compliance, reputation and material value into the same decision.</p></div><a className="pv-down" href="#wave" aria-label="Continue to the coming decommissioning wave"><Arrow /></a></section>
       <section id="wave" className="pv-screen os-deck-section" aria-label="The coming decommissioning wave"><StoryDeck id="wave-deck" title="The coming decommissioning wave" slides={waveSlides} variant="split" autoAdvanceMs={30000} /></section>
-      <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div><div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
+      <section id="stakes" className="pv-screen os-stakes" aria-labelledby="stakes-title"><div className="os-stakes-main"><h2 id="stakes-title">What is at stake?</h2><p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p><div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div><div key={stake} className="os-stakeholder-needs" aria-live="polite"><strong>{selectedStake.label} by stakeholder</strong>{selectedStake.stakeholders.map(([stakeholder, need]) => <div key={stakeholder}><span>{stakeholder}</span><p>{need}</p></div>)}</div></div><aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><p className="os-stake-goal"><strong>Our goal</strong><span>{selectedStake.goal}</span></p><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong>{selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">See why conventional methods fall short <Arrow /></a></div></div></aside></section>
       <section id="system" className="pv-screen os-system" aria-labelledby="system-title"><div className="os-system-stage"><div className="os-system-heading"><h2 id="system-title">Our solution</h2><p>One circular system answers the four shared needs: lower cost, provable compliance, material circularity and defensible reputation.</p></div><div className="os-system-flow" role="list" aria-label="The PV Circonomy circular value system">{(Object.keys(systemTopics) as SystemTopic[]).map((topic) => <article key={topic} role="listitem"><figure><img src={systemVisuals[topic].src} alt={systemVisuals[topic].alt} /></figure><div className="os-system-card-copy"><div><strong>{systemTopics[topic][0]}</strong><span> | {systemCardContent[topic].tagline}</span></div><ul>{systemCardContent[topic].bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul></div></article>)}</div></div></section>
       <ProcessPlaylist active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" />
       <section id="conventional" className="pv-screen os-deck-section" aria-label="Why conventional recycling destroys value"><StoryDeck id="conventional-deck" title="Why conventional recycling destroys value" slides={conventionalSlides} variant="split" autoAdvanceMs={10000} /></section>
