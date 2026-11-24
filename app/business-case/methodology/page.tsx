@@ -29,7 +29,7 @@ export default function MethodologyPage() {
         <section className="methodologyHero">
           <p className="methodologyEyebrow">CALCULATION METHODOLOGY</p>
           <h1>Understand the<br />numbers behind<br />the business case.</h1>
-          <p className="methodologyLead">A transparent overview of how the calculator estimates PV recycling revenues, operating costs, capacity requirements and investment payback. Both processing approaches are evaluated using the same input volume and processing fee.</p>
+          <p className="methodologyLead">A transparent overview of how the calculator estimates PV recycling revenues, operating costs, capacity requirements and investment payback. Both processing approaches are evaluated using the same input volume and recycling fee.</p>
         </section>
 
         <section className="methodologySection" id="basis">
@@ -68,8 +68,8 @@ export default function MethodologyPage() {
         <section className="methodologySection" id="revenue">
           <p className="methodologySectionLabel">03 / Revenue</p>
           <div className="methodologyContent">
-            <h2>Processing fees plus recovered material value.</h2>
-            <div className="methodologyFormula">Processing revenue = Annual panels × Panel weight (in the fee unit) × Processing fee</div>
+            <h2>Recycling fees plus recovered material value.</h2>
+            <div className="methodologyFormula">Processing revenue = Annual panels × Panel weight (in the fee unit) × Recycling fee</div>
             <div className="methodologyFormula">Material revenue = Σ (Input material mass × Recovery rate × Benchmark price × Realization factor), adjusted for price units</div>
             <div className="methodologyFormula">Total revenue = Processing revenue + Material revenue</div>
             <p>Material revenue is estimated by material type using the assumed panel composition, solution-specific recovery performance, saleability, benchmark prices and realization factors. Unsaleable materials and materials without sufficient recovery assumptions do not contribute modeled sales revenue.</p>
@@ -105,7 +105,7 @@ export default function MethodologyPage() {
             <div className="methodologyFormula">PV EBITDA advantage = PV Circulator EBITDA − Comparison solution EBITDA</div>
             <div className="methodologyFormula">Total equipment CAPEX = Equipment CAPEX per line × Required equipment lines</div>
             <div className="methodologyFormula">Simple payback (years) = Total equipment CAPEX ÷ Annual EBITDA, when EBITDA is positive</div>
-            <p>Both solutions are assessed at the same panel volume and processing fee. The comparison illustrates the estimated operating advantage under each solution’s own capacity, recovery and cost assumptions.</p>
+            <p>Both solutions are assessed at the same panel volume and recycling fee. The comparison illustrates the estimated operating advantage under each solution’s own capacity, recovery and cost assumptions.</p>
             <p className="methodologyNote">Simple payback is a simplified indicator based on EBITDA, not a discounted cash-flow or free-cash-flow calculation. It excludes items such as financing, income taxes, depreciation, working capital, and other project-specific investment or startup costs unless expressly included in the underlying model.</p>
           </div>
         </section>

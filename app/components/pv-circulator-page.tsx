@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
+import { formatMessage, headline, pageCopy, playLabel, specificationValue, zhCopy, type PageCopy } from "./pv-circulator-copy";
 
 import type { PublicRoute } from "../../lib/route-comparison";
 import { REFERENCE_CASE, SHOW_COMPETITOR_PROFIT } from "../../lib/route-comparison/config";
@@ -150,7 +151,8 @@ function LoopVideo({ src, className = "" }: { src: string; className?: string })
   return <video ref={ref} className={className} autoPlay muted loop playsInline preload="metadata" aria-hidden="true"><source src={src} type="video/mp4" /></video>;
 }
 
-export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-process-title", heading }: { active: boolean; sectionId?: string; titleId?: string; heading?: ReactNode }) {
+export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-process-title", heading, zh = false }: { active: boolean; sectionId?: string; titleId?: string; heading?: ReactNode; zh?: boolean }) {
+  const t = pageCopy(zh);
   const [stage, setStage] = useState(0);
   const [progress, setProgress] = useState(0);
   const video = useRef<HTMLVideoElement>(null);
@@ -183,59 +185,68 @@ export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-
     </video>
     <div className="pvc2-media-shade" />
     <div className="pvc2-process-heading">
-      <h2 id={titleId}>{heading ?? <>Layer by layer.<br />Material by material.</>}</h2>
-      <p>Separate materials at the source. Preserve their value for what comes next.</p>
+      <h2 id={titleId}>{heading ?? headline(t("Layer by layer.<br>Material by material."))}</h2>
+      <p>{t("Separate materials at the source. Preserve their value for what comes next.")}</p>
     </div>
     <div className="pvc2-process-footer">
       <div className="pvc2-process-description" aria-live="polite">
         <span>{String(stage + 1).padStart(2, "0")} / {String(processStages.length).padStart(2, "0")}</span>
-        <h3>{current.title}</h3>
-        <strong>{current.lead}</strong>
-        <p>{current.description}</p>
+        <h3>{t(current.title)}</h3>
+        <strong>{t(current.lead)}</strong>
+        <p>{t(current.description)}</p>
       </div>
-      <div className="pvc2-process-progress" aria-label="Process stages">
-        {processStages.map((item, index) => <button key={item.src} type="button" aria-current={index === stage ? "step" : undefined} onClick={() => setStage(index)} aria-label={`Play ${item.title}`}><i style={{ width: index === stage ? `${progress}%` : "0%" }} /><span>{item.short}</span></button>)}
+      <div className="pvc2-process-progress" aria-label={t("Process stages")}>
+        {processStages.map((item, index) => <button key={item.src} type="button" aria-current={index === stage ? "step" : undefined} onClick={() => setStage(index)} aria-label={playLabel(item.title, zh)}><i style={{ width: index === stage ? `${progress}%` : "0%" }} /><span>{t(item.short)}</span></button>)}
       </div>
     </div>
   </section>;
 }
 
-function ConfigurationValue({ value, premium = false }: { value: boolean | string; premium?: boolean }) {
-  if (typeof value === "string") return <span>{value}</span>;
-  return <span className={value ? `pvc2-config-check${premium ? " is-premium" : ""}` : "pvc2-config-empty"} aria-label={value ? "Included" : "Not included"}>{value ? "●" : "—"}</span>;
+function ConfigurationValue({ value, premium = false, t, zh }: { value: boolean | string; premium?: boolean; t: PageCopy; zh: boolean }) {
+  if (typeof value === "string") return <span>{specificationValue(value, zh)}</span>;
+  return <span className={value ? `pvc2-config-check${premium ? " is-premium" : ""}` : "pvc2-config-empty"} aria-label={t(value ? "Included" : "Not included")}>{value ? "●" : "—"}</span>;
 }
 
-function Specifications() {
+function Specifications({ t, zh }: { t: PageCopy; zh: boolean }) {
   const [variant, setVariant] = useState<SpecVariant>("basic");
   const selected = specificationVariants[variant];
+  const drawing = zh ? (variant === "basic" ? zhCopy.basicDrawing : zhCopy.drawing) : "{label} PV Circulator engineering drawing";
 
   return <section id="specification" className="pv-screen pvc2-specification" aria-labelledby="specification-title">
     <div className="pvc2-spec-top">
-      <span id="specification-title">Specifications</span>
-      <div className="pvc2-spec-tabs" role="tablist" aria-label="PV Circulator configuration">
+      <span id="specification-title">{t("Specifications")}</span>
+      <div className="pvc2-spec-tabs" role="tablist" aria-label={t("PV Circulator configuration")}>
         {(Object.keys(specificationVariants) as SpecVariant[]).map((key) => <button key={key} type="button" role="tab" aria-selected={variant === key} aria-controls="pvc2-spec-detail" onClick={() => setVariant(key)}>{specificationVariants[key].label}</button>)}
       </div>
     </div>
     <div className="pvc2-spec-actions">
-      <div className="pvc2-version" aria-label="PV Circulator model version"><button type="button" disabled aria-label="PV Circulator 2 unavailable">02</button><button type="button" aria-current="true">03</button></div>
-      <div><Link className="pv-button" href="/contact/">Contact us</Link><a className="pv-button" href="/business-case/">Business case</a><Link className="pv-button pvc2-quote-button" href="/shop/?type=equipment">Request a quote <Arrow /></Link></div>
+      <div className="pvc2-version" aria-label={t("PV Circulator model version")}><button type="button" disabled aria-label={t("PV Circulator 2 unavailable")}>02</button><button type="button" aria-current="true">03</button></div>
+      <div><Link className="pv-button" href="/contact/">{t("Contact us")}</Link><a className="pv-button" href="/business-case/">{t("Business case")}</a><Link className="pv-button pvc2-quote-button" href="/shop/?type=equipment">{t("Request a quote")} <Arrow /></Link></div>
     </div>
     <div id="pvc2-spec-detail" role="tabpanel" className="pvc2-spec-detail">
       <div className="pvc2-spec-hero">
-        <div><span>{selected.label} configuration</span><h2>{selected.title}</h2><p>{selected.description}</p></div>
-        <figure><img key={selected.drawing} src={selected.drawing} alt={`${selected.label} PV Circulator engineering drawing`} /></figure>
+        <div><span>{formatMessage(zh ? zhCopy.configuration : "{label} configuration", { label: selected.label })}</span><h2>{t(selected.title)}</h2><p>{t(selected.description)}</p></div>
+        <figure><img key={selected.drawing} src={selected.drawing} alt={formatMessage(drawing, { label: selected.label })} /></figure>
       </div>
-      <div className="pvc2-specs">{specificationGroups.map((group, index) => <details key={group.title} open={index < 2}><summary><span>{group.title}</span><span aria-hidden="true">+</span></summary><dl>{group.items.map(([label, values]) => <div key={label}><dt>{label}</dt><dd>{values[variant]}</dd></div>)}</dl></details>)}</div>
+      <div className="pvc2-specs">{specificationGroups.map((group, index) => <details key={group.title} open={index < 2}><summary><span>{t(group.title)}</span><span aria-hidden="true">+</span></summary><dl>{group.items.map(([label, values]) => <div key={label}><dt>{t(label)}</dt><dd>{specificationValue(values[variant], zh)}</dd></div>)}</dl></details>)}</div>
     </div>
-    <p className="pv-note">Published specifications are configuration- and site-dependent. Confirm feedstock, operating assumptions, utilities, compliance scope and final specifications during commercial and engineering review.</p>
-    <footer className="pv-footer"><span>© {new Date().getFullYear()} PV Circonomy</span><span>PV Circulator technology · developed by TSGC</span><a className="pv-text-button" href="#pvcirculator">Back to top</a></footer>
+    <p className="pv-note">{t("Published specifications are configuration- and site-dependent. Confirm feedstock, operating assumptions, utilities, compliance scope and final specifications during commercial and engineering review.")}</p>
+    <footer className="pv-footer"><span>© {new Date().getFullYear()} PV Circonomy</span><span>{t("PV Circulator technology · developed by TSGC")}</span><a className="pv-text-button" href="#pvcirculator">{t("Back to top")}</a></footer>
   </section>;
 }
 
-function RouteSection({ routes }: { routes: PublicRoute[] }) {
+function RouteSection({ routes, t, zh }: { routes: PublicRoute[]; t: PageCopy; zh: boolean }) {
   const usd = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
   const ordered = ["CONVENTIONAL", "HOT_KNIFE", "PVCIRCULATOR"].map(code => routes.find(route => route.code === code));
   const pvc = ordered[2];
+  const { panelWatts, panelWeightLb, processingFee } = REFERENCE_CASE;
+  const panelWeight = [`${(panelWeightLb * 0.45359237).toFixed(0)} kg`, `${panelWeightLb.toFixed(2)} lb`].join(zh ? "／" : " / ");
+  const basis = formatMessage(zh ? zhCopy.reference : "Per MW of retired panels in our {region} reference case ({panelWatts} W modules at {panelWeight} each, {fee} recycling fee, Business Case master data).", {
+    region: zh ? "加州" : "California",
+    panelWatts,
+    panelWeight,
+    fee: "$" + processingFee.toFixed(2) + "/lb",
+  });
   const rows: { label: string; value: (route: PublicRoute) => string; financial?: boolean }[] = [
     { label: "Material revenue per MW", value: route => usd(route.materialRevenuePerMw!), financial: true },
     { label: "Landfilled residue t/MW", value: route => route.landfillTPerMw.toFixed(2) },
@@ -244,16 +255,17 @@ function RouteSection({ routes }: { routes: PublicRoute[] }) {
     { label: "EBITDA per MW", value: route => usd(route.ebitdaPerMw!), financial: true },
   ];
   return <section id="routes" className="pv-screen pvc2-text-screen pvc2-routes" aria-labelledby="routes-title">
-    <header className="pvc2-section-heading"><h2 id="routes-title">Where the profit is.</h2><p>Per MW of retired panels in our California reference case ({REFERENCE_CASE.panelWatts} W modules at {REFERENCE_CASE.panelWeightLb} lb each, ${REFERENCE_CASE.processingFee.toFixed(2)}/lb processing fee, Business Case master data).</p></header>
-    {pvc?.ebitdaPerMw != null && <div className="pvc2-route-result"><strong>PV Circulator EBITDA per MW: {usd(pvc.ebitdaPerMw)}</strong><p>Material revenue {usd(pvc.materialRevenuePerMw!)} + processing fee {usd(pvc.feePerMw!)} − operating cost. Before depreciation.</p></div>}
-    {routes.length ? <div className="os-method-detail-table"><table><caption className="pv-sr-only">California reference case per MW of retired panels</caption><thead><tr><th scope="col">Item</th>{["Shredding", "Thermal processing", "PV Circulator"].map(label => <th scope="col" key={label}>{label}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{ordered.map((route, index) => <td key={index}>{!route ? "Unavailable" : row.financial && index !== 2 && !SHOW_COMPETITOR_PROFIT ? <span aria-label="Not published">—</span> : row.value(route)}</td>)}</tr>)}</tbody></table></div> : <p>Reference-case metrics are currently unavailable. Run your business case to explore available regions.</p>}
-    <p>Separating layers keeps silver concentrated and glass clean, so more of each panel is sold instead of landfilled.</p>
-    <div className="pvc2-route-actions"><Link className="pv-button" href="/business-case/">Run your business case <Arrow /></Link><Link className="pv-text-button" href="/shop/?type=equipment">Request equipment information</Link></div>
-    <p className="os-chart-source">Estimates from the PV Circonomy Business Case model with its published master data for California; your results depend on region, volume, fee and material prices. EBITDA excludes depreciation, financing and taxes.</p>
+    <header className="pvc2-section-heading"><h2 id="routes-title">{t("Where the profit is.")}</h2><p>{basis}</p></header>
+    {pvc?.ebitdaPerMw != null && <div className="pvc2-route-result"><strong>{formatMessage(zh ? zhCopy.ebitda : "PV Circulator EBITDA per MW: {ebitdaPerMw}", { ebitdaPerMw: usd(pvc.ebitdaPerMw) })}</strong><p>{formatMessage(zh ? zhCopy.revenue : "Material revenue {materialRevenuePerMw} + recycling fee {feePerMw} − operating cost. Before depreciation.", { materialRevenuePerMw: usd(pvc.materialRevenuePerMw!), feePerMw: usd(pvc.feePerMw!) })}</p></div>}
+    {routes.length ? <div className="os-method-detail-table"><table><caption className="pv-sr-only">{t("California reference case per MW of retired panels")}</caption><thead><tr><th scope="col">{t("Item")}</th>{["Shredding", "Thermal processing", "PV Circulator"].map(label => <th scope="col" key={label}>{t(label)}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.label}><th scope="row">{t(row.label)}</th>{ordered.map((route, index) => <td key={index}>{!route ? t("Unavailable") : row.financial && index !== 2 && !SHOW_COMPETITOR_PROFIT ? <span aria-label={t("Not published")}>—</span> : row.value(route)}</td>)}</tr>)}</tbody></table></div> : <p>{t("Reference-case metrics are currently unavailable. Run your business case to explore available regions.")}</p>}
+    <p>{t("Separating layers keeps silver concentrated and glass clean, so more of each panel is sold instead of landfilled.")}</p>
+    <div className="pvc2-route-actions"><Link className="pv-button" href="/business-case/">{t("Run your business case")} <Arrow /></Link><Link className="pv-text-button" href="/shop/?type=equipment">{t("Request equipment information")}</Link></div>
+    <p className="os-chart-source">{t("Estimates from the PV Circonomy Business Case model with its published master data for California; your results depend on region, volume, fee and material prices. EBITDA excludes depreciation, financing and taxes.")}</p>
   </section>;
 }
 
-export function PVCirculatorPage({ routes = [] }: { routes?: PublicRoute[] }) {
+export function PVCirculatorPage({ routes = [], zh = false }: { routes?: PublicRoute[]; zh?: boolean }) {
+  const t = pageCopy(zh);
   const [active, setActive] = useState<(typeof sections)[number][0]>("pvcirculator");
   const paneNavigationLocked = useRef(false);
   useEffect(() => {
@@ -284,59 +296,59 @@ export function PVCirculatorPage({ routes = [] }: { routes?: PublicRoute[] }) {
   const light = ["performance", "functions", "quality", "routes", "capability", "configurations", "specification"].includes(active);
 
   return <div className={`pv-review pvc2-page${light ? " pv-light-nav" : ""}`}>
-    <a className="pv-skip" href="#pvcirculator">Skip to PV Circulator</a>
+    <a className="pv-skip" href="#pvcirculator" lang={zh ? "zh-Hant" : undefined}>{t("Skip to PV Circulator")}</a>
     <PublicHeader assistantInlineLinks assistantTechnologyAnchor="#process" />
-    <nav className="pv-dots" aria-label="PV Circulator sections">{sections.map(([id, label]) => <a key={id} href={`#${id}`} aria-current={active === id ? "step" : undefined}><i /><span>{label}</span></a>)}</nav>
-    <main>
+    <nav className="pv-dots" aria-label={t("PV Circulator sections")} lang={zh ? "zh-Hant" : undefined}>{sections.map(([id, label]) => <a key={id} href={`#${id}`} aria-current={active === id ? "step" : undefined}><i /><span>{t(label)}</span></a>)}</nav>
+    <main lang={zh ? "zh-Hant" : undefined}>
       <section id="pvcirculator" className="pv-screen pv-hero pvc2-hero" aria-labelledby="pvc-title">
         <LoopVideo src="/videos/pvc-operation.mp4" className="pvc2-cover-video" />
         <div className="pv-hero-shade" />
-        <div className="pv-hero-copy"><h1 id="pvc-title">Separate more.<br />Preserve more value.</h1><p>Turn end-of-life solar panels into clean, sellable material streams—automatically, at industrial scale, and without chemicals, heat or process water.</p></div>
+        <div className="pv-hero-copy"><h1 id="pvc-title">{headline(t("Separate more.<br>Preserve more value."))}</h1><p>{t("Turn end-of-life solar panels into clean, sellable material streams—automatically, at industrial scale, and without chemicals, heat or process water.")}</p></div>
       </section>
 
       <section id="performance" className="pv-screen pvc2-text-screen pvc2-performance" aria-labelledby="performance-title">
-        <header className="pvc2-section-heading"><h2 id="performance-title">Built for industrial<br />PV recycling.</h2><p>Every line is designed around one question: how much value can you recover per panel, at what operating cost?</p></header>
-        <figure className="pvc2-machine"><img src="/images/pvc-machine.webp" alt="PV Circulator industrial solar panel recycling line" /></figure>
-        <div className="pvc2-card-row">{performance.map(([value, title, text]) => <article key={value}><strong>{value}</strong><h3>{title}</h3><p>{text}</p></article>)}</div>
+        <header className="pvc2-section-heading"><h2 id="performance-title">{headline(t("Built for industrial<br>PV recycling."))}</h2><p>{t("Every line is designed around one question: how much value can you recover per panel, at what operating cost?")}</p></header>
+        <figure className="pvc2-machine"><img src="/images/pvc-machine.webp" alt={t("PV Circulator industrial solar panel recycling line")} /></figure>
+        <div className="pvc2-card-row">{performance.map(([value, title, text]) => <article key={value}><strong>{t(value)}</strong><h3>{t(title)}</h3><p>{t(text)}</p></article>)}</div>
       </section>
 
-      <ProcessPlaylist active={active === "process"} />
+      <ProcessPlaylist active={active === "process"} zh={zh} />
 
       <section id="functions" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="functions-title">
-        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process", true)}><div><h2 id="functions-title">Configure the line.<br />Fit your operation.</h2><p>Start with the core line, then add what your operation needs: intelligent identification, integrated junction-box removal or material preparation for downstream buyers.</p><Link className="pv-button" href="/shop/?type=equipment">Request equipment information <Arrow /></Link></div></div>
-        <div className="pvc2-split-scroll" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process")}>{functions.map(([number, title, lead, text, image]) => <article className="pvc2-function" key={number}><img src={image} alt="" /><div><span>{number}</span><h3>{title}</h3><strong>{lead}</strong><p>{text}</p></div></article>)}</div>
+        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process", true)}><div><h2 id="functions-title">{headline(t("Configure the line.<br>Fit your operation."))}</h2><p>{t("Start with the core line, then add what your operation needs: intelligent identification, integrated junction-box removal or material preparation for downstream buyers.")}</p><Link className="pv-button" href="/shop/?type=equipment">{t("Request equipment information")} <Arrow /></Link></div></div>
+        <div className="pvc2-split-scroll" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process")}>{functions.map(([number, title, lead, text, image]) => <article className="pvc2-function" key={number}><img src={image} alt="" /><div><span>{t(number)}</span><h3>{t(title)}</h3><strong>{t(lead)}</strong><p>{t(text)}</p></div></article>)}</div>
       </section>
 
       <section id="layer-by-layer" className="pv-screen pvc2-media-screen" aria-labelledby="layer-title">
         <LoopVideo src="/videos/pvc-layer-separation.mp4" className="pvc2-cover-video" />
         <div className="pvc2-media-shade" />
-        <div className="pvc2-media-copy"><h2 id="layer-title">Don&apos;t crush<br />value together.</h2><p>A PV module is built in layers: glass, encapsulant, cells and backsheet. Shred it, and they end up mixed together. Separate them, and each one stays clean enough for what comes next.</p></div>
+        <div className="pvc2-media-copy"><h2 id="layer-title">{headline(t("Don't crush<br>value together."))}</h2><p>{t("A PV module is built in layers: glass, encapsulant, cells and backsheet. Shred it, and they end up mixed together. Separate them, and each one stays clean enough for what comes next.")}</p></div>
       </section>
 
       <section id="quality" className="pv-screen pvc2-text-screen pvc2-quality" aria-labelledby="quality-title">
-        <header className="pvc2-section-heading"><h2 id="quality-title">What comes out<br />matters.</h2><p>Recovery rate tells you how much comes back. Purity determines what the recovered material can become—and what it may be worth.</p></header>
-        <div className="pvc2-material-grid">{outputs.map(([name, value, text]) => <article key={name}><span>{name}</span><strong>{value}</strong><p>{text}</p></article>)}</div>
-        <div className="pvc2-value-row"><article><strong>Cleaner separation</strong><p>Distinct streams at the source.</p></article><article><strong>Less secondary processing</strong><p>Less sorting and purification.</p></article><article><strong>More value per panel</strong><p>More routes to downstream buyers.</p></article></div>
+        <header className="pvc2-section-heading"><h2 id="quality-title">{headline(t("What comes out<br>matters."))}</h2><p>{t("Recovery rate tells you how much comes back. Purity determines what the recovered material can become—and what it may be worth.")}</p></header>
+        <div className="pvc2-material-grid">{outputs.map(([name, value, text]) => <article key={name}><span>{t(name)}</span><strong>{t(value)}</strong><p>{t(text)}</p></article>)}</div>
+        <div className="pvc2-value-row"><article><strong>{t("Cleaner separation")}</strong><p>{t("Distinct streams at the source.")}</p></article><article><strong>{t("Less secondary processing")}</strong><p>{t("Less sorting and purification.")}</p></article><article><strong>{t("More value per panel")}</strong><p>{t("More routes to downstream buyers.")}</p></article></div>
       </section>
 
-      <RouteSection routes={routes} />
+      <RouteSection routes={routes} t={t} zh={zh} />
       <section id="capability" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="capability-title">
-        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality", true)}><div><h2 id="capability-title">One platform.<br />Intact, broken or glass-glass.</h2><p>PV Circulator separates intact modules layer by layer. The PLUS module extends the system to broken and glass-glass feedstock through crushing and material separation.</p></div></div>
-        <div className="pvc2-split-scroll pvc2-capability-cards" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality")}><article className="pvc2-image-card"><img src="/images/pvc-feedstock-intact.jpg" alt="Intact solar panels ready for processing" /><div><span>PV CIRCULATOR</span><h3>Intact modules</h3><p>Automated layer-by-layer separation for framed and frameless glass-backsheet panels.</p></div></article><article className="pvc2-image-card"><img src="/images/pvc-feedstock-broken.jpg" alt="Broken solar panel feedstock" /><div><span>PLUS MODULE</span><h3>Broken &amp; glass-glass</h3><p>Integrated crushing and material separation expands feedstock compatibility.</p></div></article></div>
+        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality", true)}><div><h2 id="capability-title">{headline(t("One platform.<br>Intact, broken or glass-glass."))}</h2><p>{t("PV Circulator separates intact modules layer by layer. The PLUS module extends the system to broken and glass-glass feedstock through crushing and material separation.")}</p></div></div>
+        <div className="pvc2-split-scroll pvc2-capability-cards" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality")}><article className="pvc2-image-card"><img src="/images/pvc-feedstock-intact.jpg" alt={t("Intact solar panels ready for processing")} /><div><span>{t("PV CIRCULATOR")}</span><h3>{t("Intact modules")}</h3><p>{t("Automated layer-by-layer separation for framed and frameless glass-backsheet panels.")}</p></div></article><article className="pvc2-image-card"><img src="/images/pvc-feedstock-broken.jpg" alt={t("Broken solar panel feedstock")} /><div><span>{t("PLUS MODULE")}</span><h3>{t("Broken & glass-glass")}</h3><p>{t("Integrated crushing and material separation expands feedstock compatibility.")}</p></div></article></div>
       </section>
 
       <section id="deployability" className="pv-screen pvc2-deployability" aria-labelledby="deployability-title">
-        <header><h2 id="deployability-title">Processing capacity.<br />Where you need it.</h2><p>PV waste is bulky and costly to haul. PV Circulator brings processing capacity closer to the source, reducing long-distance transportation and enabling flexible deployment as waste volumes shift.</p></header>
-        <div className="pvc2-deploy-main"><article><img src="/images/pvc-deploy-onsite.webp" alt="Illustrative modular PV recycling operation at a solar farm" /><div><span>ON-SITE PROCESSING</span><h3>Bring recycling to<br />the panels.</h3><p>Set up at large decommissioning projects and collection sites. Skip the long haul.</p></div></article><article><img src="/images/pvc-deploy-nearsite.webp" alt="Illustrative regional PV recycling hub" /><div><span>NEAR-SITE PROCESSING</span><h3>Build capacity close<br />to the supply.</h3><p>Run a regional hub for several collection points, and move it when volumes shift.</p></div></article></div>
-        <div className="pvc2-deploy-metrics"><article><strong>Modular</strong><span>Install. Dismantle. Redeploy.</span><p>Integrated processing modules enable efficient installation, dismantling and redeployment.</p></article><article><strong>24 Hours</strong><span>Relocate in a day.</span><p>Designed for rapid teardown and restart, subject to site readiness. Transport time excluded.</p></article><article><strong>Relocatable</strong><span>Follow the feedstock.</span><p>Move the line as panel volumes and collection locations change.</p></article></div>
+        <header><h2 id="deployability-title">{headline(t("Processing capacity.<br>Where you need it."))}</h2><p>{t("PV waste is bulky and costly to haul. PV Circulator brings processing capacity closer to the source, reducing long-distance transportation and enabling flexible deployment as waste volumes shift.")}</p></header>
+        <div className="pvc2-deploy-main"><article><img src="/images/pvc-deploy-onsite.webp" alt={t("Illustrative modular PV recycling operation at a solar farm")} /><div><span>{t("ON-SITE PROCESSING")}</span><h3>{headline(t("Bring recycling to<br>the panels."))}</h3><p>{t("Set up at large decommissioning projects and collection sites. Skip the long haul.")}</p></div></article><article><img src="/images/pvc-deploy-nearsite.webp" alt={t("Illustrative regional PV recycling hub")} /><div><span>{t("NEAR-SITE PROCESSING")}</span><h3>{headline(t("Build capacity close<br>to the supply."))}</h3><p>{t("Run a regional hub for several collection points, and move it when volumes shift.")}</p></div></article></div>
+        <div className="pvc2-deploy-metrics"><article><strong>{t("Modular")}</strong><span>{t("Install. Dismantle. Redeploy.")}</span><p>{t("Integrated processing modules enable efficient installation, dismantling and redeployment.")}</p></article><article><strong>{t("24 Hours")}</strong><span>{t("Relocate in a day.")}</span><p>{t("Designed for rapid teardown and restart, subject to site readiness. Transport time excluded.")}</p></article><article><strong>{t("Relocatable")}</strong><span>{t("Follow the feedstock.")}</span><p>{t("Move the line as panel volumes and collection locations change.")}</p></article></div>
       </section>
 
       <section id="configurations" className="pv-screen pvc2-split pvc2-split-43" aria-labelledby="configurations-title">
-        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability", true)}><div><h2 id="configurations-title">Choose<br />the right fit.</h2><strong>Three configurations.<br />One goal: maximum material value.</strong><p>Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.</p><div className="pvc2-business-case"><strong>Evaluate the economics of your configuration.</strong><p>Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.</p><a className="pv-text-button" href="/business-case/">Calculate your business case <Arrow /></a></div></div></div>
-        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label="Comparison of PV Circulator configurations"><div className="pvc2-config-head" role="row"><span role="columnheader">Functions</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{lead}</small></span>)}</div>{configurationRows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{label}</span><ConfigurationValue value={economic} /><ConfigurationValue value={basic} /><ConfigurationValue value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>PLUS — One module. Every configuration.</strong><p>Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{label}</span><ConfigurationValue value /><ConfigurationValue value /><ConfigurationValue value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>Dust Control</span><span>Enclosed extraction and dedicated collection</span></div></div></div></div>
+        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability", true)}><div><h2 id="configurations-title">{headline(t("Choose<br>the right fit."))}</h2><strong>{headline(t("Three configurations.<br>One goal: maximum material value."))}</strong><p>{t("Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.")}</p><div className="pvc2-business-case"><strong>{t("Evaluate the economics of your configuration.")}</strong><p>{t("Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.")}</p><a className="pv-text-button" href="/business-case/">{t("Calculate your business case")} <Arrow /></a></div></div></div>
+        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{t(name)}</strong><small>{t(lead)}</small></span>)}</div>{configurationRows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} zh={zh} value={economic} /><ConfigurationValue t={t} zh={zh} value={basic} /><ConfigurationValue t={t} zh={zh} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} zh={zh} value /><ConfigurationValue t={t} zh={zh} value /><ConfigurationValue t={t} zh={zh} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
       </section>
 
-      <Specifications />
+      <Specifications t={t} zh={zh} />
     </main>
   </div>;
 }
