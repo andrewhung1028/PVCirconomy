@@ -885,7 +885,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                   <p className="sectionDescription">
                     Annualized results using
                     the same panel volume and
-                    processing fee for both
+                    recycling fee for both
                     approaches.
                   </p>
 
