@@ -15,13 +15,12 @@ function priceFormatter(locale: OurSolutionLocale, currency: string) {
 }
 
 export function equipmentMouPriceRows(locale: OurSolutionLocale, mou: EquipmentMou, terms: EquipmentMouTerms): [string, string][] {
-  if (equipmentMouHasSalesAgent(terms)) return [];
+  if (equipmentMouHasSalesAgent(terms) || mou.msrpPerLine === null || mou.msrpTotal === null) return [];
   const t = equipmentInquiryTranslate(locale);
   const price = priceFormatter(locale, mou.currency);
-  const pending = t("Pending confirmation");
   return [
-    [t("MSRP per line"), mou.msrpPerLine === null ? pending : price.format(mou.msrpPerLine)],
-    [t("Total equipment MSRP"), mou.msrpTotal === null ? pending : price.format(mou.msrpTotal)],
+    [t("MSRP per line"), price.format(mou.msrpPerLine)],
+    [t("Total equipment MSRP"), price.format(mou.msrpTotal)],
   ];
 }
 
@@ -58,6 +57,7 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
     ] satisfies [string, string][] : []),
     [t("Installation market"), marketNames[input.locale][input.installationMarket]],
     [t("Installation city or site"), input.installationSite || "—"],
+    ...(input.installationPostalCode ? [[t("Installation postal code"), input.installationPostalCode] as [string, string]] : []),
     [t("Installation environment"), option(input.installationEnvironment)],
     [t("Available floor area"), input.floorArea
       ? `${number.format(input.floorArea.value)} ${input.floorArea.unit === "ft2" ? "ft²" : "m²"}` : "—"],

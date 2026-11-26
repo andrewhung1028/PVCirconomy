@@ -24,7 +24,7 @@ const fieldLabels: ReadonlyMap<string, string> = new Map(Object.entries({
   materials: "回收物料", "materialPurity[Glass]": "玻璃最低純度（%）", "materialPurity[Silicon]": "矽最低純度（%）",
   "materialPurity[Silver]": "銀最低純度（%）", polymerOfftake: "EVA／背板去化", installationCountry: "安裝國家或地區",
   offtakeStreams: "回收物料去化", glassOfftakePrice: "玻璃去化價格",
-  installationSite: "安裝城市或場址", installationEnvironment: "安裝環境", floorSpace: "可用樓地板面積",
+  installationSite: "安裝城市或場址", installationPostalCode: "安裝地郵遞區號", installationEnvironment: "安裝環境", floorSpace: "可用樓地板面積",
   floorSpaceUnit: "面積單位", powerSupply: "場地供電", compressedAir: "壓縮空氣供應", siteNetwork: "場地網路連線",
   requirements: "安裝、試運轉或其他需求", company: "公司", companyAddress: "公司地址", jobTitle: "職稱",
   name: "姓名", email: "公司電子郵件", phone: "電話",
@@ -46,7 +46,9 @@ function fieldValue(key: string, value: string) {
 }
 
 function InquiryRecord({ record }: { record: InquirySubmission }) {
-  const entries = record.fields.filter(([, value]) => value !== "");
+  const verified = record.verified_contact;
+  const entries = record.fields.filter(([key, value]) => value && !(verified && Object.hasOwn(verified, key)));
+  if (verified) entries.push(["company", verified.company], ["name", verified.name], ["email", verified.email]);
   const field = (key: string) => fieldValue(key, entries.find(([name]) => name === key)?.[1] ?? "");
   const date = new Date(record.submitted_at);
   return <article className="pa-order pa-inquiry">
@@ -54,7 +56,7 @@ function InquiryRecord({ record }: { record: InquirySubmission }) {
       <h2>{field("company") || "未填公司名稱"}</h2>
       <span>#{record.id} · <time dateTime={date.toISOString()}>{submittedTime.format(date)}</time></span>
     </div>
-    <p>{record.form_complete ? "填寫完整" : "未填完整"} · {field("installationCountry") || "—"} · {field("configuration") || "—"}</p>
+    <p>{record.form_complete ? "填寫完整" : "未填完整"} · {field("installationCountry") || "—"} · {field("configuration") || "—"}{verified && " · 工作信箱已驗證"}</p>
     <details>
       <summary>查看填寫內容</summary>
       <dl className="pa-inquiry-fields">

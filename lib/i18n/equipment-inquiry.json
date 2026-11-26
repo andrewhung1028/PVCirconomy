@@ -1,4 +1,22 @@
 {
+  "Remember contact details on this browser": ["在此瀏覽器記住聯絡資料", "このブラウザーに連絡先を保存する"],
+  "Installation postal code": ["安裝地郵遞區號", "設置先の郵便番号"],
+  "To check MSRP, enter your installation site and postal code and verify your work email.": ["查看建議售價前，請填寫安裝場址與郵遞區號，並驗證工作信箱。", "メーカー希望小売価格を確認するには、設置先と郵便番号を入力し、勤務先メールアドレスを認証してください。"],
+  "Enter the installation city or site and a valid postal code, then confirm the configuration, PLUS option and line count.": ["請填寫安裝城市或場址及有效的郵遞區號，並確認設備配置、PLUS 選項與產線數量。", "設置都市または設置先と有効な郵便番号を入力し、設備構成、PLUSオプション、ライン数を確認してください。"],
+  "Use a company or organization email address to check MSRP.": ["請使用公司或機構的電子郵件地址查看建議售價。", "メーカー希望小売価格の確認には、会社または組織のメールアドレスをご使用ください。"],
+  "MSRP is currently unavailable for this market and configuration.": ["此市場與設備配置目前無可查詢的建議售價。", "この市場と設備構成のメーカー希望小売価格は現在確認できません。"],
+  "Wait one minute before requesting another code.": ["請等一分鐘再索取新驗證碼。", "新しい認証コードをリクエストするには1分お待ちください。"],
+  "The code is incorrect, expired or already used. Try again or request a new code.": ["驗證碼錯誤、已過期或已使用。請再試一次或索取新驗證碼。", "認証コードが正しくないか、有効期限切れ、または使用済みです。再入力するか、新しいコードをリクエストしてください。"],
+  "Enter the six-digit verification code.": ["請輸入六位數驗證碼。", "6桁の認証コードを入力してください。"],
+  "The verification code could not be sent. Try again or review without MSRP.": ["驗證碼寄送失敗。請再試一次，或先檢視詢價內容。", "認証コードを送信できませんでした。再試行するか、価格を表示せずにお問い合わせ内容を確認してください。"],
+  "Verify your work email": ["驗證工作信箱", "勤務先メールアドレスを認証"],
+  "MSRP verification code": ["建議售價驗證碼", "メーカー希望小売価格の認証コード"],
+  "Your PV Circulator MSRP verification code is {code}. It expires in 10 minutes.": ["您的 PV Circulator 建議售價驗證碼為 {code}，10 分鐘內有效。", "PV Circulatorのメーカー希望小売価格の認証コードは {code} です。有効期間は10分です。"],
+  "We sent a six-digit code to {email}. It expires in 10 minutes.": ["六位數驗證碼已寄至 {email}，10 分鐘內有效。", "{email} に6桁のコードを送信しました。有効期間は10分です。"],
+  "Verify email & show MSRP": ["驗證信箱並查看建議售價", "メールを認証してメーカー希望小売価格を表示"],
+  "Preparing inquiry…": ["正在準備詢價…", "お問い合わせの準備中…"],
+  "Send a new code": ["索取新驗證碼", "新しい認証コードを送信"],
+  "Review without MSRP": ["先檢視詢價內容", "価格を表示せずに内容を確認"],
   "Not yet determined": [
     "尚未確定",
     "未定"

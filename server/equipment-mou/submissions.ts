@@ -1,10 +1,10 @@
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentOfftakeStreams } from "../../lib/equipment-mou";
+import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentOfftakeStreams, type EquipmentMouContact } from "../../lib/equipment-mou";
 import { database } from "../db/client";
 
 const fields = new Set([
   "configuration", "includePlus", "assessmentDate", "stage", "lineQuantity", "startDate", "configurationRequirements",
   "targetCapacity", "dailyHours", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "offtakeStreams", "glassOfftakePrice",
-  "installationCountry", "installationSite", "installationEnvironment", "floorSpace", "floorSpaceUnit",
+  "installationCountry", "installationSite", "installationPostalCode", "installationEnvironment", "floorSpace", "floorSpaceUnit",
   "powerSupply", "compressedAir", "siteNetwork", "requirements", "company", "companyAddress", "jobTitle", "name", "email", "phone",
   ...equipmentInquiryMaterials.map(material => `materialPurity[${material}]`),
 ]);
@@ -31,6 +31,7 @@ async function inquiryStore() {
       form_complete boolean NOT NULL,
       fields jsonb NOT NULL
     )`;
+    await sql`ALTER TABLE pv_equipment_inquiry_submissions ADD COLUMN IF NOT EXISTS verified_contact jsonb`;
   })().catch(error => {
     storeReady = undefined;
     throw error;
@@ -41,8 +42,23 @@ async function inquiryStore() {
 
 export async function recordInquirySubmission(fields: [string, string][], formComplete: boolean) {
   const sql = await inquiryStore();
-  await sql`INSERT INTO pv_equipment_inquiry_submissions (form_complete, fields)
-    VALUES (${formComplete}, ${JSON.stringify(fields)}::jsonb)`;
+  const [record] = await sql`INSERT INTO pv_equipment_inquiry_submissions (form_complete, fields)
+    VALUES (${formComplete}, ${JSON.stringify(fields)}::jsonb) RETURNING id::text AS id`;
+  return record.id as string;
+}
+
+type VerifiedInquiryContact = Pick<EquipmentMouContact, "email" | "company" | "name">;
+
+export async function recordVerifiedInquiryContact(id: string | undefined, contact: EquipmentMouContact, fields: [string, string][]) {
+  const sql = await inquiryStore();
+  const verified: VerifiedInquiryContact = { email: contact.email.trim().toLowerCase(), company: contact.company.trim(), name: contact.name.trim() };
+  if (id) {
+    await sql`UPDATE pv_equipment_inquiry_submissions SET verified_contact = ${JSON.stringify(verified)}::jsonb
+      WHERE id = ${id}::bigint`;
+  } else {
+    await sql`INSERT INTO pv_equipment_inquiry_submissions (form_complete, fields, verified_contact)
+      VALUES (true, ${JSON.stringify(fields)}::jsonb, ${JSON.stringify(verified)}::jsonb)`;
+  }
 }
 
 export type InquirySubmission = {
@@ -50,6 +66,7 @@ export type InquirySubmission = {
   submitted_at: string;
   form_complete: boolean;
   fields: [string, string][];
+  verified_contact: VerifiedInquiryContact | null;
 };
 
 const pageSize = 25;
@@ -59,7 +76,7 @@ export async function listInquirySubmissions(before: unknown) {
     ? before
     : null;
   const sql = await inquiryStore();
-  const rows = await sql`SELECT id::text AS id, submitted_at, form_complete, fields
+  const rows = await sql`SELECT id::text AS id, submitted_at, form_complete, fields, verified_contact
     FROM pv_equipment_inquiry_submissions
     WHERE (${cursor}::bigint IS NULL OR id < ${cursor}::bigint)
     ORDER BY pv_equipment_inquiry_submissions.id DESC
