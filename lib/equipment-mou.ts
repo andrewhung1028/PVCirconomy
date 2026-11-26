@@ -23,6 +23,12 @@ export type EquipmentProjectStage = typeof equipmentProjectStages[number];
 
 export const equipmentInquiryMaterials = ["Glass", "Silicon", "Silver"] as const;
 export const equipmentOfftakeStreams = ["Glass", "Cell powder", "EVA", "Backsheet"] as const;
+export const equipmentOfftakeTerms = {
+  Glass: "Free offtake",
+  "Cell powder": "Paid offtake",
+  EVA: "Free offtake",
+  Backsheet: "Free offtake",
+} as const satisfies Record<typeof equipmentOfftakeStreams[number], string>;
 export const glassOfftakePrices = ["Free of charge", "Price to be agreed"] as const;
 export const siteNetworkOptions = ["Wired Ethernet", "Wi-Fi", "Not available"] as const;
 

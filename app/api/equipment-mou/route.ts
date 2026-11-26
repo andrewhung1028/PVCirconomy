@@ -28,7 +28,7 @@ function validOfftake({ offtakeStreams, glassOfftakePrice, installationMarket }:
     || !offtakeStreams.every(stream => equipmentOfftakeStreams.includes(stream))
     || new Set(offtakeStreams).size !== offtakeStreams.length) return false;
   if (!offtakeStreams.includes("Glass")) return glassOfftakePrice === undefined;
-  return installationMarket === "US" && glassOfftakePrice !== undefined && glassOfftakePrices.includes(glassOfftakePrice);
+  return installationMarket === "US" && (glassOfftakePrice === undefined || glassOfftakePrices.includes(glassOfftakePrice));
 }
 
 function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput {

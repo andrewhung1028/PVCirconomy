@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { AdminNavigation } from "../../components/admin-navigation";
-import { equipmentInquiryTranslate } from "../../../lib/equipment-mou-copy";
+import { equipmentInquiryTranslate, equipmentOfftakeLabel } from "../../../lib/equipment-mou-copy";
 import { marketNames, type PublicSolutionMarket } from "../../../lib/our-solution/market";
 import { staffSession } from "../../../server/auth/microsoft";
 import { listInquirySubmissions, type InquirySubmission } from "../../../server/equipment-mou/submissions";
@@ -30,7 +30,7 @@ const fieldLabels: ReadonlyMap<string, string> = new Map(Object.entries({
   name: "姓名", email: "公司電子郵件", phone: "電話",
 }));
 const translatedFields = new Set([
-  "includePlus", "stage", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "offtakeStreams", "glassOfftakePrice",
+  "includePlus", "stage", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "glassOfftakePrice",
   "installationEnvironment", "powerSupply", "compressedAir", "siteNetwork",
 ]);
 
@@ -50,6 +50,7 @@ function InquiryRecord({ record }: { record: InquirySubmission }) {
   const entries = record.fields.filter(([key, value]) => value && !(verified && Object.hasOwn(verified, key)));
   if (verified) entries.push(["company", verified.company], ["name", verified.name], ["email", verified.email]);
   const field = (key: string) => fieldValue(key, entries.find(([name]) => name === key)?.[1] ?? "");
+  const legacyGlassPrice = Boolean(field("glassOfftakePrice"));
   const date = new Date(record.submitted_at);
   return <article className="pa-order pa-inquiry">
     <div className="pa-order-heading">
@@ -61,7 +62,7 @@ function InquiryRecord({ record }: { record: InquirySubmission }) {
       <summary>查看填寫內容</summary>
       <dl className="pa-inquiry-fields">
         {entries.map(([key, value], index) => <div key={`${key}-${index}`}>
-          <dt>{fieldLabels.get(key) ?? key}</dt><dd>{fieldValue(key, value)}</dd>
+          <dt>{fieldLabels.get(key) ?? key}</dt><dd>{key === "offtakeStreams" ? equipmentOfftakeLabel(value, t, legacyGlassPrice) : fieldValue(key, value)}</dd>
         </div>)}
       </dl>
     </details>
