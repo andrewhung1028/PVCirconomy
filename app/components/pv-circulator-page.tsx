@@ -306,7 +306,7 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
       {inquiry ? <div className="pvc2-inquiry-actions">
         <button ref={returnToSpecs} type="button" className="pv-button" onClick={toggleInquiry}>{quote("Back to specifications")}</button>
         <a className="pv-button pvc2-quote-button pvc2-inquiry-jump" href="#equipment-inquiry">{quote("Online inquiry")} <Arrow /></a>
-      </div> : <div>
+      </div> : <div className="pvc2-spec-ctas">
         <Link className="pv-button" href="/contact/">{t("Contact us")}</Link>
         {businessCaseHref && <a className="pv-button" href={businessCaseHref}>{t("Business case")}</a>}
         <button ref={openQuote} type="button" className="pv-button pvc2-quote-button" onClick={toggleInquiry}>{quote("Online inquiry")} <Arrow /></button>
@@ -510,7 +510,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
             <h2 id="quality-title">{t("What comes out")}<br />{t("matters.")}</h2>
             <p>{t("Recovery rate tells you how much comes back. Purity determines what the recovered material can become—and what it may be worth.")}</p>
             {showRevenueComparison && revenueRatio !== null && Number.isFinite(revenueRatio) && <div className="os-materials-demand">
-              <strong><span>{revenueRatio.toLocaleString(locale, { maximumFractionDigits: 2 })}×</span></strong>
+              <strong>{revenueRatio.toLocaleString(locale, { maximumFractionDigits: 2 })}×</strong>
               <h3>{t("Material sales revenue relative to recycling fee revenue")}</h3>
               {revenueRatio > 1 && <p>{t("Recovered materials are the larger revenue source at the current fee.")}</p>}
             </div>}
