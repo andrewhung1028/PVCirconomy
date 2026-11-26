@@ -19,6 +19,7 @@
 .pa-diff-sheet summary { cursor: pointer; padding-block: .75rem; font-weight: 600; }
 .pa-diff-sheet td { overflow-wrap: anywhere; white-space: normal; max-width: 32rem; }
 .pa-diff-sheet summary:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+.pa-meta.pa-pricing-version { justify-content: flex-end; }
 .pa-header-session { display: flex; align-items: center; gap: 12px; max-inline-size: 100%; margin-inline-start: auto; }
 .pa-header-session span { min-inline-size: 0; overflow-wrap: anywhere; }
 .pa-header-session button { flex-shrink: 0; margin-left: 0; }
