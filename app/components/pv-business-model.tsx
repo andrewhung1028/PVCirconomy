@@ -44,7 +44,7 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
         <p>{t("Can the line reliably separate the panels you receive? Who will take the outputs, and will the revenue cover your costs? If you already know which configuration you need, you can buy it directly.")}</p>
         {trialOffered && <article className="pvc2-purchase-option">
           <div className="os-materials-demand">
-            <strong aria-hidden="true">{t("Up to 180 days")}</strong>
+            <strong aria-hidden="true">180</strong>
             <h3>{t("Trial-based PO (TBP)")}</h3>
           </div>
           <p>{t("Try PV Circulator with your own panels for up to 180 days. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
