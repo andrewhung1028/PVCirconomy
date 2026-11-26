@@ -58,7 +58,7 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
     [t("Installation environment"), option(input.installationEnvironment)],
     [t("Available floor area"), input.floorArea
       ? `${number.format(input.floorArea.value)} ${input.floorArea.unit === "ft2" ? "ft²" : "m²"}` : "—"],
-    [t("Equipment interface language"), option(input.interfaceLanguage)],
+    ...(input.interfaceLanguage ? [[t("Equipment interface language"), option(input.interfaceLanguage)] as [string, string]] : []),
     [t("Site power supply"), sitePower],
     [t("Compressed air supply"), option(input.compressedAir)],
     [t("Site network connection"), option(input.siteNetwork)],

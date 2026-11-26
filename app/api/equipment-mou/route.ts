@@ -11,6 +11,7 @@ import { limit } from "../../../server/delivery/limits";
 import { loadSolutionOperatingData } from "../../../server/our-solution/public-view";
 
 import { equipmentMouMarket } from "../../../server/equipment-mou/market";
+import { parseInquirySubmission, recordInquirySubmission } from "../../../server/equipment-mou/submissions";
 import { database } from "../../../server/db/client";
 
 export const runtime = "nodejs";
@@ -160,6 +161,17 @@ export async function POST(request: Request) {
   try { body = await jsonBody(request, 32768); }
   catch { return reply({ error: "invalid_request" }, 400); }
   try {
+    const incomplete = body?.action === "record-incomplete";
+    if (incomplete || (body?.action === "review" && body.submission !== undefined)) {
+      const submission = parseInquirySubmission(body.submission);
+      if (!submission) return reply({ error: "invalid_request" }, 400);
+      if (!(await limit(request, "equipment-inquiry-submission", 30, 3600))) {
+        return reply({ error: "too_many_requests" }, 429);
+      }
+      const formComplete = !incomplete && validInput(body.input) && validContact(body.contact);
+      await recordInquirySubmission(submission, formComplete);
+      if (incomplete) return reply({ recorded: true }, 201);
+    }
     if (body?.action === "review") {
       if (!validInput(body.input) || !validContact(body.contact)) return reply({ error: "invalid_request" }, 400);
       const input: EquipmentMouInput = body.input;
