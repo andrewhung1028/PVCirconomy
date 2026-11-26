@@ -264,8 +264,10 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
           }} />
         {t("Remember contact details on this browser")}
       </label>}
-      <p id={`${id}-submission-note`} className="pv-note">{t("We record the details you submit to review inquiries and prevent abuse.")}</p>
-      {!noMsrp && !awaitingCode && <p className="pv-note">{t("To check MSRP, enter the installation city and postal code and verify your work email.")}</p>}
+      <p id={`${id}-submission-note`} className="pv-note">
+        {t("We record the details you submit to review inquiries and prevent abuse.")}
+        {!noMsrp && !awaitingCode && ` ${t("To check MSRP, enter the installation city and postal code and verify your work email.")}`}
+      </p>
       {awaitingCode && challenge && <fieldset className="pc-booking-fieldset">
         <legend>{t("Verify your work email")}</legend>
         <p className="pv-note" id={`${id}-code-note`} role="status">

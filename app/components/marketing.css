@@ -151,17 +151,23 @@ html.pv-public-section-scroll:has(.pc-shop, .pc-shop-catalog) { scroll-snap-type
 .pc-floor-area { display: grid; align-content: start; gap: 10px; min-inline-size: 0; }
 .pc-floor-area-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 
-.pc-capacity-controls { display: grid; grid-template-columns: minmax(0, 1fr) 30px; }
+.pc-capacity-controls { position: relative; }
 .pc-capacity-controls input { appearance: textfield; }
 .pc-capacity-controls input::-webkit-inner-spin-button { appearance: none; }
-.pc-capacity-buttons { display: grid; grid-template-rows: repeat(2, 1fr); }
-.pc-capacity-buttons button {
-  padding: 0; border: 1px solid #737775; border-inline-start: 0; background: var(--pv-paper);
-  color: var(--pc-text-primary); font-size: 15px; line-height: 1;
+.pc-capacity-buttons {
+  position: absolute; inset-block: 2px; inset-inline-end: 4px; width: 24px;
+  display: grid; grid-template-rows: repeat(2, minmax(0, 1fr));
 }
-.pc-capacity-buttons button + button { border-block-start: 0; }
-.pc-capacity-buttons button:hover { background: var(--pv-gray); }
-.pc-capacity-buttons button:focus-visible { z-index: 1; outline: 2px solid var(--pv-yellow); }
+.pc-capacity-buttons button {
+  display: grid; place-items: center; min-width: 0; min-height: 0; padding: 0; border: 0;
+  background: transparent; color: #595959; cursor: pointer;
+}
+.pc-capacity-buttons button::after {
+  content: ''; border-inline: 4px solid transparent; border-bottom: 4px solid currentColor;
+}
+.pc-capacity-buttons button + button::after { transform: rotate(180deg); }
+.pc-capacity-buttons button:hover { background: #eee; }
+.pc-capacity-buttons button:focus-visible { outline: 2px solid #595959; outline-offset: -2px; }
 .pc-offtake-head, .pc-form .pc-offtake-row {
   display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: center; gap: 10px;
 }
@@ -1003,13 +1009,14 @@ html.pv-public-section-scroll:has(.pv-support-page) { scroll-snap-type: none; }
 .pv-support-search input::placeholder { color: #5b605d; }
 
 .pvc2-inquiry-pane .pc-form :is(input:not([type="checkbox"]), select, textarea) {
-  background: var(--pv-paper); border: 1px solid #737775; border-radius: var(--pv-control-radius);
+  background: var(--pv-paper); border: 1px solid #767676; border-radius: var(--pv-control-radius);
 }
 .pvc2-inquiry-pane .pc-form :is(input:not([type="checkbox"]), select) {
   height: var(--pv-control-height);
   min-height: var(--pv-control-height);
   padding: 8px 12px;
 }
+.pvc2-inquiry-pane .pc-form .pc-capacity-controls input { padding-inline-end: 32px; }
 .pvc2-inquiry-pane .pc-form :is(input:not([type="checkbox"]), textarea) {
   font-size: var(--pv-type-caption);
 }
@@ -1020,7 +1027,7 @@ html.pv-public-section-scroll:has(.pv-support-page) { scroll-snap-type: none; }
   min-height: var(--space-76);
 }
 .pvc2-inquiry-pane .pc-form :is(input, select, textarea):focus-visible {
-  outline: 2px solid var(--pv-yellow); outline-offset: 2px;
+  outline: 2px solid #595959; outline-offset: 2px;
 }
 .pvc2-inquiry-pane .pc-form input::placeholder { color: #5b605d; }
 
