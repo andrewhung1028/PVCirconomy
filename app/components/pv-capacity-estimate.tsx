@@ -15,9 +15,9 @@ const fields = [
   { key: "shifts", label: "Shifts per day", initial: "1", max: 24, min: 1, step: 1 },
   { key: "hours", label: "Hours per shift", initial: "8", max: 24, min: 0.25, step: 0.25 },
   { key: "maintenance", label: "Planned maintenance hours per week", initial: "4", max: 168, min: 0, step: "any" },
-  { key: "inShiftMaintenance", label: "In-shift maintenance hours per week", initial: "0", max: 168, min: 0, step: "any" },
+  { key: "inShiftMaintenance", label: "In-shift maintenance hours per week", initial: "4", max: 168, min: 0, step: "any" },
   { key: "uptime", label: "Uptime (%)", initial: "85", max: 100, min: 0, step: "any" },
-  { key: "speed", label: "Operating speed (% of rated)", initial: "100", max: 100, min: 0, step: "any" },
+  { key: "speed", label: "Operating speed (% of rated)", initial: "85", max: 100, min: 0, step: "any" },
 ] as const;
 
 type Field = typeof fields[number]["key"];
