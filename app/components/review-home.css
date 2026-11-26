@@ -1299,7 +1299,11 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-business-purchase :is(h2, h3, p) { max-width: none; }
 .pvc2-purchase-option, .pvc2-offtake-list > div { border-block-start: 1px solid var(--pv-line); }
 .pvc2-purchase-option { padding-block: var(--space-20) 18px; }
-.pvc2-purchase-option .os-materials-demand h3 { margin-block-start: var(--space-20); }
+.pvc2-purchase-option .os-materials-demand h3 {
+  margin-block-start: var(--space-20);
+  font-size: 20px;
+  font-weight: var(--pv-weight-bold);
+}
 .pvc2-offtake-list > div { padding-block: var(--pv-reading-row-padding); }
 .pvc2-offtake-list dt {
   margin: 0;
