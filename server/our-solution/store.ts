@@ -2,7 +2,7 @@ import { database } from "../db/client";
 import { seededOurSolutionData, effectiveParameters, validateOurSolutionData, type OurSolutionEconomics } from "../../lib/our-solution-data";
 import { seededJapanOurSolutionData } from "../../lib/our-solution-japan-data";
 import { assertOurSolutionMarketRegion, type OurSolutionMarket, type OurSolutionParameterMarket } from "../../lib/our-solution/market";
-import { sharedParameters, marketParameters, withSharedParameters, sharedAssumptionKeys, type SharedParameters } from "../../lib/our-solution/shared";
+import { commonAssumptionSchema, sharedParameters, marketParameters, withSharedParameters, sharedAssumptionKeys, type SharedParameters } from "../../lib/our-solution/shared";
 import { parameter } from "../../lib/our-solution/parameters";
 
 export { assertOurSolutionMarketRegion, ourSolutionMarket, ourSolutionMarkets } from "../../lib/our-solution/market";
@@ -88,6 +88,18 @@ export function validateSharedParameters(data: unknown) {
       if (Object.keys(shared.assumptions[section]).length !== keys.length ||
         keys.some(key => !(Number(shared.assumptions[section][key]?.[0]) > 0) || shared.assumptions[section][key]?.[1] !== usSeed.assumptions[section][key][1])) return false;
     }
+    if (shared.commonAssumptions !== undefined) {
+      if (Object.keys(shared.commonAssumptions).length !== Object.keys(commonAssumptionSchema).length) return false;
+      for (const [section, definitions] of Object.entries(commonAssumptionSchema)) {
+        const rows = shared.commonAssumptions[section];
+        if (!rows || Object.keys(rows).length !== Object.keys(definitions).length) return false;
+        for (const [key, definition] of Object.entries(definitions)) {
+          const row = rows[key];
+          if (!Array.isArray(row) || row.length !== definition.length ||
+            row.some((value, index) => typeof definition[index] === "string" && value !== usSeed.assumptions[section][key][index])) return false;
+        }
+      }
+    }
     return validateOurSolutionData(withSharedParameters(usSeed, shared)).valid;
   } catch {
     return false;
@@ -160,7 +172,11 @@ export async function saveSharedParameters(data: SharedParameters, expectedVersi
     sql`WITH inserted AS (
       INSERT INTO pv_our_solution_shared_versions(id,data,actor_oid,actor_email,note)
       SELECT ${id}::uuid,${JSON.stringify(data)}::jsonb,${actor.oid},${actor.email},${note.trim()}
-      WHERE EXISTS (SELECT 1 FROM pv_our_solution_shared_active WHERE singleton AND version_id=${expectedVersion}::uuid)
+      WHERE EXISTS (
+        SELECT 1 FROM pv_our_solution_shared_active a JOIN pv_our_solution_shared_versions v ON v.id=a.version_id
+        WHERE a.singleton AND a.version_id=${expectedVersion}::uuid
+          AND (${Boolean(data.commonAssumptions)} OR NOT (v.data ? 'commonAssumptions'))
+      )
       RETURNING id,data,created_at
     ), published AS (
       UPDATE pv_our_solution_shared_active SET version_id=(SELECT id FROM inserted) WHERE singleton AND EXISTS (SELECT 1 FROM inserted) RETURNING version_id

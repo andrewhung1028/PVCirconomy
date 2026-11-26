@@ -15,7 +15,7 @@ type Scope = Market | "shared";
 const scopeQuery = (scope: Scope) => scope === "shared" ? "scope=shared" : `market=${scope}`;
 const markets = Object.keys(ourSolutionParameterMarkets) as Market[];
 const solutionTabs = [
-  { key: "shared", label: "全球共用參數" },
+  { key: "shared", label: "共用參數" },
   ...markets.map(key => ({ key, label: `${ourSolutionParameterMarkets[key].label}參數` })),
 ] as const;
 const businessCaseTab = { key: "business-case", label: "Business Case 主檔" } as const;
@@ -75,7 +75,7 @@ export function EconomicsAdmin() {
   const marketRef = useRef<Scope>(market);
 
   const isShared = market === "shared";
-  const marketName = isShared ? "全球共用" : ourSolutionParameterMarkets[market].label;
+  const marketName = isShared ? "共用" : ourSolutionParameterMarkets[market].label;
   const currency = isShared ? undefined : ourSolutionParameterMarkets[market].currency;
   const query = scopeQuery(market);
 
@@ -187,11 +187,7 @@ export function EconomicsAdmin() {
     finally { setBusy(false); }
   }
 
-  async function logout() { await fetch("/api/auth/logout/", { method: "POST" }); location.reload(); }
-
-  return <main className="pa pa-system-economics"><AdminNavigation active="system" action={session?.user?.role === "staff" ? (
-    <div className="pa-header-session"><span>{session.user.email}</span><button onClick={logout}>登出</button></div>
-  ) : undefined} />
+  return <main className="pa pa-system-economics"><AdminNavigation active="system" />
     <div className="pa-heading pa-economics-heading">
       <h1>系統管理</h1>
     </div>
@@ -211,7 +207,7 @@ export function EconomicsAdmin() {
       <div className="pa-economics-workspace">
         <section className="pa-downloads">
           <h2>1. 下載{marketName}工作簿</h2>
-          <p>{isShared ? "容量歷史、人口、EU-27 人口和固定換算常數由各市場共用。" : state && !state.active ? `下載${marketName}（${currency}）範本，填妥黃色欄位後上傳。` : "更新時請從現行版本開始修改。"}</p>
+          <p>{isShared ? "各市場共用的工程參數、容量歷史、人口及換算常數在此維護。" : state && !state.active ? `下載${marketName}（${currency}）範本，填妥黃色欄位後上傳。` : "更新時請從現行版本開始。共用欄位供公式參考，請在「共用參數」工作簿修改。"}</p>
           <div className="pa-actions">
             {state?.active && <a className="pa-primary" href={`/api/admin/our-solution-data/export/?${query}`}>下載現行資料</a>}
             {!isShared && <a className={state && !state.active ? "pa-primary" : undefined} href={`/api/admin/our-solution-data/export/?${query}&template=1`}>下載參數範本</a>}
@@ -220,7 +216,7 @@ export function EconomicsAdmin() {
         <section className="pa-upload">
           <h2>2. 上傳並驗證{marketName}參數</h2>
           <p id="our-solution-file-instructions">{isShared
-            ? "限 3 MB 內的 .xlsx。請更新數值並保留工作表、年份、欄名及單位。"
+            ? "限 3 MB 內的 .xlsx。共用 Assumptions 的黃色數值發布後會套用至各市場。請保留工作表、年份、欄名及單位。"
             : "限 3 MB 內的 .xlsx。Transport 工作表填寫本市場運費參考、費率與裝載資料。MOU 工作表填寫期限及保密年數。區段 12 限修改數值和來源。"}</p>
           <label className="pa-file-label" htmlFor="pa-economics-file">選擇{marketName} Excel 檔案</label>
           <input ref={fileRef} id="pa-economics-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-describedby="our-solution-file-instructions" disabled={busy || !state} onChange={(event) => void upload(event.target.files?.[0])} />
@@ -237,7 +233,7 @@ export function EconomicsAdmin() {
           <button type="button" disabled={busy} onClick={() => { setDraft(null); setErrors([]); setStatus(""); }}>取消草稿</button>
         </div>
         <p className="pa-market-confirmation">
-          <strong>發布目標：{draft.market === "shared" ? "全球共用參數" : `${ourSolutionParameterMarkets[draft.market].label}參數（${draft.market}）`}</strong>
+          <strong>發布目標：{draft.market === "shared" ? "共用參數" : `${ourSolutionParameterMarkets[draft.market].label}參數（${draft.market}）`}</strong>
           {"scenario" in draft.data && <>
             <span>Workbook Scenario.region_code：<code>{draft.data.scenario.region_code}</code></span>
             <span>幣別：{draft.data.meta?.currency ?? currency}</span>

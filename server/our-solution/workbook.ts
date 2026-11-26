@@ -8,7 +8,7 @@ import { seededOurSolutionData } from '../../lib/our-solution-data';
 import { ourSolutionParameterMarkets, parameterProfileForRegion, type AdditionalParameterMarket } from '../../lib/our-solution/market';
 import { validateParameters } from '../../lib/our-solution/validation';
 import { model, type EffectivePrices } from '../../lib/our-solution/model';
-import { sharedAssumptionKeys, withSharedParameters, type SharedParameters } from '../../lib/our-solution/shared';
+import { commonAssumptionSchema, sharedAssumptionKeys, sharedAssumptionValues, withSharedParameters, type SharedParameters } from '../../lib/our-solution/shared';
 import { emptyMarketTransport, transportUnits, type MarketTransport } from '../../lib/our-solution/transport';
 import { ourSolutionMarket } from '../../lib/our-solution/market';
 import { japanFeeBenchmarkRows, retirementThresholdKeys, websiteAssumptionRows } from '../../lib/our-solution/public-data';
@@ -51,6 +51,17 @@ const sharedSheets = ['Capacity History', 'Population', 'EU-27 Population'] as c
 const capacityYears = [...Array.from({length:25},(_,i)=>2000+i),2050];
 const populationYears = Array.from({length:31},(_,i)=>2020+i);
 const editable = {type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF2CC'}} as const;
+const commonSheetSections = {
+  "3": ["Constants", "Value", "Unit"],
+  "4": ["Solutions", "Shredding", "Thermal processing", "PV Circulator", "Unit"],
+  "5": ["Materials", "Share of module mass"],
+  "6": ["Recovery, realization and saleable", ...["Shredding", "Thermal processing", "PV Circulator"].flatMap(method =>
+    ["Recovery", "Realization", "Saleable"].map(metric => `${method} · ${metric}`))],
+  "7": ["Storage", "Value", "Unit"],
+  "8": ["Silver-bearing stream membership", "Shredding mix", "Thermal-processing laminate", "PV Circulator cell powder"],
+  "9": ["Cell powder scenarios", "Value", "Unit", "Source"],
+  "10": ["Retirement model", "Value", "Unit"],
+} satisfies Record<string, string[]>;
 
 function readGlobalTables(w: ExcelJS.Workbook) {
   const capacityHistory = table(w.getWorksheet('Capacity History')!, [...markets], capacityYears) as Parameters['capacityHistory'];
@@ -100,14 +111,27 @@ export async function createSharedParametersWorkbook(data: SharedParameters) {
       constants.addRow([`${section} · ${key}`, value, unit]).getCell(2).fill = editable;
     }
   }
+  if (data.commonAssumptions) {
+    const assumptions = w.addWorksheet('Assumptions');
+    assumptions.columns = [{ width: 38 }, ...Array.from({ length: 9 }, () => ({ width: 26 }))];
+    for (const [section, [title, ...headers]] of Object.entries(commonSheetSections)) {
+      assumptions.addRow([`${section}. ${title}`]).font = { bold: true };
+      assumptions.addRow(['Parameter', ...headers]).font = { bold: true };
+      for (const [key, values] of Object.entries(data.commonAssumptions[section])) {
+        const row = assumptions.addRow([key, ...values]);
+        values.forEach((value, index) => { if (typeof value === 'number') row.getCell(index + 2).fill = editable; });
+      }
+    }
+  }
   return Buffer.from(await w.xlsx.writeBuffer());
 }
 
 export async function parseSharedParametersWorkbook(buffer: Buffer, base: SharedParameters): Promise<SharedParameters> {
   const w = new ExcelJS.Workbook();
   await w.xlsx.load(buffer as never);
-  if (w.worksheets.length !== 4 || !w.getWorksheet('Shared Constants') || sharedSheets.some(name => !w.getWorksheet(name))) {
-    throw Error('請使用全球共用參數工作簿，其中須包含容量、人口、EU-27 人口及共用常數。');
+  const commonSheet = w.getWorksheet('Assumptions');
+  if (w.worksheets.length !== (commonSheet ? 5 : 4) || !w.getWorksheet('Shared Constants') || sharedSheets.some(name => !w.getWorksheet(name))) {
+    throw Error('請使用共用參數工作簿，其中須包含容量、人口、EU-27 人口及共用常數。');
   }
   const constants = rows(w.getWorksheet('Shared Constants')!)['0'];
   const expected = 1 + Object.values(sharedAssumptionKeys).reduce((sum, keys) => sum + keys.length, 0);
@@ -123,7 +147,29 @@ export async function parseSharedParametersWorkbook(buffer: Buffer, base: Shared
       assumptions[section][key][0] = value;
     }
   }
-  return { ...readGlobalTables(w), assumptions };
+  let commonAssumptions = base.commonAssumptions;
+  if (commonSheet) {
+    const groups = rows(commonSheet);
+    if (!commonAssumptions || Object.keys(groups).length !== 1 + Object.keys(commonAssumptionSchema).length)
+      throw Error('共用 Assumptions 格式不符，請下載現行版本。');
+    commonAssumptions = structuredClone(commonAssumptions);
+    for (const [section, definitions] of Object.entries(commonAssumptionSchema)) {
+      if (groups[section]?.size !== Object.keys(definitions).length + 2)
+        throw Error(`共用 Assumptions 區段 ${section} 欄位不符。`);
+      for (const [key, expected] of Object.entries(definitions)) {
+        const row = get(groups[section], key, 'Assumptions');
+        commonAssumptions[section][key] = expected.map((definition, index) => {
+          const cell = row.getCell(index + 2);
+          const value = raw(cell);
+          if (typeof value !== typeof definition || (typeof value === 'string' && value !== base.commonAssumptions?.[section][key][index])) {
+            throw Error(`共用 Assumptions · ${key} 的欄位類型或固定單位不符。`);
+          }
+          return value;
+        });
+      }
+    }
+  }
+  return { ...readGlobalTables(w), assumptions, ...(commonAssumptions && { commonAssumptions }) };
 }
 
 function transportRows(data: MarketTransport, market: NonNullable<ReturnType<typeof ourSolutionMarket>>) {
@@ -240,8 +286,9 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters, 
     if(section==='12'&&!groups['12']){assumptions[section]=structuredClone(websiteAssumptionRows);continue;}
     assumptions[section]={};
     for(const [label,values] of Object.entries(defs)){
-      if (shared?.assumptions[section]?.[label]) {
-        assumptions[section][label] = shared.assumptions[section][label];
+      const sharedValues = sharedAssumptionValues(shared, section, label);
+      if (sharedValues?.length === values.length) {
+        assumptions[section][label] = sharedValues;
         continue;
       }
       if (section === '12' && retirementThresholdKeys.some(key => key === label) && !groups[section]?.has(label)) {
@@ -249,7 +296,7 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters, 
         continue;
       }
       const row=get(groups[section],label,'Assumptions');
-      assumptions[section][label]=values.map((base,i)=>{const c=row.getCell(i+(section==='8'?3:2));const v=raw(c);if(typeof v!==typeof base)throw Error(`欄位 Assumptions!${c.address} 類型不正確。`);return v;});
+      assumptions[section][label]=values.map((base,i)=>{if(sharedValues && i<sharedValues.length)return sharedValues[i];const c=row.getCell(i+(section==='8'?3:2));const v=raw(c);if(typeof v!==typeof base)throw Error(`欄位 Assumptions!${c.address} 類型不正確。`);return v;});
       if(section==='8') {const c=row.getCell(2);if(c.type!==ExcelJS.ValueType.Formula&&raw(c)!==raw(get(materialRows,streamMaterial[label],'Assumptions').getCell(2)))throw Error(`欄位 Assumptions!${c.address} 必須與 Section 5 相符材料比例一致。`);}
     }
   }
@@ -301,7 +348,7 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
       values.forEach((value, index) => {
         const cell = row.getCell(index + (section === '8' ? 3 : 2));
         cell.value = value;
-        if (marketOnly && sharedKeys.includes(label)) cell.fill = {type:'pattern',pattern:'none'};
+        if (marketOnly && (sharedKeys.includes(label) || index < (commonAssumptionSchema[section]?.[label]?.length ?? 0))) cell.fill = {type:'pattern',pattern:'none'};
         else if (section !== '12' || index === 0 || index === 2) cell.fill = editable;
       });
     }
@@ -402,7 +449,7 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
     get(instructions,'Edit rule','Instructions').getCell(2).value=`Fill the blank yellow cells with confirmed local inputs and sources before upload.${reference} Shared engineering and global assumptions are included for review. Scenario contains the ${currency} per USD exchange rate. Do not rename sheets, field keys, labels or units.`;
   }
   if (marketOnly) {
-    get(instructions,'Contents','Instructions').getCell(2).value='Market-specific calculations use Assumptions, Scenario and Transport. Capacity History, Population, EU-27 Population and fixed constants are managed in the shared workbook. Fixed constants shown in Assumptions are references for the formulas.';
+    get(instructions,'Contents','Instructions').getCell(2).value='Market-specific calculations use Assumptions, Scenario and Transport. Shared engineering assumptions, constants, capacity history and population are managed in the shared workbook. Unhighlighted shared cells in Assumptions are references for the formulas.';
     get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions · Scenario · Product Value · Transport · MOU. Leave all entries for an unavailable vehicle blank, or provide the full rate and loading inputs.';
   }
   // Silicon is deliberately workbook-only; no claim of an automated SMM feed.
