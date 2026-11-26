@@ -19,6 +19,7 @@ export type PolymerOfftake = typeof polymerOfftakeOptions[number];
 export const equipmentMouValidityDays = 180;
 
 export const equipmentPurchaseOptions = ["Standard sales", "Trial-based PO (TBP)"] as const;
+export type EquipmentPurchaseOption = (typeof equipmentPurchaseOptions)[number];
 
 export const equipmentProjectStages = ["Not yet determined", "Initial feasibility", "Planning a new facility", "Expanding an operation"] as const;
 export type EquipmentProjectStage = typeof equipmentProjectStages[number];
@@ -40,7 +41,7 @@ type InquiryMaterial = typeof equipmentInquiryMaterials[number];
 export type EquipmentMouInput = {
   configuration: EquipmentVariant;
   baseConfiguration?: EquipmentBaseVariant;
-  purchaseOption?: (typeof equipmentPurchaseOptions)[number];
+  purchaseOption?: EquipmentPurchaseOption;
   polymerOfftake?: PolymerOfftake;
   offtakeStreams?: (typeof equipmentOfftakeStreams)[number][];
   glassOfftakePrice?: (typeof glassOfftakePrices)[number];

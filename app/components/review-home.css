@@ -1283,21 +1283,80 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-specification.is-inquiry .pvc2-spec-hero { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .pvc2-specification.is-inquiry .pvc2-spec-hero img { height: clamp(160px, 24vw, 300px); max-height: none; object-fit: contain; }
 .pvc2-business-model {
-  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
-  align-items: center;
-  gap: clamp(36px, 8vw, 140px);
-  background: var(--pv-paper);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   border-block-start: 1px solid var(--pv-line);
 }
-.pvc2-business-model > .pvc2-section-heading { display: block; }
-.pvc2-business-model .pv-button { margin-block-start: 28px; }
-.pvc2-business-options { border-block-end: 1px solid var(--pv-line); }
-.pvc2-business-options article { border-block-start: 1px solid var(--pv-line); padding-block: 24px; }
-.pvc2-business-options article:first-child { border-block-start-color: var(--pv-yellow); }
-.pvc2-business-options h3 { margin: 0 0 10px; font-size: var(--pv-type-group); }
-.pvc2-business-options p { max-width: 58ch; margin: 0; font-size: var(--pv-type-body); line-height: 1.55; }
+.pvc2-page .pvc2-business-model .pvc2-business-purchase,
+.pvc2-business-model .pvc2-business-offtake {
+  padding-block: clamp(102px, 12svh, 140px) 56px;
+}
+.pvc2-page .pvc2-business-model .pvc2-business-purchase {
+  align-items: flex-start;
+  padding-inline: var(--pv-safe-inline) clamp(24px, 4vw, 64px);
+  background: var(--pv-gray);
+}
+.pvc2-business-model .pvc2-business-offtake {
+  padding-inline: clamp(24px, 4.5vw, 76px) var(--pv-safe-inline);
+  background: var(--pv-paper);
+}
+.pvc2-business-offtake > .pvc2-section-heading { display: block; margin-bottom: 30px; }
+.pvc2-business-offtake > .pvc2-section-heading p { margin-top: 18px; max-width: 62ch; line-height: 1.55; }
+.pvc2-business-purchase-options, .pvc2-business-materials { display: grid; gap: 16px; }
+.pvc2-business-purchase-options { margin-block: 28px; }
+.pvc2-business-card { padding: clamp(16px, 2vw, 28px); border: 1px solid var(--pv-line); }
+.pvc2-business-materials > :first-child { border-top: 2px solid var(--pv-yellow); }
+.pvc2-business-model h3 { margin: 0 0 10px; font-size: var(--pv-type-group); line-height: 1.25; }
+.pvc2-business-model .pvc2-business-card p:not(.pvc2-business-label),
+.pvc2-business-model .pvc2-business-terms p {
+  margin: 0;
+  font-size: var(--pv-type-body);
+  line-height: 1.55;
+}
+.pvc2-business-model .pvc2-business-card p + p:not(.pvc2-business-label),
+.pvc2-business-model .pvc2-business-terms p + p { margin-top: 10px; }
+.pvc2-business-card .pv-button { margin-top: 18px; }
+.pvc2-business-model .pvc2-business-market-note { margin: 0 0 18px; font-size: var(--pv-type-caption); color: #5b605d; }
+.pvc2-business-card .pv-button span, .pvc2-business-case-link span { color: #805d00; }
+.pvc2-business-model .pvc2-business-label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  margin: 0 0 12px;
+  font-size: var(--pv-type-caption);
+  font-weight: var(--pv-weight-bold);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.pvc2-business-steps { margin-block: 34px; }
+.pvc2-business-steps ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0 0;
+  padding-block-start: 16px;
+  padding-inline-start: 2ch;
+  border-top: 1px solid var(--pv-line);
+  list-style: decimal-leading-zero;
+  line-height: 1.5;
+}
+.pvc2-business-steps li { margin-inline-start: 1ch; padding-inline-start: .35ch; }
+.pvc2-business-steps li::marker { color: #805d00; font-weight: var(--pv-weight-bold); }
+.pvc2-business-terms { border-top: 1px solid var(--pv-line); padding-block-start: 16px; }
+.pvc2-business-model .pvc2-business-terms p { font-size: var(--pv-type-caption); color: #5b605d; }
+/* Keep the rail's visible labels out of the purchasing copy. */
+@media (min-width: 761px) {
+  .pvc2-page[data-active-section="business-model"] .pv-dots a { position: relative; min-width: 32px; }
+  .pvc2-page[data-active-section="business-model"] .pv-dots span {
+    position: absolute; inset-inline-start: 100%; width: max-content;
+    padding: 3px 6px; background: var(--pv-paper);
+  }
+  .pvc2-page[data-active-section="business-model"] .pv-dots a:not(:hover):not(:focus-visible) span { visibility: hidden; }
+}
 @media (max-width: 760px) {
-  .pvc2-business-model { display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; }
+  .pvc2-page .pvc2-business-model .pvc2-business-purchase,
+  .pvc2-business-model .pvc2-business-offtake { padding-inline: 35px; }
+  .pvc2-business-model .pvc2-business-offtake { padding-block-start: 48px; }
+  .pvc2-business-steps ol { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-height: 800px) {
   .pvc2-page > .pv-dots { top: 50%; transform: translateY(-50%); }
