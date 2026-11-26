@@ -151,6 +151,19 @@ html.pv-public-section-scroll:has(.pc-shop, .pc-shop-catalog) { scroll-snap-type
 .pc-floor-area { display: grid; align-content: start; gap: 10px; min-inline-size: 0; }
 .pc-floor-area-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 
+.pc-capacity-controls { display: grid; grid-template-columns: minmax(0, 1fr) 30px; }
+.pc-capacity-controls input { appearance: textfield; }
+.pc-capacity-controls input::-webkit-inner-spin-button { appearance: none; }
+.pc-capacity-buttons { display: grid; grid-template-rows: repeat(2, 1fr); }
+.pc-capacity-buttons button {
+  padding: 0; border: 1px solid #737775; border-inline-start: 0; background: var(--pv-paper);
+  color: var(--pc-text-primary); font-size: 15px; line-height: 1;
+}
+.pc-capacity-buttons button + button { border-block-start: 0; }
+.pc-capacity-buttons button:hover { background: var(--pv-gray); }
+.pc-capacity-buttons button:focus-visible { z-index: 1; outline: 2px solid var(--pv-yellow); }
+.pc-offtake-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+
 .pc-material-requirements { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
 .pc-form .pc-material-requirements legend { font-size: var(--pv-type-interface); padding-bottom: 12px; }
 .pc-material-requirement-head, .pc-material-requirement-row {

@@ -1,16 +1,16 @@
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit } from "../../lib/equipment-mou";
+import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentOfftakeStreams } from "../../lib/equipment-mou";
 import { database } from "../db/client";
 
 const fields = new Set([
   "configuration", "includePlus", "assessmentDate", "stage", "lineQuantity", "startDate", "configurationRequirements",
-  "targetCapacity", "dailyHours", "panelTechnology", "panelCondition", "materials", "polymerOfftake",
+  "targetCapacity", "dailyHours", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "offtakeStreams", "glassOfftakePrice",
   "installationCountry", "installationSite", "installationEnvironment", "floorSpace", "floorSpaceUnit",
   "powerSupply", "compressedAir", "siteNetwork", "requirements", "company", "companyAddress", "jobTitle", "name", "email", "phone",
   ...equipmentInquiryMaterials.map(material => `materialPurity[${material}]`),
 ]);
 
 export function parseInquirySubmission(value: unknown): [string, string][] | null {
-  if (!Array.isArray(value) || value.length > fields.size + equipmentInquiryMaterials.length - 1) return null;
+  if (!Array.isArray(value) || value.length > fields.size + equipmentInquiryMaterials.length + equipmentOfftakeStreams.length - 2) return null;
   const entries: [string, string][] = [];
   for (const entry of value) {
     if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== "string" || typeof entry[1] !== "string") return null;

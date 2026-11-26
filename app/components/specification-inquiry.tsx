@@ -7,7 +7,7 @@ import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
 import { equipmentMouPriceRows, inquiryText } from "../../lib/equipment-mou-copy";
 import { defaultMouSalesAgents } from "../../lib/mou-policy";
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouSigningLocales, equipmentProjectStages, polymerOfftakeOptions, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
+import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, glassOfftakePrices, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 
 export function SpecificationInquiry({ configuration, configurations, onConfigurationChange, includePlus, onPlusChange, performance, recyclingFee, locale, market, review, setReview, defaults, sitePowerOptions }: {
@@ -61,14 +61,15 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
     const value = (name: string) => String(data.get(name) ?? "").trim();
     const numeric = (name: string) => value(name) ? Number(value(name)) : null;
     const floorArea = numeric("floorSpace");
-    const materialRequirements = equipmentInquiryMaterials.filter(material => data.getAll("materials").includes(material))
-      .map(material => ({ material, minimumPurity: numeric(`materialPurity[${material}]`) }));
-    const polymerOfftake = polymerOfftakeOptions.find(option => option === value("polymerOfftake"));
+    const selectedStreams = data.getAll("offtakeStreams");
+    const offtakeStreams = equipmentOfftakeStreams.filter(stream => selectedStreams.includes(stream));
+    const glassOfftakePrice = glassOfftakePrices.find(price => price === value("glassOfftakePrice"));
     const input: EquipmentMouInput = {
       configuration: includePlus ? "plus" : configuration, locale, pageMarket: market, recyclingFee,
       installationMarket: value("installationCountry") as PublicSolutionMarket,
       baseConfiguration: includePlus ? configuration : undefined,
-      polymerOfftake,
+      offtakeStreams,
+      glassOfftakePrice,
       installationSite: value("installationSite") || undefined,
       sitePowerSupply: value("powerSupply") === "Not yet determined" ? undefined : value("powerSupply") || undefined,
       targetStart: value("startDate") || undefined,
@@ -77,12 +78,9 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       customization: value("configurationRequirements") || undefined,
       panelTechnology: (value("panelTechnology") || undefined) as EquipmentMouInput["panelTechnology"],
       panelCondition: (value("panelCondition") || undefined) as EquipmentMouInput["panelCondition"],
-      materialRequirements,
       installationEnvironment: (value("installationEnvironment") || undefined) as EquipmentMouInput["installationEnvironment"],
       floorArea: floorArea === null ? undefined : { value: floorArea, unit: value("floorSpaceUnit") === "ft2" ? "ft2" : "m2" },
-      compressedAir: (value("compressedAir") || undefined) as EquipmentMouInput["compressedAir"],
       siteNetwork: (value("siteNetwork") || undefined) as EquipmentMouInput["siteNetwork"],
-      installationNotes: value("requirements") || undefined,
       lines: Number(value("lineQuantity")), panelsPerMonth: numeric("targetCapacity"), dailyHours: numeric("dailyHours"),
     };
     const contact = { name: value("name"), company: value("company"), jobTitle: value("jobTitle"), email: value("email"), address: value("companyAddress") || undefined, phone: value("phone") || undefined };
@@ -98,18 +96,17 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
     };
     for (const [name, raw] of data) {
       const value = String(raw).trim();
-      if (!value || (value === "Not yet determined" && name !== "polymerOfftake") || ["floorSpaceUnit", "materials"].includes(name) || name.startsWith("materialPurity[")) continue;
+      if (!value || value === "Not yet determined" || name === "floorSpaceUnit") continue;
+      if (name === "offtakeStreams") {
+        if (value === offtakeStreams[0]) summary.push([t("Recycled material offtake"), offtakeStreams.map(t).join(", ")]);
+        continue;
+      }
       if (name === "configuration") summary.push([t("Equipment configuration"), configurations.find(option => option.value === value)?.label ?? value]);
       else if (name === "installationCountry") summary.push([labelFor(name), marketNames[locale][value as PublicSolutionMarket] ?? value]);
       else if (name === "powerSupply") summary.push([labelFor(name), (form.elements.namedItem(name) as HTMLSelectElement).selectedOptions[0]?.textContent ?? value]);
       else if (name === "floorSpace") summary.push([labelFor(name), `${value} ${data.get("floorSpaceUnit") === "ft2" ? "ft²" : "m²"}`]);
       else summary.push([labelFor(name), t(value)]);
     }
-    const materials = data.getAll("materials");
-    if (materials.length) summary.push([t("Recovered material requirements"), materials.map(material => {
-      const purity = data.get(`materialPurity[${material}]`);
-      return `${t(String(material))}${purity ? ` (≥${purity}%)` : ""}`;
-    }).join(", ")]);
     setPending(true);
     setError(false);
     setRateLimited(false);
@@ -161,14 +158,13 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
           <label>{t("Project stage")}<select name="stage" defaultValue="Not yet determined">{equipmentProjectStages.map(stage => <option key={stage} value={stage}>{t(stage)}</option>)}</select></label>
           <label>{t("Number of equipment lines")}<input type="number" name="lineQuantity" min="1" max="10000" step="1" defaultValue={defaults.lineQuantity} required /></label>
           <label>{t("Expected production start")}<input type="month" name="startDate" max="9999-12" /></label>
-          <label className="pc-configuration-requirements">{t("Customization requirements")}<textarea name="configurationRequirements" rows={2} maxLength={equipmentInquiryNotesLimit} /></label>
         </div>
       </fieldset>
       <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={setInstallationMarket} />
       <p id={`${id}-submission-note`} className="pv-note">{t("We record the details you submit to review inquiries and prevent abuse.")}</p>
       <button className="pv-button pvc2-quote-button" type="submit" aria-describedby={`${id}-submission-note`} disabled={pending}>{t(throughSalesAgent
         ? (pending ? "Preparing MOU…" : "Review inquiry")
-        : (pending ? "Checking MSRP…" : "Check MSRP"))}</button>
+        : (pending ? "Checking MSRP…" : "Review inquiry & check MSRP"))}</button>
       {rateLimited && <p role="alert">{t("Too many inquiry attempts. Please try again later.")}</p>}
       {error && <p role="alert">{t("The MOU preview could not be prepared. Please try again.")}</p>}
     </form>
