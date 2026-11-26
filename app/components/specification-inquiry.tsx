@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
 import { equipmentMouPriceRows, inquiryText } from "../../lib/equipment-mou-copy";
+import { defaultMouSalesAgents } from "../../lib/mou-policy";
 import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouSigningLocales, equipmentProjectStages, polymerOfftakeOptions, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 
@@ -31,6 +32,25 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
+  const [installationMarket, setInstallationMarket] = useState(market);
+  const [salesAgentStatus, setSalesAgentStatus] = useState<{ market: PublicSolutionMarket; throughSalesAgent: boolean }>();
+  const throughSalesAgent = salesAgentStatus?.market === installationMarket
+    ? salesAgentStatus.throughSalesAgent
+    : defaultMouSalesAgents(installationMarket).length > 0;
+
+  useEffect(() => {
+    const request = new AbortController();
+    fetch(`/api/equipment-mou/?market=${installationMarket}`, { signal: request.signal })
+      .then(async response => {
+        if (!response.ok) return;
+        const result = await response.json();
+        if (!request.signal.aborted && typeof result.throughSalesAgent === "boolean") {
+          setSalesAgentStatus({ market: installationMarket, throughSalesAgent: result.throughSalesAgent });
+        }
+      })
+      .catch(() => {});
+    return () => request.abort();
+  }, [installationMarket]);
 
   async function preview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -144,15 +164,17 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
           <label className="pc-configuration-requirements">{t("Customization requirements")}<textarea name="configurationRequirements" rows={2} maxLength={equipmentInquiryNotesLimit} /></label>
         </div>
       </fieldset>
-      <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} />
+      <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={setInstallationMarket} />
       <p id={`${id}-submission-note`} className="pv-note">{t("We record the details you submit to review inquiries and prevent abuse.")}</p>
-      <button className="pv-button pvc2-quote-button" type="submit" aria-describedby={`${id}-submission-note`} disabled={pending}>{t(pending ? "Checking MSRP…" : "Check MSRP")}</button>
+      <button className="pv-button pvc2-quote-button" type="submit" aria-describedby={`${id}-submission-note`} disabled={pending}>{t(throughSalesAgent
+        ? (pending ? "Preparing MOU…" : "Review inquiry")
+        : (pending ? "Checking MSRP…" : "Check MSRP"))}</button>
       {rateLimited && <p role="alert">{t("Too many inquiry attempts. Please try again later.")}</p>}
       {error && <p role="alert">{t("The MOU preview could not be prepared. Please try again.")}</p>}
     </form>
     {review && <div className="pvc2-inquiry-review">
       <h3>{t("Review inquiry")}</h3>
-      <dl>{[...summary, ...equipmentMouPriceRows(locale, review.mou)].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      <dl>{[...summary, ...equipmentMouPriceRows(locale, review.mou, review.terms)].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
       <div id="equipment-mou-actions" />
     </div>}
   </section>;

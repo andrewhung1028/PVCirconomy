@@ -1,12 +1,12 @@
-import { defaultMouPolicy } from "../../lib/mou-policy";
+import { defaultMouPolicy, defaultMouSalesAgents } from "../../lib/mou-policy";
 import { activeOurSolutionParameterData } from "../our-solution/store";
-import { otherSitePowerSupply, type EquipmentMouAgent, type EquipmentMouInput, type EquipmentMouTerms } from "../../lib/equipment-mou";
+import { equipmentMouHasSalesAgent, otherSitePowerSupply, type EquipmentMouAgent, type EquipmentMouInput, type EquipmentMouTerms } from "../../lib/equipment-mou";
 
 import { configuredEquipmentMarkets } from "../equipment-configurations/pricing";
 import { defaultEquipmentConfigurations, equipmentLineRating, integratedEquipmentThroughput } from "../../lib/equipment-configurations";
 import { defaultEquipmentQuantitative } from "../../lib/equipment-quantitative";
 import { equipmentMarketAmount, equipmentUsdTotal } from "../../lib/equipment-module-pricing";
-import { ourSolutionParameterMarkets } from "../../lib/our-solution/market";
+import { ourSolutionParameterMarkets, type PublicSolutionMarket } from "../../lib/our-solution/market";
 import { equipmentSettingsForInquiry } from "../equipment-configurations/store";
 import { loadEquipmentExchangeRates } from "../equipment-configurations/exchange-rates";
 import { equipmentMouGoverningLaw } from "../../lib/equipment-mou-articles";
@@ -16,14 +16,8 @@ function text(value: unknown, max = 240) {
   return value.trim();
 }
 
-/**
- * PVCIRCULATOR_MOU_MARKETS holds optional regional agents. MSRP uses the market currency and PLUS is an add-on.
- */
-export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ terms: EquipmentMouTerms; msrpPerLine: number | null } | null> {
-  const market = input.installationMarket;
-  const configuredMarkets = configuredEquipmentMarkets();
-  const marketConfig = configuredMarkets[market];
-  const configuredAgent = marketConfig?.agent;
+export async function equipmentMouSalesTerms(market: PublicSolutionMarket) {
+  const configuredAgent = configuredEquipmentMarkets()[market]?.agent;
   let agent: EquipmentMouAgent | null = null;
   if (configuredAgent) {
     const company = text(configuredAgent.company, 160);
@@ -36,12 +30,20 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
       email: text(configuredAgent.email, 254),
     };
   }
+  const marketParameters = await activeOurSolutionParameterData(market).catch(() => null);
+  const policy = marketParameters?.data.mouPolicy ?? defaultMouPolicy;
+  const agentCandidates = agent ? [] : policy.salesAgents ?? defaultMouSalesAgents(market);
+  return { agent, agentCandidates, policy, marketAvailable: marketParameters !== null };
+}
+
+export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ terms: EquipmentMouTerms; msrpPerLine: number | null } | null> {
+  const market = input.installationMarket;
   const governingLaw = equipmentMouGoverningLaw(input);
   const currency = ourSolutionParameterMarkets[market].currency;
-  const [settings, fx, marketParameters] = await Promise.all([
+  const [settings, fx, sales] = await Promise.all([
     equipmentSettingsForInquiry().catch(() => null),
     currency === "USD" ? Promise.resolve(null) : loadEquipmentExchangeRates(),
-    activeOurSolutionParameterData(market).catch(() => null),
+    equipmentMouSalesTerms(market),
   ]);
   const prices = settings?.modulePrices;
   const quantitative = settings?.quantitative ?? defaultEquipmentQuantitative;
@@ -68,8 +70,9 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
   const selected = prices ? equipmentUsdTotal(prices, input.configuration) : 0;
   const base = prices && input.baseConfiguration ? equipmentUsdTotal(prices, input.baseConfiguration) : 0;
   const usd = input.configuration === "plus" ? selected > 0 && base > 0 ? base + selected : 0 : selected;
-  const msrpPerLine = usd > 0 ? equipmentMarketAmount(usd, currency, fx?.rates[currency], quantitative.pricing.nonUsdFactor) : null;
+  const msrpPerLine = sales.marketAvailable && !equipmentMouHasSalesAgent(sales) && usd > 0
+    ? equipmentMarketAmount(usd, currency, fx?.rates[currency], quantitative.pricing.nonUsdFactor) : null;
   const seller = market === "JP" ? "東建安股份有限公司" : "PV Circonomy Company";
-  const agentCandidates = market === "JP" && !agent ? ["住友商社", "川重商事"] : [];
-  return { terms: { seller, agent, agentCandidates, governingLaw, specifications, policy: marketParameters?.data.mouPolicy ?? defaultMouPolicy }, msrpPerLine };
+  const { agent, agentCandidates, policy } = sales;
+  return { terms: { seller, agent, agentCandidates, governingLaw, specifications, policy }, msrpPerLine };
 }

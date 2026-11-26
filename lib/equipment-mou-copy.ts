@@ -1,6 +1,6 @@
 import { defaultMouPolicy } from "./mou-policy";
 import { equipmentMouArticles, mouWording } from "./equipment-mou-articles";
-import { type EquipmentMou, type EquipmentMouContact, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
+import { equipmentMouHasSalesAgent, type EquipmentMou, type EquipmentMouContact, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
 import { isSitePowerOption } from "./equipment-quantitative";
 import { marketNames, type OurSolutionLocale } from "./our-solution/market";
 import translations from "./i18n/equipment-inquiry.json";
@@ -14,7 +14,8 @@ function priceFormatter(locale: OurSolutionLocale, currency: string) {
   return new Intl.NumberFormat(locale, { style: "currency", currency, currencyDisplay: "code", maximumFractionDigits: currency === "JPY" ? 0 : 2 });
 }
 
-export function equipmentMouPriceRows(locale: OurSolutionLocale, mou: EquipmentMou): [string, string][] {
+export function equipmentMouPriceRows(locale: OurSolutionLocale, mou: EquipmentMou, terms: EquipmentMouTerms): [string, string][] {
+  if (equipmentMouHasSalesAgent(terms)) return [];
   const t = equipmentInquiryTranslate(locale);
   const price = priceFormatter(locale, mou.currency);
   const pending = t("Pending confirmation");
@@ -26,6 +27,7 @@ export function equipmentMouPriceRows(locale: OurSolutionLocale, mou: EquipmentM
 
 export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact: EquipmentMouContact, terms: EquipmentMouTerms) {
   const policy = terms.policy ?? defaultMouPolicy;
+  const throughSalesAgent = equipmentMouHasSalesAgent(terms);
   const t = equipmentInquiryTranslate(input.locale);
   const w = mouWording(input.locale);
   const number = new Intl.NumberFormat(input.locale, { maximumFractionDigits: 2 });
@@ -65,19 +67,19 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
     [t("Installation, commissioning, or other project needs"), input.installationNotes || "—"],
   ];
   rows.push(
-    ...equipmentMouPriceRows(input.locale, mou),
+    ...equipmentMouPriceRows(input.locale, mou, terms),
     [w("Budget estimate validity", "概估報價有效期限", "概算見積の有効期間"),
       w(`Up to ${policy.validityDays} days from completion of signing, subject to Article 7. A formal quotation states its own validity.`,
         `自完成簽署起最長 ${policy.validityDays} 日，依第 7 條終止。正式報價以其所載有效期限為準。`,
         `署名完了日から最長${policy.validityDays}日。第7条に従い終了します。正式見積書の有効期限は当該見積書に明記します。`)],
   );
-  if (mou.msrpTotal === null && mou.investment !== null)
+  if (!throughSalesAgent && mou.msrpTotal === null && mou.investment !== null)
     rows.push([t("Modeled equipment investment"), money.format(mou.investment)]);
   rows.push([t("Estimated annual EBITDA"), mou.annualEbitda === null ? "—" : money.format(mou.annualEbitda)]);
   const payback = mou.paybackYears !== null
     ? t("{value} years").replace("{value}", number.format(mou.paybackYears))
     : mou.annualEbitda !== null && mou.annualEbitda <= 0 ? t("Not reached under these assumptions") : unavailable;
-  rows.push([t("Estimated simple payback"), payback]);
+  if (!throughSalesAgent) rows.push([t("Estimated simple payback"), payback]);
   const manufacturer = w("TSGC Technologies Inc.", "鴻躉股份有限公司", "鴻躉股份有限公司（TSGC Technologies Inc.）");
   const agentLabel = w("Sales agent", "銷售代理商", "販売代理店");
   const seller = [
@@ -89,9 +91,9 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
     const { company, address, representative, title, email } = terms.agent;
     seller.push(
       `${agentLabel}　${[company, representative, title, address, email].filter(Boolean).join(" · ")}`,
-      w("The agent coordinates local communication and provides local MSRP. The formal quotation and purchase contract will identify the contracting seller.",
-        "銷售代理負責在地聯繫及提供當地建議售價。交易相對人以正式報價及採購合約所載為準。",
-        "販売代理店は現地連絡と希望小売価格の提示を担当します。正式見積書と購入契約書に取引当事者を明記します。"),
+      w("The sales agent coordinates local communication and quotations. The formal quotation and purchase contract will identify the contracting seller.",
+        "銷售代理負責在地聯繫及報價。交易相對人以正式報價及採購合約所載為準。",
+        "販売代理店は現地での連絡と見積もりを担当します。正式見積書と購入契約書に取引当事者を明記します。"),
     );
   } else if (terms.agentCandidates.length) {
     const candidates = terms.agentCandidates.join(w(" or ", " 或 ", " または "));

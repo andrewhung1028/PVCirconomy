@@ -28,7 +28,8 @@ export async function GET(request: Request) {const denied=await adminAccess("our
     if (snapshot) {
       const { data } = snapshot;
       const transport = version ? data.transport : await resolveMarketTransport(market, data.transport, parameter(data, 7, "Pallet footprint"));
-      buffer = await createOurSolutionWorkbook({ ...data, transport }, template, await effectiveMetalPrices(data), false, true);
+      const [prices, shared] = await Promise.all([effectiveMetalPrices(data), activeSharedParameters()]);
+      buffer = await createOurSolutionWorkbook({ ...data, transport }, template, prices, false, true, shared.data);
     } else if (template && !version && isAdditionalParameterMarket(market)) {
       buffer = await createInitialOurSolutionTemplate(market, (await activeSharedParameters()).data);
     }
