@@ -3,6 +3,33 @@ import type { WheelEventHandler } from "react";
 import type { EquipmentPurchaseOption } from "../../lib/equipment-mou";
 import type { PublicSolutionMarket } from "../../lib/our-solution/market";
 
+const trialTerms = [
+  {
+    title: "Eligibility and markets",
+    description: "TBP is open to recyclers with a valid solar PV panel recycling permit for projects in the United States, Australia, the European Union, the United Kingdom and Canada. Projects in Japan use standard purchase.",
+  },
+  {
+    title: "Site and power",
+    description: "Identify the trial site and check its power supply against the equipment specifications. If power availability is still uncertain, discuss it with us during project review.",
+  },
+  {
+    title: "Trial period and acceptance",
+    description: "The trial lasts up to 180 days. Before it starts, both parties agree on the acceptance criteria. Use your own panels to measure throughput, weigh the recovered materials and compare their offtake value with your operating costs.",
+  },
+  {
+    title: "Quotation and contract",
+    description: "Submit an inquiry and confirm the MOU. The formal quotation specifies the trial fee, any applicable deposit, the agreed duration and available slots. Both parties confirm the quotation in writing before proceeding to contract.",
+  },
+  {
+    title: "Delivery and return freight",
+    description: "Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.",
+  },
+  {
+    title: "Recovered materials during the trial",
+    description: "You can request offtake for materials produced by your PV Circulator during the trial. We confirm availability for your site during project review. The offtake agreement sets the material specifications, minimum quantities and pricing. Glass offtake is available only in the United States.",
+  },
+];
+
 export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, hasRecyclingPermit, onPermitChange }: {
   market: PublicSolutionMarket;
   hasRecyclingPermit: boolean;
@@ -11,7 +38,7 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
   onPurchase: (option: EquipmentPurchaseOption) => void;
   onPaneWheel: WheelEventHandler<HTMLDivElement>;
 }) {
-  const applyLabel = <>{t("Apply for a Trial-based PO")} <span aria-hidden="true">→</span></>;
+  const applyLabel = t("Apply for a Trial-based PO");
   const trialOffered = market !== "JP";
 
   return <section id="business-model" className="pv-screen pvc2-split pvc2-split-64 pvc2-business-model" aria-labelledby="business-model-title">
@@ -27,9 +54,12 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
           <p>{t("Try PV Circulator with your own panels for up to 180 days. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
           <details className="pv-details">
             <summary>{t("TBP terms")}</summary>
-            <p>{t("The trial lasts up to 180 days. Both parties agree on acceptance criteria before the trial starts.")}</p>
-            <p>{t("After the MOU, the formal quotation sets out the trial fee and available slots before you sign the contract.")}</p>
-            <p>{t("Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.")}</p>
+            <dl className="pvc2-trial-terms">
+              {trialTerms.map(({ title, description }) => <div key={title}>
+                <dt><strong>{t(title)}</strong></dt>
+                <dd>{t(description)}</dd>
+              </div>)}
+            </dl>
           </details>
           <label className="pvc2-trial-permit">
             <input type="checkbox" checked={hasRecyclingPermit}
@@ -37,9 +67,9 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
             {t("Our organization holds a valid permit to recycle solar PV panels.")}
           </label>
           {hasRecyclingPermit
-            ? <Link className="pv-text-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
+            ? <Link className="pv-button pvc2-quote-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
                 onNavigate={() => onPurchase("Trial-based PO (TBP)")}>{applyLabel}</Link>
-            : <button type="button" className="pv-text-button" disabled>{applyLabel}</button>}
+            : <button type="button" className="pv-button pvc2-quote-button" disabled>{applyLabel}</button>}
         </article>}
       </div>
     </div>
