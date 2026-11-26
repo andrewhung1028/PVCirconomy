@@ -1321,7 +1321,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-trial-permit { display: flex; align-items: baseline; gap: 10px; margin: 12px 0 4px; padding-block: 8px; font-size: var(--pv-type-interface); cursor: pointer; }
 .pvc2-trial-permit input { flex: none; margin: 0; accent-color: var(--pv-yellow); }
 .pvc2-purchase-option .pvc2-quote-button:disabled { background: var(--pv-line); border-color: transparent; color: var(--pv-ink); cursor: not-allowed; }
-.pvc2-business-offtake { padding-block: 100px 64px; }
+.pvc2-business-offtake { padding-block: var(--pv-right-heading-top) 64px; }
 .pvc2-business-offtake h2 {
   font-size: var(--pv-type-panel);
   line-height: 1.12;
