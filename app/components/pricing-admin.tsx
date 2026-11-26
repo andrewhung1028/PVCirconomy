@@ -6,6 +6,13 @@ import {pricingLogic,defaultPricingNoteTitle} from '../../lib/pricing-notes';
 import {PricingPreview} from './pricing-preview';
 import {AdminNavigation} from './admin-navigation';
 type State={active:PricingSnapshot;history:Array<{id:string;rules:PricingRules;created_at:string;actor_email:string;note?:string;note_title?:string}>};
+function pricingVersionNotes(state: State) {
+ const current=state.history.find(item=>item.id===state.active.version);
+ return {
+  body: current?.note || pricingLogic(state.active.rules,state.active.batchPricing),
+  title: current?.note_title || defaultPricingNoteTitle,
+ };
+}
 const fields:Array<[keyof PricingRules,string,string]>=[['baseMaxWatts','起始級距上限','W'],['stepWatts','每級瓦數','W'],['panelBase','按片起始價格','USD / 片'],['panelIncrement','每級增加金額','USD / 片'],['weightBase','按重量起始價格','USD / lb'],['weightIncrement','每級增加金額','USD / lb'],['discountStartExponent','第一級折扣指數 n（10ⁿ）','整數'],['discountPercentPerExponent','每增加一個指數折扣','%'],['discountMaxPercent','折扣上限','%'],['brokenPercent','玻璃破裂','%'],['missingBoxPercent','缺接線盒','%'],['missingFramePercent','缺鋁框','%'],['doubleGlassGramsPerWatt','雙玻功率係數','g / W'],['backsheetGramsPerWatt','單玻＋背板功率係數','g / W'],['unknownGramsPerWatt','未知結構功率係數','g / W'],['doubleGlassKgPerSqm','雙玻面積係數','kg / m²'],['backsheetKgPerSqm','單玻＋背板面積係數','kg / m²'],['unknownKgPerSqm','未知結構面積係數','kg / m²']];
 export function PricingAdmin(){const [market,setMarket]=useState<PricingMarket>('US');const [minimumProcessing,setMinimumProcessing]=useState(String(defaultMinimumProcessingUsd));const [session,setSession]=useState<{configured:boolean;user:{email:string;name:string;role:string}|null}|null>(null);const [data,setData]=useState<State|null>(null);const [draft,setDraft]=useState<Record<keyof PricingRules,string>>(()=>Object.fromEntries(Object.entries({...initialRules,...pricingMisc()}).map(([k,v])=>[k,v===null?'':String(v)])) as Record<keyof PricingRules,string>);const [note,setNote]=useState('');const [noteTitle,setNoteTitle]=useState(defaultPricingNoteTitle);const [status,setStatus]=useState('載入中…');const [saving,setSaving]=useState(false);
  const rules=Object.fromEntries(Object.entries(draft).map(([k,v])=>[k,v.trim()===''?(k==='unknownGramsPerWatt'?null:NaN):Number(v)])) as PricingRules;
@@ -14,12 +21,33 @@ export function PricingAdmin(){const [market,setMarket]=useState<PricingMarket>(
  if(batchPricing){
   rules.minimumProcessingUsd=minimum;
  }
- const valid=validRules(rules);const activeNote=data?.history.find(h=>h.id===data.active.version);const dirty=data&&(Object.entries(rules).some(([key,value])=>value!==data.active.rules[key as keyof PricingRules])||note.trim()!==(activeNote?.note||'').trim()||noteTitle.trim()!==(activeNote?.note_title||defaultPricingNoteTitle));
- function apply(r:PricingRules){setMinimumProcessing(String(r.minimumProcessingUsd??defaultMinimumProcessingUsd));setDraft(Object.fromEntries(Object.entries({...r,...pricingMisc(r)}).filter(([key])=>key!=='minimumProcessingUsd').map(([k,v])=>[k,v===null?'':String(v)])) as typeof draft)}
- function loadState(value:State){setData(value);apply(value.active.rules);const current=value.history.find(h=>h.id===value.active.version);setNote(current?.note||pricingLogic(value.active.rules,value.active.batchPricing));setNoteTitle(current?.note_title||defaultPricingNoteTitle)}
+ const valid=validRules(rules);
+ const activeRules=data ? {
+  ...data.active.rules,
+  ...pricingMisc(data.active.rules),
+  ...(data.active.batchPricing && {minimumProcessingUsd:data.active.batchPricing.minimumProcessingUsd}),
+ } : null;
+ const activeNotes=data ? pricingVersionNotes(data) : null;
+ const dirty=Boolean(activeRules && activeNotes && (
+  Object.entries(rules).some(([key,value])=>value!==activeRules[key as keyof PricingRules])
+  || note.trim()!==activeNotes.body.trim() || noteTitle.trim()!==activeNotes.title.trim()
+ ));
+ function apply(r:PricingRules,minimumUsd=r.minimumProcessingUsd??defaultMinimumProcessingUsd){setMinimumProcessing(String(minimumUsd));setDraft(Object.fromEntries(Object.entries({...r,...pricingMisc(r)}).filter(([key])=>key!=='minimumProcessingUsd').map(([k,v])=>[k,v===null?'':String(v)])) as typeof draft)}
+ function loadState(value:State){
+  const notes=pricingVersionNotes(value);
+  setData(value);
+  apply(value.active.rules,value.active.batchPricing?.minimumProcessingUsd);
+  setNote(notes.body);
+  setNoteTitle(notes.title);
+ }
  async function load(target:unknown=market){const selected:PricingMarket=target==='JP'||target==='US'?target:market;setStatus('載入中…');try{const r=await fetch('/api/auth/session/',{cache:'no-store'});if(!r.ok)throw Error();const s=await r.json();setSession(s);if(s.user?.role!=='staff'){setStatus(new URLSearchParams(location.search).has('error')?'登入未完成，請確認使用 pvcirconomy.com 或 tsgc.com.tw 公司帳號及正確 Microsoft 租戶。':'');return}const p=await fetch(`/api/admin/pricing/?market=${selected}`,{cache:'no-store'});if(!p.ok)throw Error();const value=await p.json();setMarket(selected);loadState(value);setStatus('')}catch{setStatus('無法讀取價格設定。請重試；尚未儲存的修改不會套用。')}}
  useEffect(()=>{void load(new URLSearchParams(location.search).get('market')==='JP'?'JP':'US')},[]);
- useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue=''}};addEventListener('beforeunload',warn);return()=>removeEventListener('beforeunload',warn)},[dirty]);
+ useEffect(()=>{
+  if(!dirty)return;
+  const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue=''};
+  addEventListener('beforeunload',warn);
+  return()=>removeEventListener('beforeunload',warn);
+ },[dirty]);
  async function save(){if(!data||!valid)return;setSaving(true);setStatus('儲存中…');try{const r=await fetch('/api/admin/pricing/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rules,expectedVersion:data.active.version,note,noteTitle,market})});if(r.status===409){setStatus('其他管理員已更新價格。你的修改仍保留，請重新載入最新版本後核對。');return}if(r.status===401){setStatus('登入已逾時。請重新登入；目前修改尚未儲存。');return}if(!r.ok)throw Error();const value=await r.json();loadState(value);try{localStorage.setItem(`pv-pricing-updated-${market}`,value.active.version)}catch{};setStatus(`已儲存並啟用 ${market} 價格。新的估價將使用此版本。`)}catch{setStatus('儲存失敗，修改仍保留。請重試。')}finally{setSaving(false)}}
  async function logout(){try{const r=await fetch('/api/auth/logout/',{method:'POST'});if(!r.ok)throw Error();setSession(s=>s?{...s,user:null}:s);setData(null);setStatus('已登出。')}catch{setStatus('登出失敗，請重試。')}}
 
