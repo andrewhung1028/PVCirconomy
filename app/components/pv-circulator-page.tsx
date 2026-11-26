@@ -508,11 +508,11 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
         <div className="pvc2-quality-estimate">
           <header className="pvc2-section-heading">
             <h2 id="quality-title">{t("What comes out")}<br />{t("matters.")}</h2>
-            <p>{t("Recovery rate tells you how much comes back. Purity determines what the recovered material can become—and what it may be worth.")}</p>
+            <p>{t("Recovery rate tells you how much comes back.")}<br />{" "}{t("Purity determines what the recovered material can become—and what it may be worth.")}</p>
             {showRevenueComparison && revenueRatio !== null && Number.isFinite(revenueRatio) && <div className="os-materials-demand">
               <strong>{revenueRatio.toLocaleString(locale, { maximumFractionDigits: 2 })}×</strong>
               <h3>{t("Material sales revenue relative to recycling fee revenue")}</h3>
-              {revenueRatio > 1 && <p>{t("Recovered materials are the larger revenue source at the current fee.")}</p>}
+              {revenueRatio > 1 && <p>{t("At the current fee, material sales generate more revenue than recycling fees.")}<br />{" "}{t("Lower recycling fees would make material sales even more important.")}</p>}
             </div>}
             {showRevenueComparison && feePerPanel === 0 && Boolean(materialRevenuePerPanel)
               && <p>{t("At a zero recycling fee, material sales are the only modeled revenue source.")}</p>}
