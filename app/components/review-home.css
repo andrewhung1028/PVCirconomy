@@ -1164,7 +1164,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .os-local-market-note strong{font-size:var(--solution-type-group);line-height:1.35}
 .os-local-market-note p{max-width:52ch;margin:14px 0 0;color:#4b5255;font-size:var(--solution-type-body)}
 /* Reading panels share paragraph, group and row spacing across routes. */
-.os-page, .pvc2-business-offtake{
+.os-page, .pvc2-business-model{
   --pv-reading-copy-gap:var(--space-20);
   --pv-reading-group-gap:var(--space-32);
   --pv-reading-row-padding:var(--space-12);
@@ -1195,7 +1195,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .os-page .os-regulation-rules{justify-content:safe center}
 .os-page .os-regulation-rules article{padding-block:var(--pv-reading-copy-gap)}
 @media(max-width:1000px){
-  .os-page, .pvc2-business-offtake{--pv-reading-copy-gap:var(--space-16);--pv-reading-group-gap:var(--space-24)}
+  .os-page, .pvc2-business-model{--pv-reading-copy-gap:var(--space-16);--pv-reading-group-gap:var(--space-24)}
 }
 @media(min-width:761px) and (max-width:1000px){
   .os-page .os-stakes .os-solution-drivers>div{grid-template-columns:minmax(0,1fr) minmax(0,2.25fr)}
@@ -1315,8 +1315,8 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-business-model .pv-details summary { font-size: var(--pv-type-interface); }
 .pvc2-business-model .pv-details p { margin-block: 8px 16px; font-size: var(--pv-type-interface); }
 .pvc2-purchase-option .pvc2-quote-button { width: 100%; justify-content: flex-start; }
-.pvc2-trial-terms { display: grid; gap: 16px; margin: 8px 0 20px; font-size: var(--pv-type-interface); line-height: 1.55; }
-.pvc2-trial-terms dd { margin: 4px 0 0; }
+.pvc2-trial-terms { display: grid; gap: var(--pv-reading-copy-gap); margin: var(--space-8) 0 var(--pv-reading-copy-gap); font-size: var(--pv-type-interface); line-height: 1.55; }
+.pvc2-trial-terms dd { margin: var(--space-8) 0 0; }
 .pvc2-trial-permit { display: flex; align-items: baseline; gap: 10px; margin: 12px 0 4px; padding-block: 8px; font-size: var(--pv-type-interface); cursor: pointer; }
 .pvc2-trial-permit input { flex: none; margin: 0; accent-color: var(--pv-yellow); }
 .pvc2-purchase-option .pvc2-quote-button:disabled { background: var(--pv-line); border-color: transparent; color: var(--pv-ink); cursor: not-allowed; }

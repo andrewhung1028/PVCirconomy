@@ -13,12 +13,12 @@ const trialTerms = [
     description: "Identify the trial site and check its power supply against the equipment specifications. If power availability is still uncertain, discuss it with us during project review.",
   },
   {
-    title: "Trial period and acceptance",
-    description: "The trial lasts up to 180 days. Before it starts, both parties agree on the acceptance criteria. Use your own panels to measure throughput, weigh the recovered materials and compare their offtake value with your operating costs.",
+    title: "Trial period",
+    description: "The trial lasts up to 180 days. The contract sets the exact number of trial days. Use your own panels to measure throughput, weigh the recovered materials and compare their offtake value with your operating costs.",
   },
   {
     title: "Quotation and contract",
-    description: "Submit an inquiry and confirm the MOU. The formal quotation specifies the trial fee, any applicable deposit, the agreed duration and available slots. Both parties confirm the quotation in writing before proceeding to contract.",
+    description: "Submit an inquiry and confirm the MOU. The formal quotation specifies the trial fee, any applicable deposit, the proposed trial duration and available slots. Both parties confirm the quotation in writing before proceeding to contract.",
   },
   {
     title: "Delivery and return freight",
