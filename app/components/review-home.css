@@ -1353,6 +1353,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-inquiry-review dl > div { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--pv-line); font-size: var(--pv-type-interface); }
 .pvc2-inquiry-review dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .pvc2-inquiry-review-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.pvc2-spec-ctas > a.pv-button { justify-content: center; text-align: center; }
 .pvc2-spec-actions .pvc2-inquiry-jump { display: none; }
 .pv-review #equipment-inquiry { scroll-margin-top: var(--pvc2-inquiry-header); }
 @media (max-width: 1000px) {
