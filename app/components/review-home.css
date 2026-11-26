@@ -1298,18 +1298,20 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-business-purchase > div { margin-block: auto; }
 .pvc2-business-purchase :is(h2, h3, p) { max-width: none; }
 .pvc2-purchase-option, .pvc2-offtake-list > div { border-block-start: 1px solid var(--pv-line); }
-.pvc2-purchase-option { padding-block: 18px; }
+.pvc2-purchase-option { padding-block: var(--space-20) 18px; }
+.pvc2-purchase-option .os-materials-demand h3 { margin-block-start: var(--space-20); }
 .pvc2-offtake-list > div { padding-block: var(--pv-reading-row-padding); }
 .pvc2-offtake-list dt {
   margin: 0;
   font-size: var(--pv-type-group);
   line-height: 1.2;
 }
-.pvc2-offtake-list dd, .pvc2-business-offtake > p {
+.pvc2-offtake-list dd {
   line-height: 1.55;
   font-size: var(--pv-type-interface);
 }
-.pvc2-purchase-option p { margin: 10px 0 16px; line-height: 1.55; font-size: var(--pv-type-body); }
+.pvc2-purchase-option p, .pvc2-business-offtake > p { line-height: 1.55; font-size: var(--pv-type-body); }
+.pvc2-purchase-option p { margin: 10px 0 16px; }
 .pvc2-business-model .pv-details { margin-block: 12px; }
 .pvc2-business-model .pv-details summary { font-size: var(--pv-type-interface); }
 .pvc2-business-model .pv-details p { margin-block: 8px 16px; font-size: var(--pv-type-interface); }
