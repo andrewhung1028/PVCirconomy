@@ -17,9 +17,11 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }
         <h2 id="business-model-title">{t("Bring PV Circulator to your site.")}</h2>
         <p>{t("Can the line reliably separate the panels you receive? Who will take the outputs, and will the revenue cover your costs? If you already know which configuration you need, you can buy it directly.")}</p>
         {trialOffered && <article className="pvc2-purchase-option">
-          <h3>{t("Trial-based PO (TBP)")}</h3>
-          <strong className="pvc2-trial-duration">{t("180-day trial")}</strong>
-          <p>{t("If you hold a government permit for PV module dismantling or processing, you can test PV Circulator with your own panels against acceptance criteria agreed in advance. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
+          <div className="os-materials-demand">
+            <strong aria-hidden="true">{t("180 days")}</strong>
+            <h3>{t("Trial-based PO (TBP)")}</h3>
+          </div>
+          <p>{t("If you hold a government permit for PV module dismantling or processing, you can run a 180-day trial with your own panels and test PV Circulator against acceptance criteria agreed in advance. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
           <details className="pv-details">
             <summary>{t("Trial terms, freight and returns")}</summary>
             <p>{t("After the MOU, the formal quotation sets out the trial fee and available slots before you sign the contract.")}</p>

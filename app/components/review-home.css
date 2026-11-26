@@ -307,7 +307,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-quality-estimate { padding-inline: var(--pv-safe-inline-roomy) clamp(20px,3vw,56px); }
 .pvc2-quality-estimate .pvc2-section-heading { grid-template-columns: 1fr; gap: 16px; margin-bottom: clamp(28px,4svh,52px); }
 .pvc2-quality-estimate .pvc2-section-heading p { max-width: none; }
-.pvc2-quality-estimate .os-materials-demand > strong {
+.pvc2-page .os-materials-demand > strong {
   color: var(--pv-yellow);
   font-size: var(--pv-type-display);
   line-height: 1;
@@ -1299,7 +1299,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   border-block-start: 1px solid var(--pv-line);
   padding-block: 18px;
 }
-.pvc2-purchase-option h3, .pvc2-offtake-list dt {
+.pvc2-offtake-list dt {
   margin: 0;
   font-size: var(--pv-type-group);
   font-weight: var(--pv-weight-bold);
@@ -1314,14 +1314,6 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-business-model .pv-details summary { font-size: var(--pv-type-interface); }
 .pvc2-business-model .pv-details p { margin-block: 8px 16px; font-size: var(--pv-type-interface); }
 .pvc2-business-model .pv-text-button { display: inline-flex; align-items: center; gap: 12px; }
-.pvc2-trial-duration {
-  display: inline-block;
-  margin-top: 12px;
-  padding: 5px 12px;
-  color: var(--pv-yellow);
-  background: var(--pv-ink);
-  font-size: var(--pv-type-group);
-}
 .pvc2-business-offtake { padding-block: 100px 64px; }
 .pvc2-business-offtake h2 {
   font-size: var(--pv-type-panel);
@@ -1331,15 +1323,6 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 }
 .pvc2-offtake-list { margin: 28px 0 0; }
 .pvc2-offtake-list dd { margin-bottom: 0; }
-/* Reveal rail labels on interaction beside the comparison and purchasing copy. */
-@media (min-width: 761px) {
-  .pvc2-page:is([data-active-section="configurations"], [data-active-section="business-model"]) .pv-dots a { position: relative; min-width: 32px; }
-  .pvc2-page:is([data-active-section="configurations"], [data-active-section="business-model"]) .pv-dots span {
-    position: absolute; inset-inline-start: 100%; width: max-content;
-    padding: 3px 6px; background: var(--pv-paper);
-  }
-  .pvc2-page:is([data-active-section="configurations"], [data-active-section="business-model"]) .pv-dots a:not(:hover):not(:focus-visible) span { visibility: hidden; }
-}
 @media (max-width: 760px) {
   .pvc2-config-table { padding: 92px 18px 48px 35px; }
   .pvc2-config-comparison { min-width: 300px; padding: 0; }
@@ -1385,8 +1368,6 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   .pvc2-specification.is-inquiry .pvc2-spec-actions .pvc2-inquiry-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .pvc2-inquiry-pane { border-inline-start: 0; border-top: 1px solid var(--pv-line); padding: var(--pvc2-inquiry-gutter); }
   .pvc2-spec-actions .pvc2-inquiry-jump { display: inline-flex; }
-  .pvc2-page:has(.pvc2-specification.is-inquiry)[data-active-section="specification"] .pv-dots a { min-width: 28px; }
-  .pvc2-page:has(.pvc2-specification.is-inquiry)[data-active-section="specification"] .pv-dots span { display: none; }
   .pvc2-specification.is-inquiry :is(.pvc2-spec-main, .pvc2-inquiry-pane) {
     padding-inline-start: max(44px, var(--pvc2-inquiry-gutter));
   }
