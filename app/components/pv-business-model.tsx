@@ -3,9 +3,8 @@ import type { WheelEventHandler } from "react";
 import type { EquipmentPurchaseOption } from "../../lib/equipment-mou";
 import type { PublicSolutionMarket } from "../../lib/our-solution/market";
 
-export function PVCirculatorBusinessModel({ market, businessCaseHref, t, onPurchase, onPaneWheel }: {
+export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }: {
   market: PublicSolutionMarket;
-  businessCaseHref: string;
   t: (text: string) => string;
   onPurchase: (option: EquipmentPurchaseOption) => void;
   onPaneWheel: WheelEventHandler<HTMLDivElement>;
@@ -16,42 +15,30 @@ export function PVCirculatorBusinessModel({ market, businessCaseHref, t, onPurch
     <div className="pvc2-split-copy pvc2-business-purchase" tabIndex={0} role="region" aria-labelledby="business-model-title" onWheel={onPaneWheel}>
       <div>
         <h2 id="business-model-title">{t("Bring PV Circulator to your site.")}</h2>
-        <p>{t(trialOffered
-          ? "Once you have a configuration in mind, the next question is whether you’re ready to order or need to test the line on the panels you process."
-          : "Once you have a configuration in mind, use a standard purchase inquiry to confirm the equipment and terms for your site in Japan.")}</p>
-
-        <article className="pvc2-purchase-option">
-          <h3>{t("Standard purchase")}</h3>
-          <p>{t("If you know your panel mix and target volume, go straight to a quotation for the line you need. Choose the level of automation and whether to add PLUS, so you can budget for the equipment your site will use.")}</p>
-          <details className="pv-details">
-            <summary>{t("From inquiry to purchase contract")}</summary>
-            <p>{t("Start with an inquiry. After we confirm the MOU, we issue a formal quotation and then proceed to a purchase contract.")}</p>
-          </details>
-          <Link className="pv-text-button" href={`?market=${market}&inquiry=1&purchase=standard#specification`}
-            onNavigate={() => onPurchase("Standard sales")}>{t("Start a standard purchase inquiry")} <span aria-hidden="true">→</span></Link>
-        </article>
+        <p>{t("Can the line reliably separate the panels you receive? Who will take the outputs, and will the revenue cover your costs? If you already know which configuration you need, you can buy it directly.")}</p>
         {trialOffered && <article className="pvc2-purchase-option">
           <h3>{t("Trial-based PO (TBP)")}</h3>
-          <p>{t("Will the line deliver the results you need with your panels? If you hold a government permit for PV module dismantling or processing, agree on acceptance criteria and test the equipment against them.")}</p>
+          <strong className="pvc2-trial-duration">{t("180-day trial")}</strong>
+          <p>{t("If you hold a government permit for PV module dismantling or processing, you can test PV Circulator with your own panels against acceptance criteria agreed in advance. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
           <details className="pv-details">
             <summary>{t("Trial terms, freight and returns")}</summary>
-            <p>{t("Select TBP in the inquiry to start. An MOU is followed by a formal quotation and a contract. The quotation specifies the trial fee, duration and available slots.")}</p>
+            <p>{t("After the MOU, the formal quotation sets out the trial fee and available slots before you sign the contract.")}</p>
             <p>{t("Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.")}</p>
           </details>
           <Link className="pv-text-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
             onNavigate={() => onPurchase("Trial-based PO (TBP)")}>{t("Apply for a Trial-based PO")} <span aria-hidden="true">→</span></Link>
         </article>}
-        <a className="pv-text-button pvc2-business-case-link" href={businessCaseHref}>{t("Run your business case")} <span aria-hidden="true">→</span></a>
       </div>
     </div>
 
     <div className="pvc2-split-scroll pvc2-business-offtake" tabIndex={0} role="region" aria-labelledby="business-offtake-title" onWheel={onPaneWheel}>
       <h2 id="business-offtake-title">{t("Who will take the recovered materials?")}</h2>
-      <p>{t("Before you invest, you need to know which outputs have a buyer and which could cost you money to move. PV Circonomy arranges offtake for materials your PV Circulator produces that meet the agreed specifications.")}</p>
+      <p>{t("Local demand varies by market. Even after EVA is de-crosslinked, a recycler may be far from footwear manufacturers in Southeast Asia that can use it. A small batch may be worth less than it costs to ship.")}</p>
+      <p>{t("PV Circonomy buys qualifying cell powder and arranges offtake for EVA and backsheets from your PV Circulator. You can ship materials that meet the agreed specifications without secondary treatment. Keeping them out of landfill and incineration can reduce disposal costs and associated carbon emissions.")}</p>
       <dl className="pvc2-offtake-list">
         {market === "US" && <div>
           <dt>{t("Glass")}</dt>
-          <dd>{t("In the US, qualifying glass is accepted without a secondary treatment fee. You cover freight and ship full trailer or container loads, about 1,500 panels’ worth of glass per load.")}</dd>
+          <dd>{t("Glass accounts for about 70% of a panel’s weight. In the US, we also take qualifying glass without a secondary treatment fee. You pay freight and ship a full trailer or container, about 1,500 panels’ worth of glass per load.")}</dd>
         </div>}
         <div>
           <dt>{t("Cell powder")}</dt>
