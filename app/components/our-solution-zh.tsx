@@ -481,11 +481,12 @@ function GlobalCumulativeRetirementChart({ waves, assumptions }: {
     <small>估算條件：面板壽命 {assumptions.defaultLifetime}年，{waveLossLabels[assumptions.loss]}場景。來源：來自公開的「我們的解決方案」工作簿的部署容量歷史記錄和先決條件。</small>
   </figure>;
 }
-function CountryRetirementExplorer({ waves, assumptions }: {
+function CountryRetirementExplorer({ waves, assumptions, market = "US" }: {
     waves: RetirementMarketWaves;
     assumptions: WaveAssumptions;
+    market?: PublicSolutionMarket;
 }) {
-    const [country, setCountry] = useState<RetirementMarket>("Japan");
+    const [country, setCountry] = useState<RetirementMarket>(market === "JP" ? "Japan" : market === "EU" ? "Europe" : market === "AU" ? "Australia" : "United States");
     const [lifetime, setLifetime] = useState<25 | 18 | 15 | 12>(assumptions.defaultLifetime);
     const series = (market: RetirementMarket, loss: "early" | "regular") => {
         const key = `${loss}_T${lifetime}` as RetirementSeriesKey;
@@ -514,7 +515,7 @@ function CountryRetirementExplorer({ waves, assumptions }: {
     <div className="os-wave-country-controls">
       <div className="os-wave-country-tabs" role="group" aria-label="選擇市場">{retirementMarkets.map((market) => <button type="button" key={market} aria-pressed={country === market} onClick={() => setCountry(market)}>{waveMarketLabels[market]}</button>)}</div>
       <div className="os-wave-lifetime" role="group" aria-label="根據型號選擇面板壽命"><span>面板壽命</span>{([25, 18, 15, 12] as const).map((years) => <button type="button" key={years} aria-pressed={lifetime === years} onClick={() => setLifetime(years)}>{years}年</button>)}</div>
-      <p className="os-wave-lifetime-basis">按壽命進行情境分析。<strong>12年</strong>：<a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">第8 頁 美國能源部再生能源實驗室報告 NREL/TP-6A20-74124（19 頁 PDF）</a>。部分商業和大型發電項目每10-12年更換模組。<strong>15年</strong>：<a href="https://doi.org/10.1016/j.joule.2019.08.012">吉恩、伍德豪斯和布洛維奇 (2019)</a>。<strong>18年</strong>： 12 年至 25 年之間的中間情況。<strong>25年</strong>：IRENA (2026) 標準使用壽命。威布爾分佈的形狀因子：提前廢舊 {assumptions.shapes.early}，常規廢舊 {assumptions.shapes.regular} 。</p>
+      <p className="os-wave-lifetime-basis">按壽命進行情境分析。<strong>12年</strong>：<a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">第8 頁 美國能源部再生能源實驗室報告 NREL/TP-6A20-74124（19 頁 PDF）</a>。部分商業和大型發電項目每10-12年更換模組。<strong>15年</strong>：<a href="https://doi.org/10.1016/j.joule.2019.08.012">吉恩、伍德豪斯和布洛維奇 (2019)</a>。<strong>18年</strong>：PV Circonomy 採用的預設規劃情境，介於 12 年與 25 年之間。<strong>25年</strong>：IRENA (2026) 標準使用壽命。威布爾分佈的形狀因子：提前廢舊 {assumptions.shapes.early}，常規廢舊 {assumptions.shapes.regular} 。</p>
     </div>
     <figure className="os-wave-country-chart">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`對於${waveMarketLabels[country]}和麵板壽命${lifetime}年，2050年的年垃圾重量在早期處置情境下為${(lastEarly.tonnes / 1e6).toFixed(2)}百萬噸，在正常處置情境下為${(lastRegular.tonnes / 1e6).toFixed(2)}百萬噸。`}>
@@ -757,7 +758,7 @@ function RetirementContext({ lifetime, wave: retirementWave, assumptions = defau
 }) {
     const sources = {
         25: <>IRENA 2026 (25-year lifetime){assumptions.defaultLifetime === 25 ? " (default)" : ""}.</>,
-        18: <>Intermediate modeled case between the 12- and 25-year scenarios{assumptions.defaultLifetime === 18 ? " (default)" : ""}.</>,
+        18: <>PV Circonomy’s planning assumption between the 12- and 25-year scenarios{assumptions.defaultLifetime === 18 ? " (default)" : ""}.</>,
         15: <><a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović, Joule 2019</a> (initial life under 15 years).</>,
         12: <><a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124, p. 8 (PDF p. 19)</a> (industry observations of possible 10–12-year commercial and utility-scale repowering).</>,
     };
@@ -1017,7 +1018,7 @@ export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuanti
     const highestPressureIndex = pressureLast.values.indexOf(Math.max(...pressureLast.values));
     const waveSlides: DeckSlide[] = [
         { label: "介紹趨勢", navigationLabel: "累計裝置容量", visual: <div className="os-data-slide os-market-slide"><h2>{capacityLast.year} 年，太陽能累計裝置容量預計由 {capacityFirst.totalLabel} 增至 {capacityLast.totalLabel} </h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="2025 年至 2050 年每年按市場劃分的累計太陽能裝置容量，以堆疊長條顯示"/></div>, noteTitle: "今天的太陽光電設置量定義了未來的回收處理需求", note: <><p>每年的長條圖都代表目前正在建設的太陽光電基礎設施，這些基礎設施將在未來轉換成更大的廢舊回收市場。市場組成顯示未來哪些地方需要收集和處理能力。</p><table className="os-capacity-multiple-table"><caption>2025-2050 年累計裝置容量成長</caption><thead><tr><th>市場</th><th>成長</th></tr></thead><tbody>{capacityMultiples.map(({ market, multiple }) => <tr key={market}><td>{waveMarketLabels[market]}</td><td>{multiple.toFixed(1)}×</td></tr>)}</tbody></table></> },
-        { label: "廢棄物量", navigationLabel: "廢棄物量", visual: <div className="os-data-slide os-wave-global-slide"><h2>2050年全球退役浪潮將加劇</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} assumptions={waveAssumptions}/></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} assumptions={waveAssumptions}/> },
+        { label: "廢棄物量", navigationLabel: "廢棄物量", visual: <div className="os-data-slide os-wave-global-slide"><h2>2050年全球退役浪潮將加劇</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} assumptions={waveAssumptions}/></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} assumptions={waveAssumptions} market={market}/> },
         { label: "每人處理負荷", navigationLabel: "每人處理負荷", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>到 2050 年，人均處理負荷將成指數成長</h2><PressureTrendChart data={pressureData}/></div>, noteTitle: `2050年人均處理壓力將是2025年的${pressureMultipleLow}至${pressureMultipleHigh}倍。`, note: <><p>{waveMarketLabels[pressureSeries[highestPressureIndex].label]}每人的處理負荷從 {pressureFirst.values[highestPressureIndex].toFixed(1)} 公斤增至 {pressureLast.values[highestPressureIndex].toFixed(1)} 公斤，約 {Math.round(pressureMultiples[highestPressureIndex])} 倍，在此模型涵蓋的市場中最高。考量區域差異，除了全球估計，各地也需要在規劃太陽光電設置時，同步建構所需的回收處理能力。此圖使用所有市場通用的估計條件。人口數據：聯合國《2022 年世界人口估計》（中期估計）。</p><table className="os-capacity-multiple-table"><caption>2025-2050 年人均處理負荷增加</caption><thead><tr><th>市場</th><th>成長</th></tr></thead><tbody>{pressureSeries.map((series, index) => <tr key={series.label}><td>{waveMarketLabels[series.label]}</td><td>{pressureMultiples[index].toFixed(1)}×</td></tr>)}</tbody></table></> },
     ];
     const pvFacility = economicsSolutions(economicsData).circulator.facilityFootprint;

@@ -481,11 +481,12 @@ function GlobalCumulativeRetirementChart({ waves, assumptions }: {
     <small>推計条件：パネル寿命 {assumptions.defaultLifetime}年、{waveLossLabels[assumptions.loss]}シナリオ。出典：公開版 Our Solution ワークブックの導入容量履歴と前提条件。</small>
   </figure>;
 }
-function CountryRetirementExplorer({ waves, assumptions }: {
+function CountryRetirementExplorer({ waves, assumptions, market = "JP" }: {
     waves: RetirementMarketWaves;
     assumptions: WaveAssumptions;
+    market?: PublicSolutionMarket;
 }) {
-    const [country, setCountry] = useState<RetirementMarket>("Japan");
+    const [country, setCountry] = useState<RetirementMarket>(market === "JP" ? "Japan" : market === "EU" ? "Europe" : market === "AU" ? "Australia" : "United States");
     const [lifetime, setLifetime] = useState<25 | 18 | 15 | 12>(assumptions.defaultLifetime);
     const series = (market: RetirementMarket, loss: "early" | "regular") => {
         const key = `${loss}_T${lifetime}` as RetirementSeriesKey;
@@ -514,7 +515,7 @@ function CountryRetirementExplorer({ waves, assumptions }: {
     <div className="os-wave-country-controls">
       <div className="os-wave-country-tabs" role="group" aria-label="市場を選択">{retirementMarkets.map((market) => <button type="button" key={market} aria-pressed={country === market} onClick={() => setCountry(market)}>{waveMarketLabels[market]}</button>)}</div>
       <div className="os-wave-lifetime" role="group" aria-label="モデル上のパネル寿命を選択"><span>パネル寿命</span>{([25, 18, 15, 12] as const).map((years) => <button type="button" key={years} aria-pressed={lifetime === years} onClick={() => setLifetime(years)}>{years}年</button>)}</div>
-      <p className="os-wave-lifetime-basis">寿命別のシナリオ分析です。<strong>12年</strong>：<a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124 の8ページ（PDFの19ページ）</a>。一部の商業・大規模発電事業で10～12年ごとにモジュールを交換する事例に基づきます。<strong>15年</strong>：<a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović（2019年）</a>。<strong>18年</strong>：12年と25年の中間ケース。<strong>25年</strong>：IRENA（2026年）の基準寿命。ワイブル分布の形状係数は早期廃棄 {assumptions.shapes.early}、通常廃棄 {assumptions.shapes.regular} です。</p>
+      <p className="os-wave-lifetime-basis">寿命別のシナリオ分析です。<strong>12年</strong>：<a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124 の8ページ（PDFの19ページ）</a>。一部の商業・大規模発電事業で10～12年ごとにモジュールを交換する事例に基づきます。<strong>15年</strong>：<a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović（2019年）</a>。<strong>18年</strong>：PV Circonomy が採用する標準の計画シナリオ（12年と25年の中間ケース）。<strong>25年</strong>：IRENA（2026年）の基準寿命。ワイブル分布の形状係数は早期廃棄 {assumptions.shapes.early}、通常廃棄 {assumptions.shapes.regular} です。</p>
     </div>
     <figure className="os-wave-country-chart">
       <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${waveMarketLabels[country]}、パネル寿命${lifetime}年の場合、2050年の年間廃棄重量は早期廃棄シナリオで${(lastEarly.tonnes / 1e6).toFixed(2)}百万トン、通常廃棄シナリオで${(lastRegular.tonnes / 1e6).toFixed(2)}百万トン。`}>
@@ -757,7 +758,7 @@ function RetirementContext({ lifetime, wave: retirementWave, assumptions = defau
 }) {
     const sources = {
         25: <>IRENA 2026 (25-year lifetime){assumptions.defaultLifetime === 25 ? " (default)" : ""}.</>,
-        18: <>Intermediate modeled case between the 12- and 25-year scenarios{assumptions.defaultLifetime === 18 ? " (default)" : ""}.</>,
+        18: <>PV Circonomy’s planning assumption between the 12- and 25-year scenarios{assumptions.defaultLifetime === 18 ? " (default)" : ""}.</>,
         15: <><a href="https://doi.org/10.1016/j.joule.2019.08.012">Jean, Woodhouse &amp; Bulović, Joule 2019</a> (initial life under 15 years).</>,
         12: <><a href="https://docs.nrel.gov/docs/fy21osti/74124.pdf">NREL/TP-6A20-74124, p. 8 (PDF p. 19)</a> (industry observations of possible 10–12-year commercial and utility-scale repowering).</>,
     };
@@ -1017,7 +1018,7 @@ export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuanti
     const highestPressureIndex = pressureLast.values.indexOf(Math.max(...pressureLast.values));
     const waveSlides: DeckSlide[] = [
         { label: "\u5C0E\u5165\u52D5\u5411", navigationLabel: "\u7D2F\u7A4D\u5C0E\u5165\u5BB9\u91CF", visual: <div className="os-data-slide os-market-slide"><h2>{capacityLast.year} 年までに太陽光の累積導入容量が {capacityFirst.totalLabel} から {capacityLast.totalLabel} へ拡大</h2><StackedTrendChart data={capacityTrend} max={capacityPeak} tone="neutral" label="市場別の太陽光累積導入容量、2025 年から 2050 年まで各年を積み上げ棒で表示"/></div>, noteTitle: "\u4ECA\u65E5\u306E\u5C0E\u5165\u5206\u5E03\u304C\u5C06\u6765\u306E\u5EC3\u68C4\u5730\u57DF\u3092\u898F\u5B9A", note: <><p>各年の棒は、将来のはるかに大きな廃棄市場につながる、現在建設中のインフラを表しています。市場構成は、将来どこで回収・処理能力が必要になるかを示します。</p><table className="os-capacity-multiple-table"><caption>累積導入容量の成長、2025–2050</caption><thead><tr><th>市場</th><th>成長</th></tr></thead><tbody>{capacityMultiples.map(({ market, multiple }) => <tr key={market}><td>{waveMarketLabels[market]}</td><td>{multiple.toFixed(1)}×</td></tr>)}</tbody></table></> },
-        { label: "\u5EC3\u68C4\u91CF", navigationLabel: "\u5EC3\u68C4\u91CF", visual: <div className="os-data-slide os-wave-global-slide"><h2>2050 年に向けて累増する世界の廃棄の波</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} assumptions={waveAssumptions}/></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} assumptions={waveAssumptions}/> },
+        { label: "\u5EC3\u68C4\u91CF", navigationLabel: "\u5EC3\u68C4\u91CF", visual: <div className="os-data-slide os-wave-global-slide"><h2>2050 年に向けて累増する世界の廃棄の波</h2><GlobalCumulativeRetirementChart waves={retirementMarketWaves} assumptions={waveAssumptions}/></div>, noteTitle: "", note: <CountryRetirementExplorer waves={retirementMarketWaves} assumptions={waveAssumptions} market={market}/> },
         { label: "\u4E00\u4EBA\u5F53\u305F\u308A\u51E6\u7406\u8CA0\u8377", navigationLabel: "\u4E00\u4EBA\u5F53\u305F\u308A\u51E6\u7406\u8CA0\u8377", visual: <div className="os-data-slide os-market-slide os-pressure-slide"><h2>2050 年に向けて不均一に上昇する一人当たり処理負荷</h2><PressureTrendChart data={pressureData}/></div>, noteTitle: `2050年の一人当たり処理負荷は2025年の${pressureMultipleLow}～${pressureMultipleHigh}倍に。`, note: <><p>{waveMarketLabels[pressureSeries[highestPressureIndex].label]}の一人当たり処理負荷は {pressureFirst.values[highestPressureIndex].toFixed(1)} kg から {pressureLast.values[highestPressureIndex].toFixed(1)} kg へ約 {Math.round(pressureMultiples[highestPressureIndex])} 倍に増え、モデル対象市場で最も高くなります。地域差を踏まえると、世界全体の推計に加え、各地域で必要な場所に設置できる処理能力を計画することが重要です。このグラフでは全市場に共通の推計条件を用います。人口データ：国連「世界人口推計2022年版」（中位推計）。</p><table className="os-capacity-multiple-table"><caption>一人当たり処理負荷の増加、2025–2050</caption><thead><tr><th>市場</th><th>成長</th></tr></thead><tbody>{pressureSeries.map((series, index) => <tr key={series.label}><td>{waveMarketLabels[series.label]}</td><td>{pressureMultiples[index].toFixed(1)}×</td></tr>)}</tbody></table></> },
     ];
     const pvFacility = economicsSolutions(economicsData).circulator.facilityFootprint;

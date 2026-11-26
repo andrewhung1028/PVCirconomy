@@ -92,8 +92,10 @@ export function validateSharedParameters(data: unknown) {
       if (Object.keys(shared.commonAssumptions).length !== Object.keys(commonAssumptionSchema).length) return false;
       for (const [section, definitions] of Object.entries(commonAssumptionSchema)) {
         const rows = shared.commonAssumptions[section];
-        if (!rows || Object.keys(rows).length !== Object.keys(definitions).length) return false;
+        const legacyLifetime = section === "10" && rows?.["Average lifetime T"] === undefined;
+        if (!rows || Object.keys(rows).length !== Object.keys(definitions).length - Number(legacyLifetime)) return false;
         for (const [key, definition] of Object.entries(definitions)) {
+          if (legacyLifetime && key === "Average lifetime T") continue;
           const row = rows[key];
           if (!Array.isArray(row) || row.length !== definition.length ||
             row.some((value, index) => typeof definition[index] === "string" && value !== usSeed.assumptions[section][key][index])) return false;
@@ -176,6 +178,8 @@ export async function saveSharedParameters(data: SharedParameters, expectedVersi
         SELECT 1 FROM pv_our_solution_shared_active a JOIN pv_our_solution_shared_versions v ON v.id=a.version_id
         WHERE a.singleton AND a.version_id=${expectedVersion}::uuid
           AND (${Boolean(data.commonAssumptions)} OR NOT (v.data ? 'commonAssumptions'))
+          AND (${Boolean(data.commonAssumptions?.["10"]?.["Average lifetime T"])}
+            OR NOT COALESCE(v.data->'commonAssumptions'->'10' ? 'Average lifetime T', false))
       )
       RETURNING id,data,created_at
     ), published AS (

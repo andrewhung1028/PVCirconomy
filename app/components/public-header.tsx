@@ -1,6 +1,7 @@
 "use client";
 
 import { businessCaseHref, marketNames, localizedPublicPath, ourSolutionLocales, publicSolutionMarkets, solutionHref, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
+import { rememberPublicPreference } from "../../lib/our-solution/public-preference";
 
 const languageNames = { "en-US": "English", "ja-JP": "日本語", "zh-TW": "繁體中文" };
 
@@ -277,13 +278,13 @@ export function PublicHeader({
           <h2>{label("Language", "言語", "語言")}</h2>
           {ourSolutionLocales.map(language => <Link key={language}
             href={selectionHref(language, currentMarket)} hrefLang={language}
-            aria-current={language === locale ? "true" : undefined} onClick={closeAll}>{languageNames[language]}</Link>)}
+            aria-current={language === locale ? "true" : undefined} onClick={() => { rememberPublicPreference(language, currentMarket); closeAll(); }}>{languageNames[language]}</Link>)}
         </nav>
         <nav aria-label={label("Market", "市場", "市場")}>
           <h2>{label("Market", "市場", "市場")}</h2>
           {publicSolutionMarkets.map(market => <Link key={market}
             href={selectionHref(locale, market)}
-            aria-current={market === currentMarket ? "true" : undefined} onClick={closeAll}>{marketNames[locale][market]}</Link>)}
+            aria-current={market === currentMarket ? "true" : undefined} onClick={() => { rememberPublicPreference(locale, market); closeAll(); }}>{marketNames[locale][market]}</Link>)}
         </nav>
       </div>}
 

@@ -154,9 +154,11 @@ export async function parseSharedParametersWorkbook(buffer: Buffer, base: Shared
       throw Error('共用 Assumptions 格式不符，請下載現行版本。');
     commonAssumptions = structuredClone(commonAssumptions);
     for (const [section, definitions] of Object.entries(commonAssumptionSchema)) {
-      if (groups[section]?.size !== Object.keys(definitions).length + 2)
+      const legacyLifetime = section === '10' && !groups[section]?.has('Average lifetime T');
+      if (groups[section]?.size !== Object.keys(definitions).length + 2 - Number(legacyLifetime))
         throw Error(`共用 Assumptions 區段 ${section} 欄位不符。`);
       for (const [key, expected] of Object.entries(definitions)) {
+        if (legacyLifetime && key === 'Average lifetime T') continue;
         const row = get(groups[section], key, 'Assumptions');
         commonAssumptions[section][key] = expected.map((definition, index) => {
           const cell = row.getCell(index + 2);
