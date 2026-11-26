@@ -10,7 +10,7 @@ export const sharedAssumptionKeys = {
 const localRows: Record<string, readonly string[]> = {
   "4": ["Consumables", "Capex per line"],
   "9": ["Nitric acid price", "Sulfuric acid price", "Hydrogen peroxide price", ...sharedAssumptionKeys["9"]],
-  "10": ["Loss scenario", "Average lifetime T"],
+  "10": ["Loss scenario"],
 };
 const baseAssumptions: Parameters["assumptions"] = schema;
 export const commonAssumptionSchema: Parameters["assumptions"] = Object.fromEntries(

@@ -54,7 +54,7 @@ export const seededJapanOurSolutionData: OurSolutionEconomics = (() => {
   }
 
   data.assumptions[10]["Panel rating"] = [300, "W"];
-  data.assumptions[10]["Average lifetime T"] = [25, "years"];
+  data.assumptions[10]["Average lifetime T"] = [18, "years"];
   data.assumptions[10]["Loss scenario"] = ["Regular-loss"];
   data.assumptions[11]["Recovery fee"] = [100, "JPY/kg"];
   data.assumptions[11]["Processing fee steps"] = [0, 26.25, 50, 75, 100, 125, 150];
