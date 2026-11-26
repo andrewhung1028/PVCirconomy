@@ -1,4 +1,11 @@
 {
+  "Business model": "商業模式",
+  "Standard sales": "標準採購",
+  "Trial-based PO (TBP)": "試用採購（TBP）",
+  "Material offtake": "回收物料去化",
+  "Purchase a PV Circulator line configured for your operation. Confirm equipment scope and commercial terms during inquiry.": "依營運需求選擇並購買 PV Circulator 產線。設備範圍及商務條件於詢價時確認。",
+  "Apply to trial the equipment against agreed acceptance criteria under a trial-based purchase order. Trial scope and eligibility are confirmed during project review.": "申請以試用採購單，依雙方約定的驗收標準評估設備。試用範圍與申請資格於專案審查時確認。",
+  "Request offtake for materials produced by your PV Circulator alongside your equipment inquiry. Availability for your site is confirmed during project review.": "詢價時可一併申請 PV Circulator 產出物料的去化服務。場址是否適用將於專案審查時確認。",
   "Performance": "效能",
   "Process": "處理流程",
   "Functions": "功能",

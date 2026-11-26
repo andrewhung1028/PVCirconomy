@@ -2,7 +2,7 @@ import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentOfftake
 import { database } from "../db/client";
 
 const fields = new Set([
-  "configuration", "includePlus", "assessmentDate", "stage", "lineQuantity", "startDate", "configurationRequirements",
+  "configuration", "includePlus", "purchaseOption", "assessmentDate", "stage", "lineQuantity", "startDate", "configurationRequirements",
   "targetCapacity", "dailyHours", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "offtakeStreams", "glassOfftakePrice",
   "installationCountry", "installationSite", "installationPostalCode", "installationEnvironment", "floorSpace", "floorSpaceUnit",
   "powerSupply", "compressedAir", "siteNetwork", "requirements", "company", "companyAddress", "jobTitle", "name", "email", "phone",

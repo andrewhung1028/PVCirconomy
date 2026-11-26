@@ -1,4 +1,11 @@
 {
+  "Business model": "ビジネスモデル",
+  "Standard sales": "通常購入",
+  "Trial-based PO (TBP)": "試用評価付き発注（TBP）",
+  "Material offtake": "回収材の引き取り",
+  "Purchase a PV Circulator line configured for your operation. Confirm equipment scope and commercial terms during inquiry.": "運用に合わせた構成の PV Circulator を購入する方式です。設備の範囲と取引条件はお問い合わせ時に確認します。",
+  "Apply to trial the equipment against agreed acceptance criteria under a trial-based purchase order. Trial scope and eligibility are confirmed during project review.": "試用評価付きの発注で、合意した受入基準に沿って設備を評価する方式です。試用範囲と適用条件は案件審査時に確認します。",
+  "Request offtake for materials produced by your PV Circulator alongside your equipment inquiry. Availability for your site is confirmed during project review.": "設備のお問い合わせと併せて、PV Circulator で処理して得られた材料の引き取りを申請できます。設置場所での引き取りの可否は案件審査時に確認します。",
   "Performance": "処理性能",
   "Process": "処理工程",
   "Functions": "機能",

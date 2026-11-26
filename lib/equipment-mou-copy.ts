@@ -50,6 +50,7 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
   const rows: [string, string][] = [
     [t("Equipment configuration"), configuration],
     [t("PLUS module"), t(input.configuration === "plus" ? "Add PLUS" : "Without PLUS")],
+    ...(input.purchaseOption ? [[t("Purchase option"), t(input.purchaseOption)] as [string, string]] : []),
     [t("Target assessment completion"), input.targetAssessment || "—"],
     [t("Project stage"), t(input.projectStage ?? "Not yet determined")],
     [t("Number of equipment lines"), number.format(input.lines)],

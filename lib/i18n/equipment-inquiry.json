@@ -1,4 +1,7 @@
 {
+  "Purchase option": ["採購方式", "購入方法"],
+  "Standard sales": ["標準採購", "通常購入"],
+  "Trial-based PO (TBP)": ["試用採購（TBP）", "試用評価付き発注（TBP）"],
   "Remember contact details on this browser": ["在此瀏覽器記住聯絡資料", "このブラウザーに連絡先を保存する"],
   "City": ["城市", "市区町村"],
   "Postal code": ["郵遞區號", "郵便番号"],
