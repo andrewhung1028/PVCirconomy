@@ -9,24 +9,20 @@ const trialTerms = [
     description: "TBP is open to recyclers with a valid solar PV panel recycling permit for projects in the United States, Australia, the European Union, the United Kingdom and Canada. Projects in Japan use standard purchase.",
   },
   {
-    title: "Site and power",
-    description: "Identify the trial site and check its power supply against the equipment specifications. If power availability is still uncertain, discuss it with us during project review.",
-  },
-  {
-    title: "Trial period",
-    description: "The trial lasts up to 180 days. The contract sets the exact number of trial days. Use your own panels to measure throughput, weigh the recovered materials and compare their offtake value with your operating costs.",
+    title: "Trial period and acceptance criteria",
+    description: "The trial lasts up to 180 days. Both parties agree in the contract on the trial duration and the acceptance criteria for equipment throughput, uptime, material recovery rate and recovered material quality.",
   },
   {
     title: "Quotation and contract",
-    description: "Submit an inquiry and confirm the MOU. The formal quotation specifies the trial fee, any applicable deposit, the proposed trial duration and available slots. Both parties confirm the quotation in writing before proceeding to contract.",
+    description: "After you submit an inquiry and confirm the MOU, we confirm TBP availability and issue a formal TBP quotation specifying the deposit, fees and trial duration. Both parties confirm the quotation in writing before signing the contract.",
   },
   {
     title: "Delivery and return freight",
-    description: "Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.",
+    description: "The equipment delivery lead time is 180 days, starting once the deposit is paid and the contract is in effect. Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.",
   },
   {
     title: "Recovered materials during the trial",
-    description: "You can request offtake for materials produced by your PV Circulator during the trial. We confirm availability for your site during project review. The offtake agreement sets the material specifications, minimum quantities and pricing. Glass offtake is available only in the United States.",
+    description: "During the trial, you must cooperate with offtake arrangements for materials produced by your PV Circulator. During project review, we confirm the material specifications, minimum delivery quantities and prices set out in the offtake agreement. Glass offtake is available only in the United States.",
   },
 ];
 
