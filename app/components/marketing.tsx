@@ -6,7 +6,7 @@ import './marketing.css';
 import { PublicHeader } from './public-header';
 import { useSiteSettings } from './site-utilities';
 
-import { equipmentInquiryNotesLimit, equipmentOfftakeStreams, glassOfftakePrices, otherSitePowerSupply, siteNetworkOptions } from "../../lib/equipment-mou";
+import { equipmentInquiryNotesLimit, equipmentOfftakeStreams, equipmentOfftakeTerms, otherSitePowerSupply } from "../../lib/equipment-mou";
 import { defaultSitePowerOptions, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
 import inquiryCopy from "../../lib/i18n/equipment-inquiry.json";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
@@ -137,7 +137,6 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
   const fromSpecification = specificationPerformance !== undefined;
   const [capacityOverride, setCapacityOverride] = useState<string>();
   const [hoursOverride, setHoursOverride] = useState<string>();
-  const [glassOfftake, setGlassOfftake] = useState(false);
   const [installationMarket, setInstallationMarket] = useState<PublicSolutionMarket | "">(market ?? "");
   const [floorAreaUnitOverride, setFloorAreaUnitOverride] = useState<FloorAreaUnit>();
   const marketFloorAreaUnit = market === "US" || market === "UK" ? "ft2" : "m2";
@@ -194,7 +193,6 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
             onChange={event => {
               const selected = event.currentTarget.value as PublicSolutionMarket;
               setInstallationMarket(selected);
-              if (selected !== "US") setGlassOfftake(false);
               onInstallationMarketChange?.(selected);
             }}>
             <option value="" disabled>{t("Select a country or region")}</option>
@@ -230,15 +228,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           </div>
         </div>
         {!fromSpecification && <label>{t("Equipment interface language")}<input name="interfaceLanguage" /></label>}
-        {fromSpecification ? <>
-          {powerSupplyField}
-          <label>{t("Site network connection")}
-            <select name="siteNetwork" defaultValue="">
-              <option value="" disabled hidden />
-              {siteNetworkOptions.map(option => <option key={option} value={option}>{t(option)}</option>)}
-            </select>
-          </label>
-        </> : <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
+        {fromSpecification ? powerSupplyField : <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
       </div>
       {!fromSpecification && <>
         <label>{t("Project documents or samples available")}
@@ -254,22 +244,18 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
     {fromSpecification && <fieldset className="pc-booking-fieldset" aria-describedby="equipment-polymer-offtake-note">
       <legend>{t("Recycled material offtake")}</legend>
       <div className="pc-offtake-options">
-        {installationMarket === "US" && <label className="pc-material-choice">
-          <input name="offtakeStreams" type="checkbox" value="Glass" checked={glassOfftake}
-            onChange={event => setGlassOfftake(event.currentTarget.checked)} />
-          {t("Glass")}
-        </label>}
-        {equipmentOfftakeStreams.filter(stream => stream !== "Glass").map(stream => (
-          <label key={stream} className="pc-material-choice">
-            <input name="offtakeStreams" type="checkbox" value={stream} />{t(stream)}
+        <div className="pc-offtake-head" aria-hidden="true">
+          <span>{t("Apply")}</span>
+          <span>{t("Material")}</span>
+        </div>
+        {equipmentOfftakeStreams.filter(stream => stream !== "Glass" || installationMarket === "US").map(stream => (
+          <label key={stream} className="pc-material-choice pc-offtake-row">
+            <input name="offtakeStreams" type="checkbox" value={stream} />
+            <span>{t(stream)}</span>
+            <span className="pc-offtake-term">{t(equipmentOfftakeTerms[stream])}</span>
           </label>
         ))}
       </div>
-      {installationMarket === "US" && glassOfftake && <label>{t("Glass offtake pricing")}
-        <select name="glassOfftakePrice" defaultValue={glassOfftakePrices[0]}>
-          {glassOfftakePrices.map(price => <option key={price} value={price}>{t(price)}</option>)}
-        </select>
-      </label>}
       <p className="pv-note" id="equipment-polymer-offtake-note">{t("We will confirm offtake availability for your site during the project review.")}</p>
     </fieldset>}
     <fieldset className="pc-booking-fieldset">

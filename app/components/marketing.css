@@ -162,7 +162,16 @@ html.pv-public-section-scroll:has(.pc-shop, .pc-shop-catalog) { scroll-snap-type
 .pc-capacity-buttons button + button { border-block-start: 0; }
 .pc-capacity-buttons button:hover { background: var(--pv-gray); }
 .pc-capacity-buttons button:focus-visible { z-index: 1; outline: 2px solid var(--pv-yellow); }
-.pc-offtake-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+.pc-offtake-head, .pc-form .pc-offtake-row {
+  display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: center; gap: 10px;
+}
+.pc-offtake-head {
+  padding-bottom: 8px; border-bottom: 1px solid var(--pv-line);
+  color: var(--pc-text-body); font-size: var(--pv-type-caption);
+}
+.pc-form .pc-offtake-row + .pc-offtake-row { border-top: 1px solid var(--pv-line); }
+.pc-offtake-head > :first-child, .pc-offtake-row > input { justify-self: center; }
+.pc-offtake-term { text-align: end; white-space: nowrap; }
 
 .pc-material-requirements { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
 .pc-form .pc-material-requirements legend { font-size: var(--pv-type-interface); padding-bottom: 12px; }

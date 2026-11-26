@@ -5,9 +5,9 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
-import { equipmentMouPriceRows, inquiryText } from "../../lib/equipment-mou-copy";
+import { equipmentMouPriceRows, equipmentOfftakeLabel, inquiryText } from "../../lib/equipment-mou-copy";
 import { defaultMouSalesAgents } from "../../lib/mou-policy";
-import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, glassOfftakePrices, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
+import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 
 const identityFields = ["email", "company", "name"] as const;
@@ -110,13 +110,11 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
     const floorArea = numeric("floorSpace");
     const selectedStreams = data.getAll("offtakeStreams");
     const offtakeStreams = equipmentOfftakeStreams.filter(stream => selectedStreams.includes(stream));
-    const glassOfftakePrice = glassOfftakePrices.find(price => price === value("glassOfftakePrice"));
     const input: EquipmentMouInput = {
       configuration: includePlus ? "plus" : configuration, locale, pageMarket: market, recyclingFee,
       installationMarket: value("installationCountry") as PublicSolutionMarket,
       baseConfiguration: includePlus ? configuration : undefined,
       offtakeStreams,
-      glassOfftakePrice,
       installationSite: value("installationSite") || undefined,
       installationPostalCode: value("installationPostalCode") || undefined,
       sitePowerSupply: value("powerSupply") === "Not yet determined" ? undefined : value("powerSupply") || undefined,
@@ -128,7 +126,6 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       panelCondition: (value("panelCondition") || undefined) as EquipmentMouInput["panelCondition"],
       installationEnvironment: (value("installationEnvironment") || undefined) as EquipmentMouInput["installationEnvironment"],
       floorArea: floorArea === null ? undefined : { value: floorArea, unit: value("floorSpaceUnit") === "ft2" ? "ft2" : "m2" },
-      siteNetwork: (value("siteNetwork") || undefined) as EquipmentMouInput["siteNetwork"],
       lines: Number(value("lineQuantity")), panelsPerMonth: numeric("targetCapacity"), dailyHours: numeric("dailyHours"),
     };
     const contact = { name: value("name"), company: value("company"), jobTitle: value("jobTitle"), email: value("email"), address: value("companyAddress") || undefined, phone: value("phone") || undefined };
@@ -146,7 +143,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       const value = String(raw).trim();
       if (!value || value === "Not yet determined" || name === "floorSpaceUnit") continue;
       if (name === "offtakeStreams") {
-        if (value === offtakeStreams[0]) summary.push([t("Recycled material offtake"), offtakeStreams.map(t).join(", ")]);
+        if (value === offtakeStreams[0]) summary.push([t("Recycled material offtake"), offtakeStreams.map(stream => equipmentOfftakeLabel(stream, t)).join(", ")]);
         continue;
       }
       if (name === "configuration") summary.push([t("Equipment configuration"), configurations.find(option => option.value === value)?.label ?? value]);

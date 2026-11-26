@@ -1,6 +1,6 @@
 import { defaultMouPolicy } from "./mou-policy";
 import { equipmentMouArticles, mouWording } from "./equipment-mou-articles";
-import { equipmentMouHasSalesAgent, type EquipmentMou, type EquipmentMouContact, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
+import { equipmentMouHasSalesAgent, equipmentOfftakeStreams, equipmentOfftakeTerms, type EquipmentMou, type EquipmentMouContact, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
 import { isSitePowerOption } from "./equipment-quantitative";
 import { marketNames, type OurSolutionLocale } from "./our-solution/market";
 import translations from "./i18n/equipment-inquiry.json";
@@ -8,6 +8,13 @@ import translations from "./i18n/equipment-inquiry.json";
 export function equipmentInquiryTranslate(locale: OurSolutionLocale) {
   const entries: Record<string, string[]> = translations;
   return (text: string) => (locale === "zh-TW" ? entries[text]?.[0] : locale === "ja-JP" ? entries[text]?.[1] : undefined) ?? text;
+}
+
+export function equipmentOfftakeLabel(value: string, t: (text: string) => string, legacyGlassPrice = false) {
+  const stream = equipmentOfftakeStreams.find(option => option === value);
+  return !stream || (stream === "Glass" && legacyGlassPrice)
+    ? t(value)
+    : `${t(stream)} · ${t(equipmentOfftakeTerms[stream])}`;
 }
 
 function priceFormatter(locale: OurSolutionLocale, currency: string) {
@@ -64,9 +71,9 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
     ...(input.interfaceLanguage ? [[t("Equipment interface language"), option(input.interfaceLanguage)] as [string, string]] : []),
     [t("Site power supply"), sitePower],
     ...(input.compressedAir ? [[t("Compressed air supply"), option(input.compressedAir)] as [string, string]] : []),
-    [t("Site network connection"), option(input.siteNetwork)],
+    ...(input.siteNetwork ? [[t("Site network connection"), t(input.siteNetwork)] as [string, string]] : []),
     ...(input.installationNotes ? [[t("Installation, commissioning, or other project needs"), input.installationNotes] as [string, string]] : []),
-    ...(input.offtakeStreams ? [[t("Recycled material offtake"), input.offtakeStreams.map(t).join(", ") || "—"] as [string, string]] : []),
+    ...(input.offtakeStreams ? [[t("Recycled material offtake"), input.offtakeStreams.map(stream => equipmentOfftakeLabel(stream, t, Boolean(input.glassOfftakePrice))).join(", ") || "—"] as [string, string]] : []),
     ...(input.glassOfftakePrice ? [[t("Glass offtake pricing"), t(input.glassOfftakePrice)] as [string, string]] : []),
     [t("Customization requirements"), input.customization || "—"],
   ];
