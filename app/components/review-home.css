@@ -1295,6 +1295,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-business-purchase { background: var(--pv-gray); }
 .pvc2-business-model { border-block-start: 1px solid var(--pv-line); }
 .pvc2-business-purchase > div { margin-block: auto; }
+.pvc2-business-purchase :is(h2, h3, p) { max-width: none; }
 .pvc2-purchase-option, .pvc2-offtake-list > div {
   border-block-start: 1px solid var(--pv-line);
   padding-block: 18px;
