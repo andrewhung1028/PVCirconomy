@@ -465,7 +465,13 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
   return <div className={`pv-review pvc2-page${light ? " pv-light-nav" : ""}`} data-active-section={active}>
     <a className="pv-skip" href="#pvcirculator">{t("Skip to PV Circulator")}</a>
     <PublicHeader locale={locale} languagePath="/pv-circulator/" languageQuery={`?market=${market}`} solutionMarket={market} assistantInlineLinks assistantTechnologyAnchor="#process" />
-    <nav className="pv-dots" aria-label={t("PV Circulator sections")}>{sections.map(([id, label]) => <a key={id} href={`#${id}`} aria-current={active === id ? "step" : undefined}><i /><span>{t(label)}</span></a>)}</nav>
+    <nav className="pv-dots" aria-label={t("PV Circulator sections")}>
+      {sections.map(([id, label]) => (
+        <a key={id} href={`#${id}`} aria-label={t(label)} aria-current={active === id ? "step" : undefined}>
+          <i aria-hidden="true" /><span>{t(label)}</span>
+        </a>
+      ))}
+    </nav>
     <main>
       <section id="pvcirculator" className="pv-screen pv-hero pvc2-hero" aria-labelledby="pvc-title">
         <LoopVideo src="/videos/pvc-operation.mp4" className="pvc2-cover-video" />
