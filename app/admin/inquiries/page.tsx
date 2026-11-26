@@ -23,13 +23,14 @@ const fieldLabels: ReadonlyMap<string, string> = new Map(Object.entries({
   targetCapacity: "目標處理量（片／月）", dailyHours: "每日運轉時數", panelTechnology: "模組技術", panelCondition: "模組狀態",
   materials: "回收物料", "materialPurity[Glass]": "玻璃最低純度（%）", "materialPurity[Silicon]": "矽最低純度（%）",
   "materialPurity[Silver]": "銀最低純度（%）", polymerOfftake: "EVA／背板去化", installationCountry: "安裝國家或地區",
+  offtakeStreams: "回收物料去化", glassOfftakePrice: "玻璃去化價格",
   installationSite: "安裝城市或場址", installationEnvironment: "安裝環境", floorSpace: "可用樓地板面積",
   floorSpaceUnit: "面積單位", powerSupply: "場地供電", compressedAir: "壓縮空氣供應", siteNetwork: "場地網路連線",
   requirements: "安裝、試運轉或其他需求", company: "公司", companyAddress: "公司地址", jobTitle: "職稱",
   name: "姓名", email: "公司電子郵件", phone: "電話",
 }));
 const translatedFields = new Set([
-  "includePlus", "stage", "panelTechnology", "panelCondition", "materials", "polymerOfftake",
+  "includePlus", "stage", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "offtakeStreams", "glassOfftakePrice",
   "installationEnvironment", "powerSupply", "compressedAir", "siteNetwork",
 ]);
 
@@ -76,7 +77,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ b
       <AdminNavigation active="inquiries" />
       <div className="pa-heading">
         <h1>詢價管理</h1>
-        <p>查看客戶點擊「查看 MSRP」時提交的設備詢價。時間以台北時間顯示。</p>
+        <p>查看客戶從設備詢價表單提交的資料。時間以台北時間顯示。</p>
       </div>
       {page === null ? <p role="alert">無法載入詢價紀錄，請重新整理。</p> : <>
         {page.records.length === 0 ? <p>{page.showLatest ? "沒有更早的詢價紀錄。" : "目前沒有詢價紀錄。"}</p> :

@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasSalesAgent, equipmentMouSigningLocales, equipmentProjectStages, equipmentVariants, otherSitePowerSupply, polymerOfftakeOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
+import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasSalesAgent, equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentVariants, glassOfftakePrices, otherSitePowerSupply, polymerOfftakeOptions, siteNetworkOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
 import { isSitePowerOption } from "../../../lib/equipment-quantitative";
 import { ourSolutionLocales, ourSolutionParameterMarkets, publicSolutionMarkets } from "../../../lib/our-solution/market";
 import { model } from "../../../lib/our-solution/model";
@@ -20,6 +20,15 @@ function within(value: unknown, min: number, max: number): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 }
 
+function validOfftake({ offtakeStreams, glassOfftakePrice, installationMarket }: EquipmentMouInput) {
+  if (offtakeStreams === undefined) return glassOfftakePrice === undefined;
+  if (!Array.isArray(offtakeStreams) || offtakeStreams.length > equipmentOfftakeStreams.length
+    || !offtakeStreams.every(stream => equipmentOfftakeStreams.includes(stream))
+    || new Set(offtakeStreams).size !== offtakeStreams.length) return false;
+  if (!offtakeStreams.includes("Glass")) return glassOfftakePrice === undefined;
+  return installationMarket === "US" && glassOfftakePrice !== undefined && glassOfftakePrices.includes(glassOfftakePrice);
+}
+
 function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput {
   return Boolean(value && equipmentVariants.includes(value.configuration)
     && (value.baseConfiguration === undefined || (equipmentVariants.slice(0, 3).includes(value.baseConfiguration)))
@@ -36,12 +45,13 @@ function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput
     && (value.panelTechnology === undefined || value.panelTechnology === "Crystalline silicon")
     && (value.panelCondition === undefined || ["Not yet determined", "Mostly intact", "Mostly damaged", "Mixed"].includes(value.panelCondition))
     && validMaterialRequirements(value.materialRequirements)
+    && validOfftake(value)
     && (value.installationEnvironment === undefined || ["Not yet determined", "Indoor", "Outdoor"].includes(value.installationEnvironment))
     && (value.floorArea === undefined || (value.floorArea && within(value.floorArea.value, 0, Number.MAX_SAFE_INTEGER)
       && ["m2", "ft2"].includes(value.floorArea.unit)))
     && (value.interfaceLanguage === undefined || ["English", "Japanese"].includes(value.interfaceLanguage))
     && (value.compressedAir === undefined || ["Not yet determined", "Available", "Not available"].includes(value.compressedAir))
-    && (value.siteNetwork === undefined || ["Not yet determined", "Wired Ethernet", "Wi-Fi", "Wired Ethernet and Wi-Fi", "Not available"].includes(value.siteNetwork))
+    && (value.siteNetwork === undefined || [...siteNetworkOptions, "Not yet determined", "Wired Ethernet and Wi-Fi"].includes(value.siteNetwork))
     && (value.installationNotes === undefined || validNotes(value.installationNotes))
     && Number.isSafeInteger(value.lines) && within(value.lines, 1, 10_000)
     && (value.panelsPerMonth === null || within(value.panelsPerMonth, 0, 1e9))

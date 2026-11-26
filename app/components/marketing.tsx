@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import './marketing.css';
 import { PublicHeader } from './public-header';
 import { useSiteSettings } from './site-utilities';
 
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, otherSitePowerSupply, polymerOfftakeOptions } from "../../lib/equipment-mou";
+import { equipmentInquiryNotesLimit, equipmentOfftakeStreams, glassOfftakePrices, otherSitePowerSupply, siteNetworkOptions } from "../../lib/equipment-mou";
 import { defaultSitePowerOptions, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
 import inquiryCopy from "../../lib/i18n/equipment-inquiry.json";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
@@ -87,6 +87,44 @@ type FloorAreaUnit = keyof typeof floorAreaSettings;
 
 const catalogInquiryMaterials = products.map(({ name }) => name);
 
+function CapacityInput({ name, label, value, onChange, t }: {
+  name: "targetCapacity" | "dailyHours";
+  label: string;
+  value: string | number;
+  onChange: (value: string) => void;
+  t: ReturnType<typeof inquiryTranslate>;
+}) {
+  const id = useId();
+  const isCapacity = name === "targetCapacity";
+  const min = isCapacity ? 0 : 0.25;
+  const max = isCapacity ? 1e9 : 24;
+
+  function adjust(direction: -1 | 1) {
+    const current = value === "" ? 0 : Number(value);
+    const next = isCapacity
+      ? ((direction === 1 ? Math.floor(current / 500) : Math.ceil(current / 500)) + direction) * 500
+      : current + direction;
+    onChange(String(Math.max(min, Math.min(max, next))));
+  }
+
+  return <div className="pc-floor-area">
+    <label htmlFor={id}>{label}</label>
+    <div className="pc-capacity-controls">
+      <input id={id} name={name} type="number" min={min} max={max} step={isCapacity ? 1 : "any"}
+        value={value} onChange={event => onChange(event.currentTarget.value)}
+        onKeyDown={event => {
+          if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+          event.preventDefault();
+          adjust(event.key === "ArrowUp" ? 1 : -1);
+        }} />
+      <div className="pc-capacity-buttons">
+        <button type="button" aria-label={t(isCapacity ? "Increase target capacity" : "Increase operating hours")} onClick={() => adjust(1)}>+</button>
+        <button type="button" aria-label={t(isCapacity ? "Decrease target capacity" : "Decrease operating hours")} onClick={() => adjust(-1)}>−</button>
+      </div>
+    </div>
+  </div>;
+}
+
 export function EquipmentFields({ locale = "en-US", market, specificationPerformance, defaults, sitePowerOptions = defaultSitePowerOptions, onInstallationMarketChange }: {
   locale?: OurSolutionLocale;
   market?: PublicSolutionMarket;
@@ -99,6 +137,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
   const fromSpecification = specificationPerformance !== undefined;
   const [capacityOverride, setCapacityOverride] = useState<string>();
   const [hoursOverride, setHoursOverride] = useState<string>();
+  const [glassOfftake, setGlassOfftake] = useState(false);
   const [installationMarket, setInstallationMarket] = useState<PublicSolutionMarket | "">(market ?? "");
   const [floorAreaUnitOverride, setFloorAreaUnitOverride] = useState<FloorAreaUnit>();
   const marketFloorAreaUnit = market === "US" || market === "UK" ? "ft2" : "m2";
@@ -119,16 +158,15 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
     <fieldset className="pc-booking-fieldset">
       <legend>{t(fromSpecification ? "Processing capacity" : "Feedstock and capacity")}</legend>
       <div className="pc-form-pair">
-        <label>{t("Target capacity (panels/month)")}
-          <input name="targetCapacity" type="number" min={fromSpecification ? 0 : 500} step={fromSpecification ? 1 : 500}
-            value={capacityOverride ?? (fromSpecification ? specificationPerformance?.monthlyAverage ?? "" : "")}
-            onChange={event => setCapacityOverride(event.currentTarget.value)} />
-        </label>
-        <label>{t("Operating hours per day")}
-          <input name="dailyHours" type="number" min={fromSpecification ? 0.25 : 1} max="24" step={fromSpecification ? 0.25 : 1}
-            value={hoursOverride ?? (fromSpecification ? specificationPerformance?.dailyHours ?? "" : "")}
-            onChange={event => setHoursOverride(event.currentTarget.value)} />
-        </label>
+        {fromSpecification ? <>
+          <CapacityInput name="targetCapacity" label={t("Target capacity (panels/month)")}
+            value={capacityOverride ?? specificationPerformance?.monthlyAverage ?? ""} onChange={setCapacityOverride} t={t} />
+          <CapacityInput name="dailyHours" label={t("Operating hours per day")}
+            value={hoursOverride ?? specificationPerformance?.dailyHours ?? ""} onChange={setHoursOverride} t={t} />
+        </> : <>
+          <label>{t("Target capacity (panels/month)")}<input name="targetCapacity" type="number" min="500" step="500" /></label>
+          <label>{t("Operating hours per day")}<input name="dailyHours" type="number" min="1" max="24" step="1" /></label>
+        </>}
         <label>{t("Panel technology")}
           <select name="panelTechnology" defaultValue="Crystalline silicon">
             <option value={unspecified} disabled={fromSpecification}>{t(unspecified)}</option>
@@ -148,16 +186,6 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
       </div>
       {!fromSpecification && <MaterialRecoveryRequirements t={t} materials={catalogInquiryMaterials} />}
     </fieldset>
-    {fromSpecification && <fieldset className="pc-booking-fieldset">
-      <legend>{t("Recovered materials and offtake")}</legend>
-      <MaterialRecoveryRequirements t={t} materials={equipmentInquiryMaterials} />
-      <label>{t("EVA and backsheet offtake")}
-        <select name="polymerOfftake" defaultValue={polymerOfftakeOptions[0]} aria-describedby="equipment-polymer-offtake-note">
-          {polymerOfftakeOptions.map(option => <option key={option} value={option}>{t(option)}</option>)}
-        </select>
-        <span id="equipment-polymer-offtake-note">{t("We will confirm offtake availability for your site during the project review.")}</span>
-      </label>
-    </fieldset>}
     <fieldset className="pc-booking-fieldset">
       <legend>{t("Installation and operation")}</legend>
       <div className="pc-form-pair">
@@ -166,6 +194,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
             onChange={event => {
               const selected = event.currentTarget.value as PublicSolutionMarket;
               setInstallationMarket(selected);
+              if (selected !== "US") setGlassOfftake(false);
               onInstallationMarketChange?.(selected);
             }}>
             <option value="" disabled>{t("Select a country or region")}</option>
@@ -197,7 +226,15 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           </div>
         </div>
         {!fromSpecification && <label>{t("Equipment interface language")}<input name="interfaceLanguage" /></label>}
-        {fromSpecification ? powerSupplyField : <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
+        {fromSpecification ? <>
+          {powerSupplyField}
+          <label>{t("Site network connection")}
+            <select name="siteNetwork" defaultValue="">
+              <option value="" disabled hidden />
+              {siteNetworkOptions.map(option => <option key={option} value={option}>{t(option)}</option>)}
+            </select>
+          </label>
+        </> : <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
       </div>
       {!fromSpecification && <>
         <label>{t("Project documents or samples available")}
@@ -208,22 +245,29 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
         </label>
         {powerSupplyField}
       </>}
-      {fromSpecification && <div className="pc-form-pair">
-        <label>{t("Compressed air supply")}
-          <select name="compressedAir" defaultValue={unspecified}>
-            {[unspecified, "Available", "Not available"].map(option =>
-              <option key={option} value={option}>{t(option)}</option>)}
-          </select>
-        </label>
-        <label>{t("Site network connection")}
-          <select name="siteNetwork" defaultValue={unspecified}>
-            {[unspecified, "Wired Ethernet", "Wi-Fi", "Wired Ethernet and Wi-Fi", "Not available"].map(option =>
-              <option key={option} value={option}>{t(option)}</option>)}
-          </select>
-        </label>
-      </div>}
-      <label>{t("Installation, commissioning, or other project needs")}<textarea name="requirements" maxLength={fromSpecification ? equipmentInquiryNotesLimit : undefined} /></label>
+      {!fromSpecification && <label>{t("Installation, commissioning, or other project needs")}<textarea name="requirements" /></label>}
     </fieldset>
+    {fromSpecification && <fieldset className="pc-booking-fieldset" aria-describedby="equipment-polymer-offtake-note">
+      <legend>{t("Recycled material offtake")}</legend>
+      <div className="pc-offtake-options">
+        {installationMarket === "US" && <label className="pc-material-choice">
+          <input name="offtakeStreams" type="checkbox" value="Glass" checked={glassOfftake}
+            onChange={event => setGlassOfftake(event.currentTarget.checked)} />
+          {t("Glass")}
+        </label>}
+        {equipmentOfftakeStreams.filter(stream => stream !== "Glass").map(stream => (
+          <label key={stream} className="pc-material-choice">
+            <input name="offtakeStreams" type="checkbox" value={stream} />{t(stream)}
+          </label>
+        ))}
+      </div>
+      {installationMarket === "US" && glassOfftake && <label>{t("Glass offtake pricing")}
+        <select name="glassOfftakePrice" defaultValue={glassOfftakePrices[0]}>
+          {glassOfftakePrices.map(price => <option key={price} value={price}>{t(price)}</option>)}
+        </select>
+      </label>}
+      <p className="pv-note" id="equipment-polymer-offtake-note">{t("We will confirm offtake availability for your site during the project review.")}</p>
+    </fieldset>}
     <fieldset className="pc-booking-fieldset">
       <legend>{t("Contact details")}</legend>
       <div className="pc-form-pair">
@@ -233,6 +277,9 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
         <label>{t("Your name (required)")}<input name="name" autoComplete="name" required /></label>
         <label>{t("Work email (required)")}<input name="email" type="email" autoComplete="email" required /></label>
         <label>{t("Phone")}<input name="phone" type="tel" autoComplete="tel" maxLength={fromSpecification ? 80 : undefined} /></label>
+        {fromSpecification && <label className="pc-configuration-requirements">{t("Customization requirements")}
+          <textarea name="configurationRequirements" rows={2} maxLength={equipmentInquiryNotesLimit} />
+        </label>}
       </div>
     </fieldset>
   </>;
