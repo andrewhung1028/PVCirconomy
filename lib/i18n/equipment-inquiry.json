@@ -1,8 +1,9 @@
 {
   "Remember contact details on this browser": ["在此瀏覽器記住聯絡資料", "このブラウザーに連絡先を保存する"],
-  "Installation postal code": ["安裝地郵遞區號", "設置先の郵便番号"],
-  "To check MSRP, enter your installation site and postal code and verify your work email.": ["查看建議售價前，請填寫安裝場址與郵遞區號，並驗證工作信箱。", "メーカー希望小売価格を確認するには、設置先と郵便番号を入力し、勤務先メールアドレスを認証してください。"],
-  "Enter the installation city or site and a valid postal code, then confirm the configuration, PLUS option and line count.": ["請填寫安裝城市或場址及有效的郵遞區號，並確認設備配置、PLUS 選項與產線數量。", "設置都市または設置先と有効な郵便番号を入力し、設備構成、PLUSオプション、ライン数を確認してください。"],
+  "City": ["城市", "市区町村"],
+  "Postal code": ["郵遞區號", "郵便番号"],
+  "To check MSRP, enter the installation city and postal code and verify your work email.": ["查看建議售價前，請填寫安裝城市與郵遞區號，並驗證工作信箱。", "メーカー希望小売価格を確認するには、設置先の市区町村と郵便番号を入力し、勤務先メールアドレスを認証してください。"],
+  "Enter the installation city and a valid postal code, then confirm the configuration, PLUS option and line count.": ["請填寫安裝城市及有效的郵遞區號，並確認設備配置、PLUS 選項與產線數量。", "設置先の市区町村と有効な郵便番号を入力し、設備構成、PLUSオプション、ライン数を確認してください。"],
   "Use a company or organization email address to check MSRP.": ["請使用公司或機構的電子郵件地址查看建議售價。", "メーカー希望小売価格の確認には、会社または組織のメールアドレスをご使用ください。"],
   "MSRP is currently unavailable for this market and configuration.": ["此市場與設備配置目前無可查詢的建議售價。", "この市場と設備構成のメーカー希望小売価格は現在確認できません。"],
   "Wait one minute before requesting another code.": ["請等一分鐘再索取新驗證碼。", "新しい認証コードをリクエストするには1分お待ちください。"],
