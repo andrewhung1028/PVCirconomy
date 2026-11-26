@@ -43,8 +43,9 @@ const msrpErrors: Readonly<Record<string, string>> = {
   msrp_code_invalid: "The code is incorrect, expired or already used. Try again or request a new code.",
 };
 
-export function SpecificationInquiry({ configuration, configurations, onConfigurationChange, includePlus, onPlusChange, performance, recyclingFee, locale, market, review, setReview, defaults, sitePowerOptions, purchaseOption, setPurchaseOption }: {
+export function SpecificationInquiry({ configuration, configurations, onConfigurationChange, includePlus, onPlusChange, performance, recyclingFee, locale, market, review, setReview, defaults, sitePowerOptions, hasRecyclingPermit, purchaseOption, setPurchaseOption }: {
   configuration: EquipmentBaseVariant;
+  hasRecyclingPermit: boolean;
   purchaseOption: EquipmentPurchaseOption;
   setPurchaseOption: (option: EquipmentPurchaseOption) => void;
   configurations: ReadonlyArray<{ value: EquipmentBaseVariant; label: string }>;
@@ -101,6 +102,9 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
     return () => request.abort();
   }, [installationMarket]);
 
+  const trialSelectable = hasRecyclingPermit && installationMarket !== "JP";
+  const selectedPurchaseOption = trialSelectable ? purchaseOption : equipmentPurchaseOptions[0];
+
   async function preview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -116,7 +120,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       configuration: includePlus ? "plus" : configuration, locale, pageMarket: market, recyclingFee,
       installationMarket: value("installationCountry") as PublicSolutionMarket,
       baseConfiguration: includePlus ? configuration : undefined,
-      purchaseOption: equipmentPurchaseOptions.find(option => option === value("purchaseOption")),
+      purchaseOption: selectedPurchaseOption,
       offtakeStreams,
       installationSite: value("installationSite") || undefined,
       installationPostalCode: value("installationPostalCode") || undefined,
@@ -236,10 +240,10 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       <fieldset className="pc-booking-fieldset">
         <legend>{t("Equipment configuration")}</legend>
         <label>{t("Purchase option")}
-          <select name="purchaseOption" value={installationMarket === "JP" ? equipmentPurchaseOptions[0] : purchaseOption}
+          <select name="purchaseOption" value={selectedPurchaseOption}
             onChange={event => setPurchaseOption(equipmentPurchaseOptions.find(option => option === event.currentTarget.value) ?? equipmentPurchaseOptions[0])}>
             {equipmentPurchaseOptions.slice(0, installationMarket === "JP" ? 1 : undefined).map(option => (
-              <option key={option} value={option}>{t(option)}</option>
+              <option key={option} value={option} disabled={option === "Trial-based PO (TBP)" && !trialSelectable}>{t(option)}</option>
             ))}
           </select>
         </label>
