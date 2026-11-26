@@ -1455,6 +1455,24 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 }
 .pvc2-layer-intro { padding-block-start: clamp(108px,12svh,145px); }
 .pvc2-silver-grades { margin-top: 124px; max-width: 650px; padding: 18px 20px; background: rgb(0 0 0 / 50%); }
+#layer-by-layer .pvc2-media-copy:has(.pvc2-silver-grade-range) {
+  min-height: 100svh;
+  grid-template-rows: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+  padding-bottom: 0;
+}
+.pvc2-silver-grade-range {
+  align-self: center;
+  padding-block: 24px;
+}
+.pvc2-silver-grade-range strong {
+  display: block;
+  color: var(--pv-yellow);
+  font-size: var(--pv-type-display);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.pvc2-media-copy .pvc2-silver-grade-range p { margin-top: 8px; }
+.pvc2-silver-grade-range + .pvc2-silver-grades { align-self: end; margin-block: 0 52px; }
 .pvc2-silver-grades h3 { font-size: var(--pv-type-subsection); margin: 0 0 8px; }
 .pvc2-silver-grades table { width: 100%; border-collapse: collapse; font-size: var(--pv-type-body); }
 .pvc2-silver-grades :is(th,td) { text-align: left; padding: 7px 8px 7px 0; border-bottom: 1px solid #ffffff54; }
@@ -1465,6 +1483,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-silver-grades a { display: inline-block; padding-block: 8px; font-size: var(--pv-type-interface); text-underline-offset: 3px; }
 @media (max-width: 760px) {
   #layer-by-layer .pvc2-media-copy { margin-inline: 35px; }
+  .pvc2-silver-grade-range { padding-block: 32px; }
   .pvc2-silver-grades { padding: 12px; }
   .pvc2-silver-grades table { font-size: var(--pv-type-interface); }
 }

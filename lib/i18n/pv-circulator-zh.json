@@ -328,6 +328,7 @@
   "Economic, Basic and Premium share the same rated throughput. With PLUS integrated, line throughput is {throughput} panels/min.": "Economic、Basic 與 Premium 的額定處理速度相同。整合 PLUS 後，整線速度為每分鐘 {throughput} 片。",
   "Direct staff operate the equipment. Indirect staff handle warehousing and pre-processing. Include unplanned changeovers or cleaning stops in uptime.": "直接人員負責設備操作，間接人員負責倉儲與前處理。非計畫換料或清潔停機請反映在稼動率。",
   "Theoretical silver concentration": "銀濃度理論上限",
+  "PV Circulator’s theoretical silver concentration compared with thermal processing and shredding": "PV Circulator 的理論銀濃度相對於熱處理和破碎法的倍數",
   "Method": "處理技術",
   "Silver-bearing output": "含銀產物",
   "Upper limit (wt.%)": "重量百分比上限",
