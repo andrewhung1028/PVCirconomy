@@ -1,0 +1,14 @@
+.pa-inquiry h2 { margin: 0; }
+.pa-inquiry summary { cursor: pointer; }
+.pa-inquiry-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 16px 24px;
+  margin: 16px 0 0;
+}
+.pa-inquiry-fields dt { font-weight: 800; }
+.pa-inquiry-fields dd {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
