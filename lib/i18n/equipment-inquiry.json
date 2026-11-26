@@ -508,9 +508,9 @@
   "EVA and backsheet offtake": ["EVA／背板去化", "EVA・バックシートの引き取り"],
   "Offtake inquiry": ["洽詢 Offtake", "引き取りを相談"],
   "Self-managed": ["自行處理", "自社で手配"],
-  "We will confirm offtake availability for your site during the project review.": [
-    "是否能安排去化，將於專案評估時依場址確認。",
-    "引き取りの可否は、案件評価時に設置場所ごとに確認します。"
+  "We accept only materials produced by PV Circulator. We will confirm offtake availability for your site during the project review.": [
+    "我們僅接受由 PV Circulator 產出的材料。是否可在您的場址提供去化服務，將於專案審查時確認。",
+    "引き取りの対象は、PV Circulator で処理して得られた材料に限ります。設置場所での引き取りの可否は、案件審査時に確認します。"
   ],
   "Buyer company address": ["買方公司地址", "購入企業の住所"],
   "Processing capacity": ["處理能力", "処理能力"],

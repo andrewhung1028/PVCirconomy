@@ -259,7 +259,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           </label>
         ))}
       </div>
-      <p className="pv-note" id="equipment-polymer-offtake-note">{t("We will confirm offtake availability for your site during the project review.")}</p>
+      <p className="pv-note" id="equipment-polymer-offtake-note">{t("We accept only materials produced by PV Circulator. We will confirm offtake availability for your site during the project review.")}</p>
     </fieldset>}
     <fieldset className="pc-booking-fieldset">
       <legend>{t("Contact details")}</legend>
