@@ -3,7 +3,8 @@ import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasS
 import { isSitePowerOption } from "../../../lib/equipment-quantitative";
 import { ourSolutionLocales, ourSolutionParameterMarkets, publicSolutionMarkets } from "../../../lib/our-solution/market";
 import { model } from "../../../lib/our-solution/model";
-import { parameter, parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeightLb } from "../../../lib/our-solution/parameters";
+import { parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeightLb } from "../../../lib/our-solution/parameters";
+import { equipmentMouGoverningLaw } from "../../../lib/equipment-mou-articles";
 import { equipmentInquiryTranslate, inquiryText } from "../../../lib/equipment-mou-copy";
 import { mailConfigured, sendDocumentEmail } from "../../../server/delivery/communications";
 import { jsonBody, reply, sameOrigin } from "../../../server/delivery/http";
@@ -11,7 +12,8 @@ import { limit } from "../../../server/delivery/limits";
 import { loadSolutionOperatingData } from "../../../server/our-solution/public-view";
 
 import { equipmentMouMarket, equipmentMouSalesTerms } from "../../../server/equipment-mou/market";
-import { parseInquirySubmission, recordInquirySubmission } from "../../../server/equipment-mou/submissions";
+import { completeMsrpDetails, consumeMsrpCode, isWorkEmail, sendMsrpCode } from "../../../server/equipment-mou/msrp-verification";
+import { parseInquirySubmission, recordInquirySubmission, recordVerifiedInquiryContact } from "../../../server/equipment-mou/submissions";
 import { database } from "../../../server/db/client";
 
 export const runtime = "nodejs";
@@ -38,6 +40,7 @@ function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput
     && (value.sitePowerSupply === undefined || value.sitePowerSupply === otherSitePowerSupply
       || isSitePowerOption(value.sitePowerSupply))
     && (value.installationSite === undefined || validContactField(value.installationSite, 240))
+    && (value.installationPostalCode === undefined || validContactField(value.installationPostalCode, 16))
     && (value.targetStart === undefined || validMonth(value.targetStart))
     && (value.targetAssessment === undefined || validMonth(value.targetAssessment))
     && (value.projectStage === undefined || equipmentProjectStages.includes(value.projectStage))
@@ -59,7 +62,7 @@ function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput
     && (value.recyclingFee === null || within(value.recyclingFee, 0, Number.MAX_SAFE_INTEGER)));
 }
 
-async function estimate(input: EquipmentMouInput, msrpPerLine: number | null, throughSalesAgent: boolean): Promise<EquipmentMou> {
+async function estimate(input: EquipmentMouInput, msrpPerLine: number | null): Promise<EquipmentMou> {
   const currency = ourSolutionParameterMarkets[input.installationMarket].currency;
   const msrpTotal = msrpPerLine === null ? null : msrpPerLine * input.lines;
   const result: EquipmentMou = {
@@ -70,13 +73,6 @@ async function estimate(input: EquipmentMouInput, msrpPerLine: number | null, th
   const source = await loadSolutionOperatingData(input.installationMarket);
   if (!source || parameterCurrency(source.data) !== currency) return result;
   const { data, prices } = source;
-  const isBasic = input.configuration === "basic";
-  // Our Solution currently publishes one PV Circulator reference operating profile.
-  // Its investment assumption can be shown separately for the standard Basic line.
-  if (!throughSalesAgent && result.investment === null && isBasic) {
-    const capex = parameter(data, 4, "Capex per line", 2);
-    if (capex > 0) result.investment = capex * input.lines;
-  }
   const scenario = { ...data.scenario, panels_per_month: input.panelsPerMonth, operating_hours_per_day: input.dailyHours };
   const output = model({ ...data, scenario }, prices, { circulatorLines: input.lines }).solutions.PVCIRCULATOR;
   if (output.lines > input.lines) {
@@ -130,7 +126,7 @@ function validContact(contact: EquipmentMouContact | undefined): contact is Equi
 function signature(review: Omit<EquipmentMouReview, "token">, id: string, expires: number) {
   const key = process.env.AUTH_SECRET;
   return key && key.length >= 32
-    ? createHmac("sha256", key).update(JSON.stringify([`equipment-mou-v${consentVersion}`, id, expires, review.input, review.contact, review.mou, review.terms])).digest("hex")
+    ? createHmac("sha256", key).update(JSON.stringify([`equipment-mou-preview-v2-${consentVersion}`, id, expires, review.input, review.contact, review.mou, review.terms])).digest("hex")
     : null;
 }
 
@@ -139,10 +135,14 @@ function verifiedReview(review: EquipmentMouReview | undefined): review is Equip
   if (!review || !token || typeof token.id !== "string" || !uuidPattern.test(token.id)
     || typeof token.signature !== "string" || !/^[0-9a-f]{64}$/.test(token.signature)
     || !Number.isSafeInteger(token.expires) || token.expires < Date.now()
-    || !validInput(review.input) || !validContact(review.contact) || !review.terms?.governingLaw
-    || review.input.locale !== equipmentMouSigningLocales[review.input.pageMarket]) return false;
+    || !validInput(review.input) || !validContact(review.contact) || !review.terms?.governingLaw) return false;
   const wanted = signature(review, token.id, token.expires);
   return wanted !== null && timingSafeEqual(Buffer.from(wanted, "hex"), Buffer.from(token.signature, "hex"));
+}
+
+function issueReview(review: Omit<EquipmentMouReview, "token">, deadline = Date.now() + 60 * 60 * 1000, id: string = randomUUID()) {
+  const digest = signature(review, id, deadline);
+  return reply({ review: { ...review, token: digest ? { id, expires: deadline, signature: digest } : null } });
 }
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char =>
@@ -183,6 +183,7 @@ export async function POST(request: Request) {
   catch { return reply({ error: "invalid_request" }, 400); }
   try {
     const incomplete = body?.action === "record-incomplete";
+    let submissionId: string | undefined;
     if (incomplete || (body?.action === "review" && body.submission !== undefined)) {
       const submission = parseInquirySubmission(body.submission);
       if (!submission) return reply({ error: "invalid_request" }, 400);
@@ -190,26 +191,57 @@ export async function POST(request: Request) {
         return reply({ error: "too_many_requests" }, 429);
       }
       const formComplete = !incomplete && validInput(body.input) && validContact(body.contact);
-      await recordInquirySubmission(submission, formComplete);
+      submissionId = await recordInquirySubmission(submission, formComplete);
       if (incomplete) return reply({ recorded: true }, 201);
     }
     if (body?.action === "review") {
       if (!validInput(body.input) || !validContact(body.contact)) return reply({ error: "invalid_request" }, 400);
       const input: EquipmentMouInput = body.input;
+      const contact: EquipmentMouContact = body.contact;
+      const intent = body.msrp?.intent;
+      if (body.msrp !== undefined && intent !== "send" && intent !== "verify")
+        return reply({ error: "invalid_request" }, 400);
+      if (intent && !(await limit(request, "equipment-msrp-" + intent, intent === "send" ? 10 : 30, 3600)))
+        return reply({ error: "too_many_requests" }, 429);
       const marketData = await equipmentMouMarket(input);
       if (!marketData) return reply({ error: "invalid_site_power" }, 400);
-      const { terms, msrpPerLine } = marketData;
-      const review = { input, contact: body.contact as EquipmentMouContact,
-        mou: await estimate(input, msrpPerLine, equipmentMouHasSalesAgent(terms)), terms };
-      const id = randomUUID();
-      const expires = Date.now() + 60 * 60 * 1000;
-      const languageReady = review.input.locale === equipmentMouSigningLocales[review.input.pageMarket];
-      const signedDigest = languageReady ? signature(review, id, expires) : null;
-      return reply({ review: { ...review, token: signedDigest ? { id, expires, signature: signedDigest } : null } });
+      const { terms } = marketData;
+      let msrpPerLine: number | null = null;
+      if (intent && input.installationMarket !== "JP" && !equipmentMouHasSalesAgent(terms)) {
+        if (!completeMsrpDetails(input)) return reply({ error: "msrp_details_required" }, 422);
+        if (!isWorkEmail(contact.email)) return reply({ error: "work_email_required" }, 422);
+        if (marketData.msrpPerLine === null) return reply({ error: "msrp_not_published" }, 422);
+        if (intent === "send") {
+          const id = await sendMsrpCode(contact, input.locale);
+          if (!id) return reply({ error: "msrp_email_cooldown" }, 429);
+          return reply({ challenge: { id, email: contact.email } }, 202);
+        }
+        if (!(await consumeMsrpCode(contact, body.msrp.id, body.msrp.code)))
+          return reply({ error: "msrp_code_invalid" }, 422);
+        await recordVerifiedInquiryContact(submissionId, contact, [
+          ["installationCountry", input.installationMarket],
+          ["installationSite", input.installationSite ?? ""],
+          ["installationPostalCode", input.installationPostalCode ?? ""],
+          ["configuration", input.baseConfiguration ?? input.configuration],
+          ["includePlus", input.configuration === "plus" ? "With" : "Without"],
+          ["lineQuantity", String(input.lines)],
+        ]);
+        msrpPerLine = marketData.msrpPerLine;
+      }
+      return issueReview({ input, contact, mou: await estimate(input, msrpPerLine), terms });
+    }
+    const submittedReview: EquipmentMouReview | undefined = body?.review;
+    if (body?.action === "signing-version") {
+      if (!verifiedReview(submittedReview)) return reply({ error: "expired_review" }, 409);
+      const { input, contact, mou, terms, token } = submittedReview;
+      const localizedInput = { ...input, locale: equipmentMouSigningLocales[input.pageMarket] };
+      return issueReview({ input: localizedInput, contact, mou,
+        terms: { ...terms, governingLaw: equipmentMouGoverningLaw(localizedInput) } }, token.expires, token.id);
     }
     if (body?.action !== "sign" || body.confirmed !== true) return reply({ error: "invalid_request" }, 400);
-    if (!verifiedReview(body.review)) return reply({ error: "expired_review" }, 409);
-    const { input, contact, mou, terms, token } = body.review;
+    if (!verifiedReview(submittedReview) || submittedReview.input.locale !== equipmentMouSigningLocales[submittedReview.input.pageMarket])
+      return reply({ error: "expired_review" }, 409);
+    const { input, contact, mou, terms, token } = submittedReview;
     const sql = database();
     await initializeSigningStore();
     let [record] = await sql`SELECT signed_at, completed_at FROM pv_equipment_mou_acceptances WHERE id=${token.id}::uuid`;

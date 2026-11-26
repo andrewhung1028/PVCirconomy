@@ -10,6 +10,39 @@ import { defaultMouSalesAgents } from "../../lib/mou-policy";
 import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, glassOfftakePrices, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 
+const identityFields = ["email", "company", "name"] as const;
+const rememberedInquiryKey = "pv-equipment-inquiry-contact-v1";
+
+function restoreInquiryContact(form: HTMLFormElement) {
+  try {
+    const remembered = JSON.parse(localStorage.getItem(rememberedInquiryKey) ?? "null");
+    if (!remembered || !identityFields.every(field => typeof remembered[field] === "string"
+      && remembered[field].trim() && remembered[field].length <= 254)) return false;
+    for (const field of identityFields) {
+      const input = form.elements.namedItem(field);
+      if (input instanceof HTMLInputElement && !input.value) input.value = remembered[field];
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function inquiryIdentity(data: FormData) {
+  return JSON.stringify(identityFields.map(field => {
+    const value = data.get(field)?.toString().trim() ?? "";
+    return field === "email" ? value.toLowerCase() : value;
+  }));
+}
+
+const msrpErrors: Readonly<Record<string, string>> = {
+  msrp_details_required: "Enter the installation city or site and a valid postal code, then confirm the configuration, PLUS option and line count.",
+  work_email_required: "Use a company or organization email address to check MSRP.",
+  msrp_not_published: "MSRP is currently unavailable for this market and configuration.",
+  msrp_email_cooldown: "Wait one minute before requesting another code.",
+  msrp_code_invalid: "The code is incorrect, expired or already used. Try again or request a new code.",
+};
+
 export function SpecificationInquiry({ configuration, configurations, onConfigurationChange, includePlus, onPlusChange, performance, recyclingFee, locale, market, review, setReview, defaults, sitePowerOptions }: {
   configuration: EquipmentBaseVariant;
   configurations: ReadonlyArray<{ value: EquipmentBaseVariant; label: string }>;
@@ -28,15 +61,29 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const t = inquiryTranslate(locale);
   const id = useId();
   const heading = useRef<HTMLHeadingElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [rememberContact, setRememberContact] = useState(false);
   const [summary, setSummary] = useState<[string, string][]>([]);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
+  const [challenge, setChallenge] = useState<{ id: string; email: string; identity: string }>();
+  const [code, setCode] = useState("");
+  const codeField = useRef<HTMLInputElement>(null);
   const [rateLimited, setRateLimited] = useState(false);
   const [installationMarket, setInstallationMarket] = useState(market);
   const [salesAgentStatus, setSalesAgentStatus] = useState<{ market: PublicSolutionMarket; throughSalesAgent: boolean }>();
-  const throughSalesAgent = salesAgentStatus?.market === installationMarket
+  const noMsrp = installationMarket === "JP" || (salesAgentStatus?.market === installationMarket
     ? salesAgentStatus.throughSalesAgent
-    : defaultMouSalesAgents(installationMarket).length > 0;
+    : defaultMouSalesAgents(installationMarket).length > 0);
+  const awaitingCode = Boolean(challenge) && !noMsrp;
+
+  useEffect(() => {
+    if (formRef.current && restoreInquiryContact(formRef.current)) setRememberContact(true);
+  }, []);
+
+  useEffect(() => {
+    if (challenge) codeField.current?.focus();
+  }, [challenge]);
 
   useEffect(() => {
     const request = new AbortController();
@@ -71,6 +118,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       offtakeStreams,
       glassOfftakePrice,
       installationSite: value("installationSite") || undefined,
+      installationPostalCode: value("installationPostalCode") || undefined,
       sitePowerSupply: value("powerSupply") === "Not yet determined" ? undefined : value("powerSupply") || undefined,
       targetStart: value("startDate") || undefined,
       targetAssessment: value("assessmentDate") || undefined,
@@ -107,28 +155,67 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       else if (name === "floorSpace") summary.push([labelFor(name), `${value} ${data.get("floorSpaceUnit") === "ft2" ? "ft²" : "m²"}`]);
       else summary.push([labelFor(name), t(value)]);
     }
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const action = submitter instanceof HTMLButtonElement ? submitter.value : "";
+    const wantsMsrp = !noMsrp && action !== "skip";
+    const identity = inquiryIdentity(data);
+    const activeChallenge = challenge?.identity === identity ? challenge : undefined;
+    const msrp = wantsMsrp
+      ? activeChallenge && action !== "resend"
+        ? { intent: "verify", id: activeChallenge.id, code }
+        : { intent: "send" }
+      : undefined;
+    if (complete && msrp?.intent === "verify" && !/^\d{6}$/.test(code)) {
+      setError(t("Enter the six-digit verification code."));
+      codeField.current?.focus();
+      return;
+    }
     setPending(true);
-    setError(false);
+    setError("");
     setRateLimited(false);
     try {
       const response = await fetch("/api/equipment-mou/", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(complete
-          ? { action: "review", input, contact, submission }
+          ? { action: "review", input, contact, msrp, submission: action === "resend" ? undefined : submission }
           : { action: "record-incomplete", submission }),
       });
+      const result = await response.json();
+      if (typeof result.error === "string" && Object.hasOwn(msrpErrors, result.error)) {
+        setError(t(msrpErrors[result.error]));
+        return;
+      }
       if (response.status === 429) {
         setRateLimited(true);
         return;
       }
-      if (!response.ok) throw new Error("inquiry_unavailable");
+      if (!response.ok) {
+        setError(t(msrp?.intent === "send" && response.status === 503
+          ? "The verification code could not be sent. Try again or review without MSRP."
+          : "The MOU preview could not be prepared. Please try again."));
+        return;
+      }
       if (!complete) return;
-      const result = await response.json();
+      if (response.status === 202 && result.challenge) {
+        setCode("");
+        if (inquiryIdentity(new FormData(form)) === identity)
+          setChallenge({ ...result.challenge, identity });
+        return;
+      }
       if (!result.review) throw new Error("review_unavailable");
+      if (rememberContact && msrp?.intent === "verify" && result.review.mou.msrpPerLine !== null) {
+        try {
+          localStorage.setItem(rememberedInquiryKey, JSON.stringify({
+            email: contact.email, company: contact.company, name: contact.name,
+          }));
+        } catch {}
+      }
+      setChallenge(undefined);
+      setCode("");
       setSummary(summary);
       setReview(result.review);
     } catch {
-      setError(true);
+      setError(t("The MOU preview could not be prepared. Please try again."));
     } finally {
       setPending(false);
     }
@@ -137,7 +224,15 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   return <section className="pvc2-inquiry-pane" id="equipment-inquiry" aria-labelledby={id}>
     <h2 id={id} ref={heading} tabIndex={-1}>{t("Online inquiry")}</h2>
     <p className="pv-note">{t("Review your inquiry to preview a draft MOU.")}</p>
-    <form className="pc-form" onSubmit={preview} noValidate hidden={Boolean(review)}>
+    <form ref={formRef} className="pc-form" onSubmit={preview} noValidate hidden={Boolean(review)}
+      onChange={event => {
+        const target = event.target;
+        if (target instanceof HTMLInputElement && identityFields.some(field => field === target.name) && challenge) {
+          setChallenge(undefined);
+          setCode("");
+          setError("");
+        }
+      }}>
       <fieldset className="pc-booking-fieldset">
         <legend>{t("Equipment configuration")}</legend>
         <div className="pc-form-pair">
@@ -161,12 +256,39 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
         </div>
       </fieldset>
       <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={setInstallationMarket} />
+      {(!noMsrp || rememberContact) && <label className="pc-configuration-choice">
+        <input type="checkbox" checked={rememberContact} disabled={pending}
+          onChange={event => {
+            const checked = event.currentTarget.checked;
+            setRememberContact(checked);
+            if (!checked) {
+              try { localStorage.removeItem(rememberedInquiryKey); } catch {}
+            }
+          }} />
+        {t("Remember contact details on this browser")}
+      </label>}
       <p id={`${id}-submission-note`} className="pv-note">{t("We record the details you submit to review inquiries and prevent abuse.")}</p>
-      <button className="pv-button pvc2-quote-button" type="submit" aria-describedby={`${id}-submission-note`} disabled={pending}>{t(throughSalesAgent
+      {!noMsrp && !awaitingCode && <p className="pv-note">{t("To check MSRP, enter your installation site and postal code and verify your work email.")}</p>}
+      {awaitingCode && challenge && <fieldset className="pc-booking-fieldset">
+        <legend>{t("Verify your work email")}</legend>
+        <p className="pv-note" id={`${id}-code-note`} role="status">
+          {t("We sent a six-digit code to {email}. It expires in 10 minutes.").replace("{email}", challenge.email)}
+        </p>
+        <label>{t("MSRP verification code")}
+          <input ref={codeField} value={code} onChange={event => setCode(event.currentTarget.value.replace(/\D/g, ""))}
+            inputMode="numeric" autoComplete="one-time-code" maxLength={6} aria-describedby={`${id}-code-note`} />
+        </label>
+      </fieldset>}
+      <button className="pv-button pvc2-quote-button" type="submit" aria-describedby={`${id}-submission-note`} disabled={pending}>{t(noMsrp
         ? (pending ? "Preparing MOU…" : "Review inquiry")
-        : (pending ? "Checking MSRP…" : "Review inquiry & check MSRP"))}</button>
+        : awaitingCode ? (pending ? "Checking MSRP…" : "Verify email & show MSRP")
+          : (pending ? "Preparing inquiry…" : "Review inquiry & check MSRP"))}</button>
+      {!noMsrp && (awaitingCode || error || rateLimited) && <div className="pvc2-inquiry-review-actions">
+        {awaitingCode && <button className="pv-button" type="submit" value="resend" disabled={pending}>{t("Send a new code")}</button>}
+        <button className="pv-button" type="submit" value="skip" disabled={pending}>{t("Review without MSRP")}</button>
+      </div>}
       {rateLimited && <p role="alert">{t("Too many inquiry attempts. Please try again later.")}</p>}
-      {error && <p role="alert">{t("The MOU preview could not be prepared. Please try again.")}</p>}
+      {error && <p role="alert">{error}</p>}
     </form>
     {review && <div className="pvc2-inquiry-review">
       <h3>{t("Review inquiry")}</h3>
@@ -206,7 +328,7 @@ export function EquipmentMouPreview({ review: initialReview, onEdit }: { review:
     try {
       const response = await fetch("/api/equipment-mou/", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "review", input: { ...review.input, locale: signingLocale }, contact: review.contact }),
+        body: JSON.stringify({ action: "signing-version", review }),
       });
       const result = await response.json();
       if (!response.ok || result.review?.input.locale !== signingLocale) throw new Error("review_unavailable");

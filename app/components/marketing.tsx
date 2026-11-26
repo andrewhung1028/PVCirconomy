@@ -204,6 +204,10 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           </select>
         </label>
         <label>{t("Installation city or site")}<input name="installationSite" maxLength={fromSpecification ? 240 : undefined} /></label>
+        {fromSpecification && <label>{t("Installation postal code")}
+          <input name="installationPostalCode" autoComplete="section-installation postal-code" maxLength={16}
+            autoCapitalize="characters" spellCheck={false} />
+        </label>}
         <label>{t("Installation environment")}
           <select name="installationEnvironment" defaultValue={unspecified}>
             <option value={unspecified}>{t(unspecified)}</option>

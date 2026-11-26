@@ -36,6 +36,7 @@ export type EquipmentMouInput = {
   offtakeStreams?: (typeof equipmentOfftakeStreams)[number][];
   glassOfftakePrice?: (typeof glassOfftakePrices)[number];
   installationSite?: string;
+  installationPostalCode?: string;
   sitePowerSupply?: string;
   targetStart?: string;
   targetAssessment?: string;

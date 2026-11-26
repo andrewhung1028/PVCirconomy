@@ -70,7 +70,7 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
   const selected = prices ? equipmentUsdTotal(prices, input.configuration) : 0;
   const base = prices && input.baseConfiguration ? equipmentUsdTotal(prices, input.baseConfiguration) : 0;
   const usd = input.configuration === "plus" ? selected > 0 && base > 0 ? base + selected : 0 : selected;
-  const msrpPerLine = sales.marketAvailable && !equipmentMouHasSalesAgent(sales) && usd > 0
+  const msrpPerLine = market !== "JP" && sales.marketAvailable && !equipmentMouHasSalesAgent(sales) && usd > 0
     ? equipmentMarketAmount(usd, currency, fx?.rates[currency], quantitative.pricing.nonUsdFactor) : null;
   const seller = market === "JP" ? "東建安股份有限公司" : "PV Circonomy Company";
   const { agent, agentCandidates, policy } = sales;
