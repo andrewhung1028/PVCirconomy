@@ -30,11 +30,14 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const [summary, setSummary] = useState<[string, string][]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
 
   async function preview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
+    const submission = Array.from(data.entries());
+    const complete = form.reportValidity();
     const value = (name: string) => String(data.get(name) ?? "").trim();
     const numeric = (name: string) => value(name) ? Number(value(name)) : null;
     const floorArea = numeric("floorSpace");
@@ -57,7 +60,6 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       materialRequirements,
       installationEnvironment: (value("installationEnvironment") || undefined) as EquipmentMouInput["installationEnvironment"],
       floorArea: floorArea === null ? undefined : { value: floorArea, unit: value("floorSpaceUnit") === "ft2" ? "ft2" : "m2" },
-      interfaceLanguage: (value("interfaceLanguage") || undefined) as EquipmentMouInput["interfaceLanguage"],
       compressedAir: (value("compressedAir") || undefined) as EquipmentMouInput["compressedAir"],
       siteNetwork: (value("siteNetwork") || undefined) as EquipmentMouInput["siteNetwork"],
       installationNotes: value("requirements") || undefined,
@@ -90,13 +92,22 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
     }).join(", ")]);
     setPending(true);
     setError(false);
+    setRateLimited(false);
     try {
       const response = await fetch("/api/equipment-mou/", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "review", input, contact }),
+        body: JSON.stringify(complete
+          ? { action: "review", input, contact, submission }
+          : { action: "record-incomplete", submission }),
       });
+      if (response.status === 429) {
+        setRateLimited(true);
+        return;
+      }
+      if (!response.ok) throw new Error("inquiry_unavailable");
+      if (!complete) return;
       const result = await response.json();
-      if (!response.ok || !result.review) throw new Error("review_unavailable");
+      if (!result.review) throw new Error("review_unavailable");
       setSummary(summary);
       setReview(result.review);
     } catch {
@@ -109,7 +120,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   return <section className="pvc2-inquiry-pane" id="equipment-inquiry" aria-labelledby={id}>
     <h2 id={id} ref={heading} tabIndex={-1}>{t("Online inquiry")}</h2>
     <p className="pv-note">{t("Review your inquiry to preview a draft MOU.")}</p>
-    <form className="pc-form" onSubmit={preview} hidden={Boolean(review)}>
+    <form className="pc-form" onSubmit={preview} noValidate hidden={Boolean(review)}>
       <fieldset className="pc-booking-fieldset">
         <legend>{t("Equipment configuration")}</legend>
         <div className="pc-form-pair">
@@ -120,10 +131,10 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
             </select>
           </label>
           <label>{t("PLUS module")}
-            <select name="includePlus" value={includePlus ? "Add PLUS" : "Without PLUS"}
-              onChange={event => onPlusChange(event.currentTarget.value === "Add PLUS")}>
-              <option value="Without PLUS">{t("Without PLUS")}</option>
-              <option value="Add PLUS">{t("Add PLUS")}</option>
+            <select name="includePlus" value={includePlus ? "With" : "Without"}
+              onChange={event => onPlusChange(event.currentTarget.value === "With")}>
+              <option value="Without">{t("Without")}</option>
+              <option value="With">{t("With")}</option>
             </select>
           </label>
           <label>{t("Target assessment completion")}<input type="month" name="assessmentDate" max="9999-12" /></label>
@@ -134,7 +145,9 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
         </div>
       </fieldset>
       <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} />
-      <button className="pv-button pvc2-quote-button" type="submit" disabled={pending}>{t(pending ? "Preparing MOU…" : "Review inquiry")}</button>
+      <p id={`${id}-submission-note`} className="pv-note">{t("We record the details you submit to review inquiries and prevent abuse.")}</p>
+      <button className="pv-button pvc2-quote-button" type="submit" aria-describedby={`${id}-submission-note`} disabled={pending}>{t(pending ? "Checking MSRP…" : "Check MSRP")}</button>
+      {rateLimited && <p role="alert">{t("Too many inquiry attempts. Please try again later.")}</p>}
       {error && <p role="alert">{t("The MOU preview could not be prepared. Please try again.")}</p>}
     </form>
     {review && <div className="pvc2-inquiry-review">

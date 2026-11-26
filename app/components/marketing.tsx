@@ -191,13 +191,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
             </select>
           </div>
         </div>
-        <label>{t("Equipment interface language")}
-          {fromSpecification ? <select name="interfaceLanguage" defaultValue="">
-            <option value="" disabled>{t(unspecified)}</option>
-            <option value="English">{t("English")}</option>
-            <option value="Japanese">{t("Japanese")}</option>
-          </select> : <input name="interfaceLanguage" />}
-        </label>
+        {!fromSpecification && <label>{t("Equipment interface language")}<input name="interfaceLanguage" /></label>}
         {fromSpecification ? powerSupplyField : <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
       </div>
       {!fromSpecification && <>
