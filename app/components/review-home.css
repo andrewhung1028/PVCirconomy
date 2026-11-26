@@ -1282,81 +1282,62 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-specification.is-inquiry .pvc2-spec-tabs button { min-width: 0; padding-inline: 3px; }
 .pvc2-specification.is-inquiry .pvc2-spec-hero { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .pvc2-specification.is-inquiry .pvc2-spec-hero img { height: clamp(160px, 24vw, 300px); max-height: none; object-fit: contain; }
-.pvc2-business-model {
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  border-block-start: 1px solid var(--pv-line);
+.pvc2-config-table {
+  border-inline-start: 0;
+  padding-inline-start: var(--pvc2-pad);
 }
-.pvc2-page .pvc2-business-model .pvc2-business-purchase,
-.pvc2-business-model .pvc2-business-offtake {
-  padding-block: clamp(102px, 12svh, 140px) 56px;
-}
-.pvc2-page .pvc2-business-model .pvc2-business-purchase {
-  align-items: flex-start;
-  padding-inline: var(--pv-safe-inline) clamp(24px, 4vw, 64px);
+.pvc2-config-copy, .pvc2-business-offtake {
   background: var(--pv-gray);
+  padding-inline: clamp(28px, 3vw, 56px);
 }
-.pvc2-business-model .pvc2-business-offtake {
-  padding-inline: clamp(24px, 4.5vw, 76px) var(--pv-safe-inline);
-  background: var(--pv-paper);
+.pvc2-config-copy { border-inline-start: 1px solid var(--pv-line); }
+.pvc2-business-model { border-block-start: 1px solid var(--pv-line); }
+.pvc2-business-purchase > div { margin-block: auto; }
+.pvc2-purchase-option, .pvc2-offtake-list > div {
+  border-block-start: 1px solid var(--pv-line);
+  padding-block: 18px;
 }
-.pvc2-business-offtake > .pvc2-section-heading { display: block; margin-bottom: 30px; }
-.pvc2-business-offtake > .pvc2-section-heading p { margin-top: 18px; max-width: 62ch; line-height: 1.55; }
-.pvc2-business-purchase-options, .pvc2-business-materials { display: grid; gap: 16px; }
-.pvc2-business-purchase-options { margin-block: 28px; }
-.pvc2-business-card { padding: clamp(16px, 2vw, 28px); border: 1px solid var(--pv-line); }
-.pvc2-business-materials > :first-child { border-top: 2px solid var(--pv-yellow); }
-.pvc2-business-model h3 { margin: 0 0 10px; font-size: var(--pv-type-group); line-height: 1.25; }
-.pvc2-business-model .pvc2-business-card p:not(.pvc2-business-label),
-.pvc2-business-model .pvc2-business-terms p {
+.pvc2-purchase-option h3, .pvc2-offtake-list dt {
   margin: 0;
-  font-size: var(--pv-type-body);
-  line-height: 1.55;
-}
-.pvc2-business-model .pvc2-business-card p + p:not(.pvc2-business-label),
-.pvc2-business-model .pvc2-business-terms p + p { margin-top: 10px; }
-.pvc2-business-card .pv-button { margin-top: 18px; }
-.pvc2-business-model .pvc2-business-market-note { margin: 0 0 18px; font-size: var(--pv-type-caption); color: #5b605d; }
-.pvc2-business-card .pv-button span, .pvc2-business-case-link span { color: #805d00; }
-.pvc2-business-model .pvc2-business-label {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px 14px;
-  margin: 0 0 12px;
-  font-size: var(--pv-type-caption);
+  font-size: var(--pv-type-group);
   font-weight: var(--pv-weight-bold);
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  line-height: 1.2;
 }
-.pvc2-business-steps { margin-block: 34px; }
-.pvc2-business-steps ol {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 16px 0 0;
-  padding-block-start: 16px;
-  padding-inline-start: 2ch;
-  border-top: 1px solid var(--pv-line);
-  list-style: decimal-leading-zero;
-  line-height: 1.5;
+.pvc2-purchase-option p, .pvc2-offtake-list dd, .pvc2-business-offtake > p {
+  margin: 10px 0 16px;
+  line-height: 1.55;
+  font-size: var(--pv-type-body);
 }
-.pvc2-business-steps li { margin-inline-start: 1ch; padding-inline-start: .35ch; }
-.pvc2-business-steps li::marker { color: #805d00; font-weight: var(--pv-weight-bold); }
-.pvc2-business-terms { border-top: 1px solid var(--pv-line); padding-block-start: 16px; }
-.pvc2-business-model .pvc2-business-terms p { font-size: var(--pv-type-caption); color: #5b605d; }
-/* Keep the rail's visible labels out of the purchasing copy. */
+.pvc2-business-model .pv-details { margin-block: 12px; }
+.pvc2-business-model .pv-details summary { font-size: var(--pv-type-interface); }
+.pvc2-business-model .pv-details p { margin-block: 8px 16px; font-size: var(--pv-type-interface); }
+.pvc2-business-model .pv-text-button { display: inline-flex; align-items: center; gap: 12px; }
+.pvc2-business-case-link { margin-top: 20px; }
+.pvc2-business-offtake { padding-block: 100px 64px; }
+.pvc2-business-offtake h2 {
+  font-size: var(--pv-type-panel);
+  line-height: 1.12;
+  letter-spacing: var(--pv-heading-tracking);
+  margin: 0;
+}
+.pvc2-offtake-list { margin: 28px 0 0; }
+.pvc2-offtake-list dd { margin-bottom: 0; }
+/* Reveal rail labels on interaction beside the comparison and purchasing copy. */
 @media (min-width: 761px) {
-  .pvc2-page[data-active-section="business-model"] .pv-dots a { position: relative; min-width: 32px; }
-  .pvc2-page[data-active-section="business-model"] .pv-dots span {
+  .pvc2-page:is([data-active-section="configurations"], [data-active-section="business-model"]) .pv-dots a { position: relative; min-width: 32px; }
+  .pvc2-page:is([data-active-section="configurations"], [data-active-section="business-model"]) .pv-dots span {
     position: absolute; inset-inline-start: 100%; width: max-content;
     padding: 3px 6px; background: var(--pv-paper);
   }
-  .pvc2-page[data-active-section="business-model"] .pv-dots a:not(:hover):not(:focus-visible) span { visibility: hidden; }
+  .pvc2-page:is([data-active-section="configurations"], [data-active-section="business-model"]) .pv-dots a:not(:hover):not(:focus-visible) span { visibility: hidden; }
 }
 @media (max-width: 760px) {
-  .pvc2-page .pvc2-business-model .pvc2-business-purchase,
-  .pvc2-business-model .pvc2-business-offtake { padding-inline: 35px; }
-  .pvc2-business-model .pvc2-business-offtake { padding-block-start: 48px; }
-  .pvc2-business-steps ol { grid-template-columns: minmax(0, 1fr); }
+  .pvc2-config-table { padding: 92px 18px 48px 35px; }
+  .pvc2-config-comparison { min-width: 300px; padding: 0; }
+  .pvc2-config-head, .pvc2-config-row { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); }
+  .pvc2-config-head > span, .pvc2-config-row > span { padding-inline: 3px; overflow-wrap: anywhere; }
+  .pvc2-config-copy { min-height: 0; border-inline-start: 0; }
+  .pvc2-business-offtake { padding: 48px 35px; }
 }
 @media (max-height: 800px) {
   .pvc2-page > .pv-dots { top: 50%; transform: translateY(-50%); }
