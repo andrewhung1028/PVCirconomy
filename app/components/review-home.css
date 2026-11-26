@@ -306,6 +306,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-quality-estimate, .pvc2-quality-materials { min-width: 0; padding-block: clamp(108px,12svh,145px) 52px; }
 .pvc2-quality-estimate { padding-inline: var(--pv-safe-inline-roomy) clamp(20px,3vw,56px); }
 .pvc2-quality-estimate .pvc2-section-heading { grid-template-columns: 1fr; gap: 16px; margin-bottom: clamp(28px,4svh,52px); }
+.pvc2-quality-estimate .pvc2-section-heading p { max-width: none; }
 .pvc2-quality-estimate .os-materials-demand > strong {
   color: var(--pv-yellow);
   font-size: var(--pv-type-display);
