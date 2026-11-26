@@ -1,4 +1,4 @@
-import { defaultMouPolicy, validMouPolicy } from "../../lib/mou-policy";
+import { defaultMouPolicy, defaultMouSalesAgents, validMouPolicy } from "../../lib/mou-policy";
 import { freightCostTrend } from "../../lib/our-solution/freight-cost-trends";
 import ExcelJS from 'exceljs';
 import layout from '../../data/our-solution-workbook-layout.json';
@@ -316,15 +316,41 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters, 
   if (transport && !transport.referencePoints && !transportSheet?.getColumn(1).values.includes('reference_1_distance') && base?.transport?.referencePoints)
     transport.referencePoints = base.transport.referencePoints;
   const mouSheet = w.getWorksheet('MOU');
-  const mouPolicy = mouSheet ? { validityDays: mouSheet.getCell('B2').value, confidentialityYears: mouSheet.getCell('B3').value } : base?.mouPolicy;
+  let salesAgents = base?.mouPolicy?.salesAgents;
+  if (mouSheet?.getCell('A4').value !== undefined && mouSheet?.getCell('A4').value !== null) {
+    const cell = mouSheet.getCell('B4');
+    if (mouSheet.getCell('A4').value !== 'sales_agents' || (cell.value !== null && typeof cell.value !== 'string'))
+      throw Error('MOU · 請以純文字填寫銷售代理，每行一家公司。');
+    salesAgents = String(cell.value ?? '').split(/\r?\n/).map(name => name.trim()).filter(Boolean);
+  }
+  const mouPolicy = mouSheet ? { validityDays: mouSheet.getCell('B2').value, confidentialityYears: mouSheet.getCell('B3').value,
+    ...(salesAgents !== undefined && { salesAgents }) } : base?.mouPolicy;
   if (mouSheet && (mouSheet.getCell('A2').value !== 'validity_days' || mouSheet.getCell('A3').value !== 'confidentiality_years' || !validMouPolicy(mouPolicy)))
-    throw Error("MOU · 請保留欄位鍵並填寫有效年日數。");
+    throw Error("MOU · 請保留欄位鍵，填寫有效期限，並輸入不重複的銷售代理名稱。");
   const marketData = { ...(validMouPolicy(mouPolicy) ? { mouPolicy } : {}), format: 'parameters-v2' as const, scenario, assumptions, meta, ...(transport ? { transport } : {}) };
   const data: Parameters = shared ? withSharedParameters(marketData, shared) : { ...marketData, ...readGlobalTables(w) };
   const errors=validateParameters(data);if(errors.length)throw Error(errors.join('\n'));return data;
 }
 
-export async function createOurSolutionWorkbook(data:Parameters, _template=false, effective:EffectivePrices={}, blankLocalInputs=false, marketOnly=false) {
+function referencedAssumptionCells(workbook: ExcelJS.Workbook, assumptions: ExcelJS.Worksheet) {
+  const referenced = new Set<string>();
+  // The generated workbook uses A1 references and rectangular ranges.
+  const pattern = /(?:'?([A-Za-z][\w -]*)'?!)?(\$?[A-Z]{1,3}\$?\d+)(?::(\$?[A-Z]{1,3}\$?\d+))?/g;
+  for (const sheet of workbook.worksheets) sheet.eachRow(row => row.eachCell(cell => {
+    if (!cell.formula) return;
+    for (const [, target, start, end] of cell.formula.matchAll(pattern)) {
+      if ((target ?? sheet.name) !== assumptions.name) continue;
+      const first = assumptions.getCell(start.replaceAll('$', ''));
+      const last = end ? assumptions.getCell(end.replaceAll('$', '')) : first;
+      for (let r = Number(first.row); r <= Number(last.row); r++) {
+        for (let c = Number(first.col); c <= Number(last.col); c++) referenced.add(assumptions.getCell(r, c).address);
+      }
+    }
+  }));
+  return referenced;
+}
+
+export async function createOurSolutionWorkbook(data:Parameters, _template=false, effective:EffectivePrices={}, blankLocalInputs=false, marketOnly=false, shared?: SharedParameters) {
   const w=new ExcelJS.Workbook();w.creator='PV Circonomy';w.calcProperties.fullCalcOnLoad=true;
   for (const template of layout) {
     if (!marketOnly || !sharedSheets.some(name => name === template.name)) addLayoutSheet(w, template);
@@ -379,28 +405,45 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
         sheet.addRow([`reference_${i}_cost`,points[i-1]?.cost ?? null,currency]).getCell(2).fill = editable;
       }
       const mou = w.addWorksheet('MOU');
-      mou.columns = [{width:34},{width:18},{width:20}];
+      mou.columns = [{width:30},{width:34},{width:14},{width:58}];
       const policy = data.mouPolicy ?? defaultMouPolicy;
-      mou.addRow(['field_key','Value','Unit']);
+      mou.addRow(['field_key','Value','Unit','說明']);
       mou.addRow(['validity_days',policy.validityDays,'days']).getCell(2).fill = editable;
       mou.addRow(['confidentiality_years',policy.confidentialityYears,'years']).getCell(2).fill = editable;
+      const agents = policy.salesAgents ?? defaultMouSalesAgents(market);
+      const salesAgentRow = mou.addRow(['sales_agents', agents.join('\n') || null, null,
+        '銷售代理，每行一家公司。有銷售代理的市場，線上詢價與 MOU 不顯示 MSRP。']);
+      salesAgentRow.getCell(2).fill = editable;
+      salesAgentRow.getCell(2).alignment = { wrapText: true, vertical: 'top' };
+      salesAgentRow.getCell(4).alignment = { wrapText: true, vertical: 'top' };
+      salesAgentRow.height = Math.max(32, agents.length * 16);
     }
   }
   const instructions=rows(w.getWorksheet('Instructions')!)['0'];
   get(instructions,'Contents','Instructions').getCell(2).value='Assumptions, Scenario, Capacity History, Population and EU-27 Population are the single sources for every editable market, operating, technical and benchmark value shown on Our Solution. Assumptions section 12 holds externally sourced public benchmarks, targets and their sources.';
   get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions (model parameters plus section 12 public benchmarks) · Scenario (volume and schedule) · Product Value (live formulas) · Capacity History · Population · EU-27 Population.';
   get(instructions,'Edit rule','Instructions').getCell(2).value='Change yellow cells only. In Assumptions section 12, edit Value and Source only. Do not rename sheets, field keys, labels or units.';
-  // Product Value and Section 8 formulas retain the template's live references.
+  // Build the live references from row labels so added worksheet rows do not shift formulas.
   const result=blankLocalInputs ? null : model(data,effective);
   for(const [label,mat] of Object.entries(streamMaterial))get(groups['8'],label,'Assumptions').getCell(2).value={formula:`B${get(groups['5'],mat,'Assumptions').number}`,result:data.assumptions[5][mat][0] as number};
+  const silver = get(groups['5'],'Silver','Assumptions').getCell(2).address;
+  const membership = Object.keys(streamMaterial).map(label => get(groups['8'],label,'Assumptions'));
   for(const [i,code] of ['SHREDDING','HOT_KNIFE','PVCIRCULATOR'].entries()){
-    for(const [label,mult] of [['Theoretical silver content upper limit (%)',1],['Theoretical silver content upper limit (g/t)',10000]] as const){const cell=get(groups['8'],label,'Assumptions').getCell(i+3);cell.value={formula:cell.formula,...(result ? {result:result.solutions[code as keyof typeof result.solutions].silverUpperPct*mult} : {})};}
+    const percent = get(groups['8'],'Theoretical silver content upper limit (%)','Assumptions').getCell(i+3);
+    const grams = get(groups['8'],'Theoretical silver content upper limit (g/t)','Assumptions').getCell(i+3);
+    const components = membership.map(row => `${row.getCell(2).address}*${row.getCell(i+3).address}`);
+    const value = result?.solutions[code as keyof NonNullable<typeof result>['solutions']].silverUpperPct;
+    percent.value = {formula:`${silver}/(${components.join('+')}+${silver})*100`,...(value === undefined ? {} : {result:value})};
+    grams.value = {formula:`${percent.address}*10000`,...(value === undefined ? {} : {result:value*10000})};
   }
-  if (additional) {
+  if (marketOnly || additional) {
     const value = w.getWorksheet('Product Value')!;
     value.getCell('A1').value = `Product value per panel (${currency})`;
-    value.getCell('A2').value = `Calculated from the ${currency} prices, metric panel weight and recovery assumptions in this workbook.`;
-    value.getCell('B3').value = {formula: `Scenario!${get(sr,'panel_weight_kg','Scenario').getCell(3).address}/1000`};
+    value.getCell('A2').value = `Calculated from the ${currency} prices, panel weight and recovery assumptions in this workbook.`;
+    const panelWeight = get(sr,metric?'panel_weight_kg':'panel_weight_lb','Scenario').getCell(3).address;
+    const kgPerPound = get(groups[3],'Kilograms per pound','Assumptions').getCell(2).address;
+    const poundsPerTonne = get(groups[3],'Pounds per metric ton','Assumptions').getCell(2).address;
+    value.getCell('B3').value = {formula: `Scenario!${panelWeight}${metric?'':`*Assumptions!${kgPerPound}`}/1000`};
     value.getCell('B4').value = `Price (${currency}/t)`;
     let rowNumber = 5;
     for (const key of Object.keys(baseSections[5])) {
@@ -410,7 +453,7 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
       const row = value.getRow(rowNumber++);
       row.getCell(1).value = key;
       const unit = `Assumptions!D${material}`, price = `Assumptions!C${material}`;
-      row.getCell(2).value = {formula:`IF(${unit}="N/A",0,IF(${unit}="${currency}/kg",${price}*1000,IF(${unit}="${currency}/troy oz",${price}*1000000/Assumptions!${ounce},${price})))`};
+      row.getCell(2).value = {formula:`IF(${unit}="N/A",0,IF(${unit}="${currency}/kg",${price}*1000,IF(${unit}="${currency}/lb",${price}*Assumptions!${poundsPerTonne},IF(${unit}="${currency}/troy oz",${price}*1000000/Assumptions!${ounce},${price}))))`};
       for (const [index,columns] of ['BCD','EFG','HIJ'].entries()) {
         row.getCell(index+3).value = {formula:`$B$3*Assumptions!B${material}*B${row.number}*${[...columns].map(c=>`Assumptions!${c}${recovery}`).join('*')}`};
       }
@@ -451,6 +494,20 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
     get(instructions,'Edit rule','Instructions').getCell(2).value=`Fill the blank yellow cells with confirmed local inputs and sources before upload.${reference} Shared engineering and global assumptions are included for review. Scenario contains the ${currency} per USD exchange rate. Do not rename sheets, field keys, labels or units.`;
   }
   if (marketOnly) {
+    if (shared) {
+      const referenced = referencedAssumptionCells(w, a);
+      for (const [section, definitions] of Object.entries(data.assumptions)) {
+        for (const key of Object.keys(definitions)) {
+          const values = sharedAssumptionValues(shared, section, key);
+          if (!values) continue;
+          const row = get(groups[section], key, 'Assumptions');
+          values.forEach((_, index) => {
+            const cell = row.getCell(index + (section === '8' ? 3 : 2));
+            if (!referenced.has(cell.address)) cell.value = null;
+          });
+        }
+      }
+    }
     get(instructions,'Contents','Instructions').getCell(2).value='Market-specific calculations use Assumptions, Scenario and Transport. Shared engineering assumptions, constants, capacity history and population are managed in the shared workbook. Unhighlighted shared cells in Assumptions are references for the formulas.';
     get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions · Scenario · Product Value · Transport · MOU. Leave all entries for an unavailable vehicle blank, or provide the full rate and loading inputs.';
   }
@@ -477,5 +534,5 @@ export async function createInitialOurSolutionTemplate(market: AdditionalParamet
   }
   data.assumptions[11]['Processing fee steps']=data.assumptions[11]['Processing fee steps (USD/lb)'];
   delete data.assumptions[11]['Processing fee steps (USD/lb)'];
-  return createOurSolutionWorkbook(shared ? withSharedParameters(data, shared) : data,true,{},true,Boolean(shared));
+  return createOurSolutionWorkbook(shared ? withSharedParameters(data, shared) : data,true,{},true,Boolean(shared),shared);
 }

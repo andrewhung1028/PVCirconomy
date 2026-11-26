@@ -91,6 +91,10 @@ export type EquipmentMouTerms = {
   specifications?: EquipmentMouSpecifications;
 };
 
+export function equipmentMouHasSalesAgent(terms: Pick<EquipmentMouTerms, "agent" | "agentCandidates">) {
+  return Boolean(terms.agent || terms.agentCandidates?.length);
+}
+
 export type EquipmentMouReview = {
   input: EquipmentMouInput;
   contact: EquipmentMouContact;

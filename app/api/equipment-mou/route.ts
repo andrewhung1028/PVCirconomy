@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouSigningLocales, equipmentProjectStages, equipmentVariants, otherSitePowerSupply, polymerOfftakeOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
+import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasSalesAgent, equipmentMouSigningLocales, equipmentProjectStages, equipmentVariants, otherSitePowerSupply, polymerOfftakeOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
 import { isSitePowerOption } from "../../../lib/equipment-quantitative";
 import { ourSolutionLocales, ourSolutionParameterMarkets, publicSolutionMarkets } from "../../../lib/our-solution/market";
 import { model } from "../../../lib/our-solution/model";
@@ -10,7 +10,7 @@ import { jsonBody, reply, sameOrigin } from "../../../server/delivery/http";
 import { limit } from "../../../server/delivery/limits";
 import { loadSolutionOperatingData } from "../../../server/our-solution/public-view";
 
-import { equipmentMouMarket } from "../../../server/equipment-mou/market";
+import { equipmentMouMarket, equipmentMouSalesTerms } from "../../../server/equipment-mou/market";
 import { parseInquirySubmission, recordInquirySubmission } from "../../../server/equipment-mou/submissions";
 import { database } from "../../../server/db/client";
 
@@ -49,7 +49,7 @@ function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput
     && (value.recyclingFee === null || within(value.recyclingFee, 0, Number.MAX_SAFE_INTEGER)));
 }
 
-async function estimate(input: EquipmentMouInput, msrpPerLine: number | null): Promise<EquipmentMou> {
+async function estimate(input: EquipmentMouInput, msrpPerLine: number | null, throughSalesAgent: boolean): Promise<EquipmentMou> {
   const currency = ourSolutionParameterMarkets[input.installationMarket].currency;
   const msrpTotal = msrpPerLine === null ? null : msrpPerLine * input.lines;
   const result: EquipmentMou = {
@@ -63,7 +63,7 @@ async function estimate(input: EquipmentMouInput, msrpPerLine: number | null): P
   const isBasic = input.configuration === "basic";
   // Our Solution currently publishes one PV Circulator reference operating profile.
   // Its investment assumption can be shown separately for the standard Basic line.
-  if (result.investment === null && isBasic) {
+  if (!throughSalesAgent && result.investment === null && isBasic) {
     const capex = parameter(data, 4, "Capex per line", 2);
     if (capex > 0) result.investment = capex * input.lines;
   }
@@ -155,6 +155,17 @@ function initializeSigningStore() {
   return signingStoreReady;
 }
 
+export async function GET(request: Request) {
+  const value = new URL(request.url).searchParams.get("market");
+  const market = publicSolutionMarkets.find(option => option === value);
+  if (!market) return reply({ error: "invalid_market" }, 400);
+  try {
+    return reply({ throughSalesAgent: equipmentMouHasSalesAgent(await equipmentMouSalesTerms(market)) });
+  } catch {
+    return reply({ error: "unavailable" }, 503);
+  }
+}
+
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return reply({ error: "invalid_origin" }, 403);
   let body;
@@ -178,7 +189,8 @@ export async function POST(request: Request) {
       const marketData = await equipmentMouMarket(input);
       if (!marketData) return reply({ error: "invalid_site_power" }, 400);
       const { terms, msrpPerLine } = marketData;
-      const review = { input, contact: body.contact as EquipmentMouContact, mou: await estimate(input, msrpPerLine), terms };
+      const review = { input, contact: body.contact as EquipmentMouContact,
+        mou: await estimate(input, msrpPerLine, equipmentMouHasSalesAgent(terms)), terms };
       const id = randomUUID();
       const expires = Date.now() + 60 * 60 * 1000;
       const languageReady = review.input.locale === equipmentMouSigningLocales[review.input.pageMarket];

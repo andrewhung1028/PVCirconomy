@@ -87,12 +87,13 @@ type FloorAreaUnit = keyof typeof floorAreaSettings;
 
 const catalogInquiryMaterials = products.map(({ name }) => name);
 
-export function EquipmentFields({ locale = "en-US", market, specificationPerformance, defaults, sitePowerOptions = defaultSitePowerOptions }: {
+export function EquipmentFields({ locale = "en-US", market, specificationPerformance, defaults, sitePowerOptions = defaultSitePowerOptions, onInstallationMarketChange }: {
   locale?: OurSolutionLocale;
   market?: PublicSolutionMarket;
   specificationPerformance?: EquipmentPerformance | null;
   defaults?: EquipmentMarketDefaults;
   sitePowerOptions?: SitePowerOptions;
+  onInstallationMarketChange?: (market: PublicSolutionMarket) => void;
 } = {}) {
   const t = inquiryTranslate(locale);
   const fromSpecification = specificationPerformance !== undefined;
@@ -162,7 +163,11 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
       <div className="pc-form-pair">
         <label>{t(fromSpecification ? "Country / region" : "Installation country or region (required)")}
           <select name="installationCountry" required value={installationMarket}
-            onChange={event => setInstallationMarket(event.currentTarget.value as PublicSolutionMarket)}>
+            onChange={event => {
+              const selected = event.currentTarget.value as PublicSolutionMarket;
+              setInstallationMarket(selected);
+              onInstallationMarketChange?.(selected);
+            }}>
             <option value="" disabled>{t("Select a country or region")}</option>
             {(["US", "AU", "EU", "UK", "CA", "JP"] as const).map(market => (
               <option key={market} value={market}>{marketNames[locale][market]}</option>

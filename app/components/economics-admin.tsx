@@ -217,7 +217,7 @@ export function EconomicsAdmin() {
           <h2>2. 上傳並驗證{marketName}參數</h2>
           <p id="our-solution-file-instructions">{isShared
             ? "限 3 MB 內的 .xlsx。共用 Assumptions 的黃色數值發布後會套用至各市場。請保留工作表、年份、欄名及單位。"
-            : "限 3 MB 內的 .xlsx。Transport 工作表填寫本市場運費參考、費率與裝載資料。MOU 工作表填寫期限及保密年數。區段 12 限修改數值和來源。"}</p>
+            : "限 3 MB 內的 .xlsx。Transport 工作表填寫本市場運費參考、費率與裝載資料。MOU 工作表填寫期限、保密年數及銷售代理。區段 12 限修改數值和來源。"}</p>
           <label className="pa-file-label" htmlFor="pa-economics-file">選擇{marketName} Excel 檔案</label>
           <input ref={fileRef} id="pa-economics-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-describedby="our-solution-file-instructions" disabled={busy || !state} onChange={(event) => void upload(event.target.files?.[0])} />
           {status && !draft && <p className="pa-parameter-feedback" role="status">{status}</p>}

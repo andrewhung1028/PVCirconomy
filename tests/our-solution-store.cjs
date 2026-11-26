@@ -111,10 +111,11 @@ const assert=require('node:assert/strict'),{PGlite}=require('@electric-sql/pglit
   const auParsed = await parseOurSolutionWorkbook(scopedWorkbook, australia, shared.data);
   const { freightCostTrend } = require('../lib/our-solution/freight-cost-trends.ts');
   assert.deepEqual(auParsed.transport, {...auTransport, referencePoints:freightCostTrend('AU')});
-  assert.deepEqual(auParsed.mouPolicy, {validityDays:180, confidentialityYears:3});
+  assert.deepEqual(auParsed.mouPolicy, {validityDays:180, confidentialityYears:3,salesAgents:[]});
   workbookCheck.getWorksheet('MOU').getCell('B2').value=120;
+  workbookCheck.getWorksheet('MOU').getCell('B4').value='Agent One\nAgent Two';
   const changed = await parseOurSolutionWorkbook(Buffer.from(await workbookCheck.xlsx.writeBuffer()), australia, shared.data);
-  assert.deepEqual(changed.mouPolicy,{validityDays:120, confidentialityYears:3});
+  assert.deepEqual(changed.mouPolicy,{validityDays:120, confidentialityYears:3,salesAgents:['Agent One','Agent Two']});
   assert.deepEqual(auParsed.capacityHistory, shared.data.capacityHistory);
   australia.transport = auTransport;
   const australiaFirst = await store.saveOurSolutionData(australia,null,actor,'Australia initial version','AU');
