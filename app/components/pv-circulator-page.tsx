@@ -40,6 +40,7 @@ const sections = [
   ["capability", "Capability"],
   ["deployability", "Deployability"],
   ["configurations", "Configurations"],
+  ["business-model", "Business model"],
   ["specification", "Specification"],
 ] as const;
 
@@ -222,7 +223,9 @@ function ConfigurationValue({ value, premium = false, t }: { value: boolean | st
     aria-label={t(value ? "Included" : "Not included")}>{!value && "—"}</span>;
 }
 
-function Specifications({ locale, market, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions }: {
+function Specifications({ locale, market, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions, inquiry, setInquiry }: {
+  inquiry: boolean;
+  setInquiry: (open: boolean) => void;
   equipmentConfigurations: EquipmentConfigurations;
   marketDefaults: EquipmentMarketDefaults;
   sitePowerOptions: SitePowerOptions;
@@ -241,14 +244,10 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
   const [includePlus, setIncludePlus] = useState(false);
   const selected = specificationVariants[variant];
   const variants = Object.keys(specificationVariants) as SpecVariant[];
-  const [inquiry, setInquiry] = useState(false);
   const [mouReview, setMouReview] = useState<EquipmentMouReview | null>(null);
   const quote = inquiryTranslate(locale);
   const openQuote = useRef<HTMLButtonElement>(null);
   const returnToSpecs = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (new URLSearchParams(location.search).get("inquiry") === "1") setInquiry(true);
-  }, []);
   function selectSpecification(next: SpecVariant) {
     setVariant(next);
     if (next === "plus") setIncludePlus(true);
@@ -421,7 +420,11 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
   const showRevenueComparison = estimate.valid && estimate.netAnnual > 0 && Boolean(recovery);
   const businessCaseHref = marketCalculatorHref(locale, market);
   const [active, setActive] = useState<(typeof sections)[number][0]>("pvcirculator");
+  const [inquiry, setInquiry] = useState(false);
   const paneNavigationLocked = useRef(false);
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("inquiry") === "1") setInquiry(true);
+  }, []);
   useEffect(() => {
     document.documentElement.classList.add("pv-section-scroll");
     const elements = sections.map(([id]) => document.getElementById(id)).filter((element): element is HTMLElement => Boolean(element));
@@ -460,7 +463,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
     window.setTimeout(() => { paneNavigationLocked.current = false; }, 750);
   };
 
-  const light = ["performance", "functions", "quality", "routes", "capability", "deployability", "configurations", "specification"].includes(active);
+  const light = ["performance", "functions", "quality", "routes", "capability", "deployability", "configurations", "business-model", "specification"].includes(active);
 
   return <div className={`pv-review pvc2-page${light ? " pv-light-nav" : ""}`} data-active-section={active}>
     <a className="pv-skip" href="#pvcirculator">{t("Skip to PV Circulator")}</a>
@@ -587,12 +590,35 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
       </section>
 
       <section id="configurations" className="pv-screen pvc2-split pvc2-split-43" aria-labelledby="configurations-title">
-        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability", true)}><div><h2 id="configurations-title">{t("Choose")}<br />{t("the right fit.")}</h2><strong>{t("Three configurations.")}<br />{t("One goal: maximum material value.")}</strong><p>{t("Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.")}</p><div className="pvc2-business-case"><strong>{t("Evaluate the economics of your configuration.")}</strong><p>{t("Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.")}</p>
+        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "business-model", "deployability", true)}><div><h2 id="configurations-title">{t("Choose")}<br />{t("the right fit.")}</h2><strong>{t("Three configurations.")}<br />{t("One goal: maximum material value.")}</strong><p>{t("Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.")}</p><div className="pvc2-business-case"><strong>{t("Evaluate the economics of your configuration.")}</strong><p>{t("Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.")}</p>
           <p>{t("Premium integrates junction-box removal. Economic and Basic require separate preparation for that step. Check power, floor loading and staffing in the specifications.")}</p><a className="pv-text-button" href={businessCaseHref}>{t("Calculate your business case")}{' '}<Arrow /></a></div></div></div>
-        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{t(lead)}</small></span>)}</div>{rows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value={economic} /><ConfigurationValue t={t} value={basic} /><ConfigurationValue t={t} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value /><ConfigurationValue t={t} value /><ConfigurationValue t={t} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
+        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "business-model", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{t(lead)}</small></span>)}</div>{rows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value={economic} /><ConfigurationValue t={t} value={basic} /><ConfigurationValue t={t} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value /><ConfigurationValue t={t} value /><ConfigurationValue t={t} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
       </section>
 
-      <Specifications locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} recyclingFee={feeRate} marketDefaults={marketDefaults} sitePowerOptions={sitePowerOptions} equipmentConfigurations={equipmentConfigurations} />
+      <section id="business-model" className="pv-screen pvc2-text-screen pvc2-business-model" aria-labelledby="business-model-title">
+        <header className="pvc2-section-heading">
+          <h2 id="business-model-title">{t("Business model")}</h2>
+          <Link className="pv-button" href={`?market=${market}&inquiry=1#specification`} onNavigate={() => setInquiry(true)}>
+            {inquiryTranslate(locale)("Online inquiry")} <Arrow />
+          </Link>
+        </header>
+        <div className="pvc2-business-options">
+          <article>
+            <h3>{t("Standard sales")}</h3>
+            <p>{t("Purchase a PV Circulator line configured for your operation. Confirm equipment scope and commercial terms during inquiry.")}</p>
+          </article>
+          {market !== "JP" && <article>
+            <h3>{t("Trial-based PO (TBP)")}</h3>
+            <p>{t("Apply to trial the equipment against agreed acceptance criteria under a trial-based purchase order. Trial scope and eligibility are confirmed during project review.")}</p>
+          </article>}
+          <article>
+            <h3>{t("Material offtake")}</h3>
+            <p>{t("Request offtake for materials produced by your PV Circulator alongside your equipment inquiry. Availability for your site is confirmed during project review.")}</p>
+          </article>
+        </div>
+      </section>
+
+      <Specifications inquiry={inquiry} setInquiry={setInquiry} locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} recyclingFee={feeRate} marketDefaults={marketDefaults} sitePowerOptions={sitePowerOptions} equipmentConfigurations={equipmentConfigurations} />
     </main>
   </div>;
 }

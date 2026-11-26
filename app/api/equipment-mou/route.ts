@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasSalesAgent, equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentVariants, glassOfftakePrices, otherSitePowerSupply, polymerOfftakeOptions, siteNetworkOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
+import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasSalesAgent, equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentPurchaseOptions, equipmentVariants, glassOfftakePrices, otherSitePowerSupply, polymerOfftakeOptions, siteNetworkOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
 import { isSitePowerOption } from "../../../lib/equipment-quantitative";
 import { ourSolutionLocales, ourSolutionParameterMarkets, publicSolutionMarkets } from "../../../lib/our-solution/market";
 import { model } from "../../../lib/our-solution/model";
@@ -34,6 +34,8 @@ function validOfftake({ offtakeStreams, glassOfftakePrice, installationMarket }:
 function validInput(value: EquipmentMouInput | null): value is EquipmentMouInput {
   return Boolean(value && equipmentVariants.includes(value.configuration)
     && (value.baseConfiguration === undefined || (equipmentVariants.slice(0, 3).includes(value.baseConfiguration)))
+    && (value.purchaseOption === undefined || (equipmentPurchaseOptions.includes(value.purchaseOption)
+      && (value.installationMarket !== "JP" || value.purchaseOption === equipmentPurchaseOptions[0])))
     && (value.polymerOfftake === undefined || polymerOfftakeOptions.includes(value.polymerOfftake))
     && publicSolutionMarkets.includes(value.installationMarket) && publicSolutionMarkets.includes(value.pageMarket)
     && ourSolutionLocales.includes(value.locale)
@@ -224,6 +226,7 @@ export async function POST(request: Request) {
           ["installationPostalCode", input.installationPostalCode ?? ""],
           ["configuration", input.baseConfiguration ?? input.configuration],
           ["includePlus", input.configuration === "plus" ? "With" : "Without"],
+          ["purchaseOption", input.purchaseOption ?? ""],
           ["lineQuantity", String(input.lines)],
         ]);
         msrpPerLine = marketData.msrpPerLine;

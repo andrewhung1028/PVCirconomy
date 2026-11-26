@@ -7,7 +7,7 @@ import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
 import { equipmentMouPriceRows, equipmentOfftakeLabel, inquiryText } from "../../lib/equipment-mou-copy";
 import { defaultMouSalesAgents } from "../../lib/mou-policy";
-import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
+import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentPurchaseOptions, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 
 const identityFields = ["email", "company", "name"] as const;
@@ -71,6 +71,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const codeField = useRef<HTMLInputElement>(null);
   const [rateLimited, setRateLimited] = useState(false);
   const [installationMarket, setInstallationMarket] = useState(market);
+  const [purchaseOption, setPurchaseOption] = useState<(typeof equipmentPurchaseOptions)[number]>(equipmentPurchaseOptions[0]);
   const [salesAgentStatus, setSalesAgentStatus] = useState<{ market: PublicSolutionMarket; throughSalesAgent: boolean }>();
   const noMsrp = installationMarket === "JP" || (salesAgentStatus?.market === installationMarket
     ? salesAgentStatus.throughSalesAgent
@@ -114,6 +115,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       configuration: includePlus ? "plus" : configuration, locale, pageMarket: market, recyclingFee,
       installationMarket: value("installationCountry") as PublicSolutionMarket,
       baseConfiguration: includePlus ? configuration : undefined,
+      purchaseOption: equipmentPurchaseOptions.find(option => option === value("purchaseOption")),
       offtakeStreams,
       installationSite: value("installationSite") || undefined,
       installationPostalCode: value("installationPostalCode") || undefined,
@@ -232,6 +234,14 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       }}>
       <fieldset className="pc-booking-fieldset">
         <legend>{t("Equipment configuration")}</legend>
+        <label>{t("Purchase option")}
+          <select name="purchaseOption" value={purchaseOption}
+            onChange={event => setPurchaseOption(equipmentPurchaseOptions.find(option => option === event.currentTarget.value) ?? equipmentPurchaseOptions[0])}>
+            {equipmentPurchaseOptions.slice(0, installationMarket === "JP" ? 1 : undefined).map(option => (
+              <option key={option} value={option}>{t(option)}</option>
+            ))}
+          </select>
+        </label>
         <div className="pc-form-pair">
           <label>{t("Configuration")}
             <select name="configuration" value={configuration}
@@ -252,7 +262,10 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
           <label>{t("Expected production start")}<input type="month" name="startDate" max="9999-12" /></label>
         </div>
       </fieldset>
-      <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={setInstallationMarket} />
+      <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={selected => {
+        setInstallationMarket(selected);
+        if (selected === "JP") setPurchaseOption(equipmentPurchaseOptions[0]);
+      }} />
       {(!noMsrp || rememberContact) && <label className="pc-configuration-choice">
         <input type="checkbox" checked={rememberContact} disabled={pending}
           onChange={event => {

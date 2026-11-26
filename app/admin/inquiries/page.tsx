@@ -18,7 +18,7 @@ const submittedTime = new Intl.DateTimeFormat("zh-TW", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Taipei",
 });
 const fieldLabels: ReadonlyMap<string, string> = new Map(Object.entries({
-  configuration: "設備配置", includePlus: "PLUS 模組", assessmentDate: "預計完成評估時間",
+  configuration: "設備配置", purchaseOption: "採購方式", includePlus: "PLUS 模組", assessmentDate: "預計完成評估時間",
   stage: "專案階段", lineQuantity: "產線數量", startDate: "預計啟動生產時間", configurationRequirements: "客製化需求",
   targetCapacity: "目標處理量（片／月）", dailyHours: "每日運轉時數", panelTechnology: "模組技術", panelCondition: "模組狀態",
   materials: "回收物料", "materialPurity[Glass]": "玻璃最低純度（%）", "materialPurity[Silicon]": "矽最低純度（%）",
@@ -30,7 +30,7 @@ const fieldLabels: ReadonlyMap<string, string> = new Map(Object.entries({
   name: "姓名", email: "公司電子郵件", phone: "電話",
 }));
 const translatedFields = new Set([
-  "includePlus", "stage", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "glassOfftakePrice",
+  "includePlus", "purchaseOption", "stage", "panelTechnology", "panelCondition", "materials", "polymerOfftake", "glassOfftakePrice",
   "installationEnvironment", "powerSupply", "compressedAir", "siteNetwork",
 ]);
 
