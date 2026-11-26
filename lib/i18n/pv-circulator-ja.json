@@ -296,6 +296,7 @@
   "Economic, Basic and Premium share the same rated throughput. With PLUS integrated, line throughput is {throughput} panels/min.": "Economic、Basic、Premium の定格処理速度は共通です。PLUS を組み込んだラインの処理速度は毎分 {throughput} 枚です。",
   "Direct staff operate the equipment. Indirect staff handle warehousing and pre-processing. Include unplanned changeovers or cleaning stops in uptime.": "直接作業員は設備を操作し、間接作業員は倉庫業務と前処理を担当します。計画外の段取り替えや清掃による停止は稼働率に反映してください。",
   "Theoretical silver concentration": "銀濃度の理論上限",
+  "PV Circulator’s theoretical silver concentration compared with thermal processing and shredding": "熱処理・破砕に対する PV Circulator の理論銀濃度の倍率",
   "Method": "処理方式",
   "Silver-bearing output": "銀を含む産出物",
   "Upper limit (wt.%)": "重量比の上限",

@@ -353,6 +353,23 @@ const silverStreams = [
   ["PVCIRCULATOR", "PV Circulator", "Cell powder"],
 ] as const;
 
+function SilverGradeRange({ grades, locale, t }: { grades?: PVCirculatorSilverGrades; locale: ProductLocale; t: Translate }) {
+  // Compare the concentrations shown in the table, rounded to three decimal places.
+  const [shredding, thermal, circulator] = silverStreams.map(([code]) => {
+    const grade = grades?.find(item => item.code === code)?.silverUpperPct;
+    return grade == null ? 0 : Number(grade.toFixed(3));
+  });
+  if (shredding <= 0 || thermal <= 0 || circulator <= 0) return null;
+
+  const ratios = [circulator / thermal, circulator / shredding];
+  const format = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  const range = `${format.format(Math.min(...ratios))}–${format.format(Math.max(...ratios))}×`;
+  return <div className="pvc2-silver-grade-range">
+    <strong>{range}</strong>
+    <p>{t("PV Circulator’s theoretical silver concentration compared with thermal processing and shredding")}</p>
+  </div>;
+}
+
 function SilverGradeComparison({ grades, locale, market, t }: { grades?: PVCirculatorSilverGrades; locale: ProductLocale; market: PublicSolutionMarket; t: Translate }) {
   return <div className="pvc2-silver-grades">
     <h3 id="pvc2-silver-grade-title">{t("Theoretical silver concentration")}</h3>
@@ -482,6 +499,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
             <h2 id="layer-title">{t("Don't crush")}<br />{t("value together.")}</h2>
             <p>{t("A PV module is built in layers: glass, encapsulant, cells and backsheet. Shred it, and they end up mixed together. Separate them, and each one stays clean enough for what comes next.")}</p>
           </div>
+          <SilverGradeRange grades={silverGrades} locale={locale} t={t} />
           <SilverGradeComparison grades={silverGrades} locale={locale} market={market} t={t} />
         </div>
       </section>
