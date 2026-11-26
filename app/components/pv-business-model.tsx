@@ -1,7 +1,13 @@
 import Link from "next/link";
-import type { WheelEventHandler } from "react";
+import { useState, type WheelEventHandler } from "react";
 import type { EquipmentPurchaseOption } from "../../lib/equipment-mou";
 import type { PublicSolutionMarket } from "../../lib/our-solution/market";
+
+const trialConditions = [
+  "Our organization holds a government permit to dismantle or process PV modules.",
+  "We understand that both parties will agree on acceptance criteria before the trial starts.",
+  "We understand that delivery is FOB Taiwan port and that the buyer pays outbound freight, duties and import fees.",
+];
 
 export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }: {
   market: PublicSolutionMarket;
@@ -9,6 +15,8 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }
   onPurchase: (option: EquipmentPurchaseOption) => void;
   onPaneWheel: WheelEventHandler<HTMLDivElement>;
 }) {
+  const [confirmed, setConfirmed] = useState<string[]>([]);
+  const applyLabel = <>{t("Apply for a Trial-based PO")} <span aria-hidden="true">→</span></>;
   const trialOffered = market !== "JP";
 
   return <section id="business-model" className="pv-screen pvc2-split pvc2-split-64 pvc2-business-model" aria-labelledby="business-model-title">
@@ -27,8 +35,20 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }
             <p>{t("After the MOU, the formal quotation sets out the trial fee and available slots before you sign the contract.")}</p>
             <p>{t("Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.")}</p>
           </details>
-          <Link className="pv-text-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
-            onNavigate={() => onPurchase("Trial-based PO (TBP)")}>{t("Apply for a Trial-based PO")} <span aria-hidden="true">→</span></Link>
+          <fieldset className="pvc2-trial-conditions">
+            <legend>{t("Confirm each condition to apply")}</legend>
+            {trialConditions.map(condition => <label key={condition}>
+              <input type="checkbox" checked={confirmed.includes(condition)} onChange={event => {
+                const checked = event.currentTarget.checked;
+                setConfirmed(previous => checked ? [...previous, condition] : previous.filter(item => item !== condition));
+              }} />
+              {t(condition)}
+            </label>)}
+          </fieldset>
+          {confirmed.length === trialConditions.length
+            ? <Link className="pv-text-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
+                onNavigate={() => onPurchase("Trial-based PO (TBP)")}>{applyLabel}</Link>
+            : <button type="button" className="pv-text-button" disabled>{applyLabel}</button>}
         </article>}
       </div>
     </div>
