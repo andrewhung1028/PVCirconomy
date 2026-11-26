@@ -201,8 +201,11 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
             ))}
           </select>
         </label>
-        <label>{t("Installation city or site")}<input name="installationSite" maxLength={fromSpecification ? 240 : undefined} /></label>
-        {fromSpecification && <label>{t("Installation postal code")}
+        <label>{t(fromSpecification ? "City" : "Installation city or site")}
+          <input name="installationSite" maxLength={fromSpecification ? 240 : undefined}
+            autoComplete={fromSpecification ? "section-installation address-level2" : undefined} />
+        </label>
+        {fromSpecification && <label>{t("Postal code")}
           <input name="installationPostalCode" autoComplete="section-installation postal-code" maxLength={16}
             autoCapitalize="characters" spellCheck={false} />
         </label>}

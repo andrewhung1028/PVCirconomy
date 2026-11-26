@@ -63,8 +63,8 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
       [t("EVA and backsheet offtake"), option(input.polymerOfftake)],
     ] satisfies [string, string][] : []),
     [t("Installation market"), marketNames[input.locale][input.installationMarket]],
-    [t("Installation city or site"), input.installationSite || "—"],
-    ...(input.installationPostalCode ? [[t("Installation postal code"), input.installationPostalCode] as [string, string]] : []),
+    [t("City"), input.installationSite || "—"],
+    ...(input.installationPostalCode ? [[t("Postal code"), input.installationPostalCode] as [string, string]] : []),
     [t("Installation environment"), option(input.installationEnvironment)],
     [t("Available floor area"), input.floorArea
       ? `${number.format(input.floorArea.value)} ${input.floorArea.unit === "ft2" ? "ft²" : "m²"}` : "—"],
