@@ -3,19 +3,13 @@ import { useState, type WheelEventHandler } from "react";
 import type { EquipmentPurchaseOption } from "../../lib/equipment-mou";
 import type { PublicSolutionMarket } from "../../lib/our-solution/market";
 
-const trialConditions = [
-  "Our organization holds a government permit to dismantle or process PV modules.",
-  "We understand that both parties will agree on acceptance criteria before the trial starts.",
-  "We understand that delivery is FOB Taiwan port and that the buyer pays outbound freight, duties and import fees.",
-];
-
 export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }: {
   market: PublicSolutionMarket;
   t: (text: string) => string;
   onPurchase: (option: EquipmentPurchaseOption) => void;
   onPaneWheel: WheelEventHandler<HTMLDivElement>;
 }) {
-  const [confirmed, setConfirmed] = useState<string[]>([]);
+  const [hasRecyclingPermit, setHasRecyclingPermit] = useState(false);
   const applyLabel = <>{t("Apply for a Trial-based PO")} <span aria-hidden="true">→</span></>;
   const trialOffered = market !== "JP";
 
@@ -26,26 +20,22 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }
         <p>{t("Can the line reliably separate the panels you receive? Who will take the outputs, and will the revenue cover your costs? If you already know which configuration you need, you can buy it directly.")}</p>
         {trialOffered && <article className="pvc2-purchase-option">
           <div className="os-materials-demand">
-            <strong aria-hidden="true">{t("180 days")}</strong>
+            <strong aria-hidden="true">{t("Up to 180 days")}</strong>
             <h3>{t("Trial-based PO (TBP)")}</h3>
           </div>
-          <p>{t("If you hold a government permit for PV module dismantling or processing, you can run a 180-day trial with your own panels and test PV Circulator against acceptance criteria agreed in advance. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
+          <p>{t("Try PV Circulator with your own panels for up to 180 days. Measure throughput, weigh the recovered materials and compare their offtake value with your operating costs. Use those results to judge whether the line works for your business.")}</p>
           <details className="pv-details">
-            <summary>{t("Trial terms, freight and returns")}</summary>
+            <summary>{t("TBP terms")}</summary>
+            <p>{t("The trial lasts up to 180 days. Both parties agree on acceptance criteria before the trial starts.")}</p>
             <p>{t("After the MOU, the formal quotation sets out the trial fee and available slots before you sign the contract.")}</p>
             <p>{t("Delivery is FOB Taiwan port. The buyer pays outbound freight, duties and import fees. If the equipment is returned because it fails to meet the agreed acceptance criteria, the seller pays return freight.")}</p>
           </details>
-          <fieldset className="pvc2-trial-conditions">
-            <legend>{t("Confirm each condition to apply")}</legend>
-            {trialConditions.map(condition => <label key={condition}>
-              <input type="checkbox" checked={confirmed.includes(condition)} onChange={event => {
-                const checked = event.currentTarget.checked;
-                setConfirmed(previous => checked ? [...previous, condition] : previous.filter(item => item !== condition));
-              }} />
-              {t(condition)}
-            </label>)}
-          </fieldset>
-          {confirmed.length === trialConditions.length
+          <label className="pvc2-trial-permit">
+            <input type="checkbox" checked={hasRecyclingPermit}
+              onChange={event => setHasRecyclingPermit(event.currentTarget.checked)} />
+            {t("Our organization holds a valid permit to recycle solar PV panels.")}
+          </label>
+          {hasRecyclingPermit
             ? <Link className="pv-text-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
                 onNavigate={() => onPurchase("Trial-based PO (TBP)")}>{applyLabel}</Link>
             : <button type="button" className="pv-text-button" disabled>{applyLabel}</button>}
