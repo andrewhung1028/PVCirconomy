@@ -606,7 +606,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <p>{t("Premium integrates junction-box removal. Economic and Basic require separate preparation for that step. Check power, floor loading and staffing in the specifications.")}</p><a className="pv-text-button" href={businessCaseHref}>{t("Calculate your business case")}{' '}<Arrow /></a></div></div></div>
       </section>
 
-      <PVCirculatorBusinessModel market={market} businessCaseHref={businessCaseHref} t={t}
+      <PVCirculatorBusinessModel market={market} t={t}
         onPaneWheel={event => navigateSplitPane(event, "specification", "configurations")}
         onPurchase={option => {
           setPurchaseOption(option);
