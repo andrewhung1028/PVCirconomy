@@ -24,7 +24,6 @@ import type { ImpactRouteMetric } from "../../lib/our-solution/model";
 import type { EconomicsView } from "../../lib/our-solution-data";
 import { websiteNumber } from "../../lib/our-solution/public-data";
 import { initialRules, tierRate, type PricingRules } from "../../lib/pricing-rules";
-import { defaultTransportLimits } from "../../lib/pickup";
 import "./review-home.css";
 
 const panelCount = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
@@ -62,12 +61,12 @@ function Arrow({ direction = "right" }: { direction?: "left" | "right" }) {
   return <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d={direction === "right" ? "M3 9h11M10 5l4 4-4 4" : "M15 9H4m4-4L4 9l4 4"} stroke="currentColor" strokeWidth="1.3" /></svg>;
 }
 
-function CostBenchmarkChart({data,rules,residentialSurchargePct}:{data:OurSolutionView;rules:PricingRules;residentialSurchargePct:number}) {
+function CostBenchmarkChart({data,rules}:{data:OurSolutionView;rules:PricingRules}) {
   const watts=webNum(data,"stakes.cost.reference_panel_watts"),panelsPerMw=1e6/watts,weightLb=data.scenario.panelWeightLb;
   const truckRate=tierRate(watts,"panel",{},rules)?.rate??0,utilityRate=tierRate(watts,"lb",{},rules)?.rate??0;
-  const residential=truckRate*(1+residentialSurchargePct/100)*panelsPerMw,utility=utilityRate*weightLb*panelsPerMw;
+  const truckCost=truckRate*panelsPerMw,utility=utilityRate*weightLb*panelsPerMw;
   const landfillLow=webNum(data,"stakes.cost.nrel_landfill_low_usd_per_panel")*panelsPerMw,landfillHigh=webNum(data,"stakes.cost.nrel_landfill_high_usd_per_panel")*panelsPerMw;
-  const {conventional,hotKnife}=economicsSolutions(data),pvCirconomy=(residential+utility)/2,landfill=(landfillLow+landfillHigh)/2;
+  const {conventional,hotKnife}=economicsSolutions(data),pvCirconomy=(truckCost+utility)/2,landfill=(landfillLow+landfillHigh)/2;
   const shredding=conventional.opexPerPanel.total*panelsPerMw,thermal=hotKnife.opexPerPanel.total*panelsPerMw;
   const bars=[
     {label:"Landfill",value:landfill,className:"is-landfill"},
@@ -77,11 +76,11 @@ function CostBenchmarkChart({data,rules,residentialSurchargePct}:{data:OurSoluti
   ];
   const max=Math.max(...bars.map(bar=>bar.value))*1.16,money=(value:number)=>`$${Math.round(value).toLocaleString("en-US")}`,percentage=(value:number)=>`${value/max*100}%`;
   return <figure className="os-cost-benchmark">
-    <figcaption><strong>Recycling Cost per MW</strong><span>{compactNumber(watts)} W modules · current Residential / Utility-scale pricing and modeled OPEX</span></figcaption>
-    <div className="os-cost-plot" role="img" aria-label={`Cost per megawatt: Landfill midpoint ${money(landfill)}, PV Circonomy current Residential and Utility-scale average ${money(pvCirconomy)}, Shredding ${money(shredding)}, Thermal processing ${money(thermal)}.`}>
+    <figcaption><strong>Recycling Cost per MW</strong><span>{compactNumber(watts)} W modules · current Truck / Trailer pricing and modeled OPEX</span></figcaption>
+    <div className="os-cost-plot" role="img" aria-label={`Cost per megawatt: Landfill midpoint ${money(landfill)}, PV Circonomy current Truck and Trailer average ${money(pvCirconomy)}, Shredding ${money(shredding)}, Thermal processing ${money(thermal)}.`}>
       <div className="os-cost-columns">{bars.map(bar=><div className={`os-cost-column ${bar.className}`} style={{"--bar":percentage(bar.value)} as CSSProperties} key={bar.label}><strong>{money(bar.value)}</strong><i aria-hidden="true"/><span>{bar.label}</span></div>)}</div>
     </div>
-    <small>PV Circonomy = mean of current Residential and Utility-scale processing prices. Landfill = midpoint of the NREL range. Shredding and Thermal processing = modeled California OPEX. Transport, taxes, CAPEX and depreciation are excluded; NREL estimates also exclude transport.</small>
+    <small>PV Circonomy = mean of current Truck and Trailer processing prices. Landfill = midpoint of the NREL range. Shredding and Thermal processing = modeled California OPEX. Transport, taxes, CAPEX and depreciation are excluded; NREL estimates also exclude transport.</small>
   </figure>;
 }
 
@@ -805,7 +804,7 @@ function MaterialsSection({data}:{data:OurSolutionView}) {
   </section>;
 }
 
-export function OurSolution({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices", pricingRules=initialRules, residentialSurchargePct=defaultTransportLimits.residentialSurchargePct, showPublicPricingBenchmark=true }: { market?: PublicSolutionMarket; equipmentClaims?: EquipmentClaims; economicsData?: OurSolutionView; routeMetrics?: ImpactRouteMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string;pricingRules?:PricingRules;residentialSurchargePct?:number;showPublicPricingBenchmark?:boolean }) {
+export function OurSolution({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices", pricingRules=initialRules, showPublicPricingBenchmark=true }: { market?: PublicSolutionMarket; equipmentClaims?: EquipmentClaims; economicsData?: OurSolutionView; routeMetrics?: ImpactRouteMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string;pricingRules?:PricingRules;showPublicPricingBenchmark?:boolean }) {
   const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
   const capacityFirst = capacityTrend[0], capacityLast = capacityTrend[capacityTrend.length - 1];
   const capacityMultiples=trendRegions.map((market,index)=>({market,multiple:capacityFirst.values[index]>0?capacityLast.values[index]/capacityFirst.values[index]:0}));
@@ -878,7 +877,7 @@ export function OurSolution({ market, equipmentClaims = defaultEquipmentQuantita
           <h2 id="stakes-title">What is at stake?</h2>
           <p>Owners, recyclers, material users and the public each see retired panels differently—but they all need the same four things.</p>
           <div className="os-stake-tabs" role="group" aria-label="Choose a stakeholder outcome">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic} /><strong>{stakeSolutions[topic].label}</strong></button>)}</div>
-          {stake==="cost"&&(market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="en-US" /> : showPublicPricingBenchmark?<CostBenchmarkChart data={economicsData} rules={pricingRules} residentialSurchargePct={residentialSurchargePct}/>:<MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="en-US" />)}
+          {stake==="cost"&&(market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="en-US" /> : showPublicPricingBenchmark?<CostBenchmarkChart data={economicsData} rules={pricingRules}/>:<MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="en-US" />)}
           {stake==="compliance"&&<div className="os-compliance-risk"><strong className="os-compliance-risk-mark">HFCs</strong><div><h3>Keep fluorinated backsheets out of the environment.</h3><p>Some PV backsheets contain PVF or PVDF fluoropolymers. Under broad definitions, these materials fall within PFAS—the persistent chemicals often called “forever chemicals.” Thermal treatment can generate hydrogen fluoride (HF) and other fluorinated decomposition products, while landfill leaves persistent fluoropolymers in the environment. PV Circonomy’s first mission is to recover EVA and backsheets as separate streams and return them to qualified use.</p></div></div>}
           {stake==="circularity"&&<div className="os-compliance-risk os-offtake-service"><strong className="os-circularity-mark"><b>{compactNumber(webNum(economicsData,"stakes.circularity_goal_percent"))}%</b><span>reusable</span></strong><div><h3>Build the next use market by market.</h3><p>PV Circonomy provides more than recycling technology: we also provide material-upcycling technology and offtake services. Our localized strategy keeps recovered materials in use close to where they are generated, adapting to the industrial ecosystem of each country and region. EVA and backsheet offtake connects these separated streams to qualified local or downstream uses so every recovered material can be put to responsible use.</p><span><b>Offtake service</b> EVA and backsheet qualification and downstream placement.</span></div></div>}
           {stake==="reputation"&&<div className="os-compliance-risk os-connected-service"><strong className="os-connected-mark">Connected</strong><div><h3>Make recycling itself valuable.</h3><p>PV Circonomy connects upstream and downstream partners so recyclers can account responsibly to investors for where recovered materials go, while material users can disclose their origin to consumers. By making both destination and provenance visible, the work of recycling itself becomes valuable.</p></div></div>}

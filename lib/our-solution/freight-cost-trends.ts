@@ -3,7 +3,7 @@ import { japanKantoTrailerFreight } from "./japan-freight-reference";
 import type { PublicSolutionMarket } from "./market";
 
 export const freightDistanceSteps = [0, 200, 400, 600, 800, 1000];
-type FreightPoint = { distance: number; cost: number };
+import type { FreightPoint } from "./transport";
 const onSite: FreightPoint = { distance: 0, cost: 0 };
 
 function points(samples: [number, number][]): FreightPoint[] {

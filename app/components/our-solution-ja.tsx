@@ -23,7 +23,6 @@ import { websiteNumber } from "../../lib/our-solution/public-data";
 import { scenarioPanelWeightKg } from "../../lib/our-solution/parameters";
 import { formatCurrency } from "../../lib/region-format";
 import { initialJapanRules, tierRate, type PricingRules } from "../../lib/pricing-rules";
-import { defaultTransportLimits } from "../../lib/pickup";
 import "./review-home.css";
 export type BreakevenView = {
     region: string;
@@ -83,16 +82,15 @@ function Arrow({ direction = "right" }: {
 }) {
     return <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d={direction === "right" ? "M3 9h11M10 5l4 4-4 4" : "M15 9H4m4-4L4 9l4 4"} stroke="currentColor" strokeWidth="1.3"/></svg>;
 }
-function CostBenchmarkChart({ data, rules, residentialSurchargePct }: {
+function CostBenchmarkChart({ data, rules }: {
     data: OurSolutionView;
     rules: PricingRules;
-    residentialSurchargePct: number;
 }) {
     const watts = webNum(data, "stakes.cost.reference_panel_watts"), panelsPerMw = 1e6 / watts, weightLb = data.scenario.panelWeightLb;
     const truckRate = tierRate(watts, "panel", {}, rules)?.rate ?? 0, utilityRate = tierRate(watts, "lb", {}, rules)?.rate ?? 0;
-    const residential = truckRate * (1 + residentialSurchargePct / 100) * panelsPerMw, utility = utilityRate * weightLb * panelsPerMw;
+    const truckCost = truckRate * panelsPerMw, utility = utilityRate * weightLb * panelsPerMw;
     const landfillLow = webNum(data, "stakes.cost.nrel_landfill_low_usd_per_panel") * panelsPerMw, landfillHigh = webNum(data, "stakes.cost.nrel_landfill_high_usd_per_panel") * panelsPerMw;
-    const { conventional, hotKnife } = economicsSolutions(data), pvCirconomy = (residential + utility) / 2, landfill = (landfillLow + landfillHigh) / 2;
+    const { conventional, hotKnife } = economicsSolutions(data), pvCirconomy = (truckCost + utility) / 2, landfill = (landfillLow + landfillHigh) / 2;
     const shredding = conventional.opexPerPanel.total * panelsPerMw, thermal = hotKnife.opexPerPanel.total * panelsPerMw;
     const bars = [
         { label: "\u57CB\u7ACB", value: landfill, className: "is-landfill" },
@@ -102,11 +100,11 @@ function CostBenchmarkChart({ data, rules, residentialSurchargePct }: {
     ];
     const max = Math.max(...bars.map(bar => bar.value)) * 1.16, money = (value: number) => `$${Math.round(value).toLocaleString("ja-JP")}`, percentage = (value: number) => `${value / max * 100}%`;
     return <figure className="os-cost-benchmark">
-    <figcaption><strong>1 MW 当たりのリサイクル費用</strong><span>{compactNumber(watts)} W モジュール・住宅用／大規模発電用の現行料金と試算運営費</span></figcaption>
-    <div className="os-cost-plot" role="img" aria-label={`1 MW 当たりの費用：埋立の中央値 ${money(landfill)}、PV Circonomy の住宅用／大規模発電用の現行料金の平均 ${money(pvCirconomy)}、${THREE_METHODS[0]} ${money(shredding)}、${THREE_METHODS[1]} ${money(thermal)}。`}>
+    <figcaption><strong>1 MW 当たりのリサイクル費用</strong><span>{compactNumber(watts)} W モジュール・トラック／トレーラーの現行料金と試算運営費</span></figcaption>
+    <div className="os-cost-plot" role="img" aria-label={`1 MW 当たりの費用：埋立の中央値 ${money(landfill)}、PV Circonomy のトラック／トレーラーの現行料金の平均 ${money(pvCirconomy)}、${THREE_METHODS[0]} ${money(shredding)}、${THREE_METHODS[1]} ${money(thermal)}。`}>
       <div className="os-cost-columns">{bars.map(bar => <div className={`os-cost-column ${bar.className}`} style={{ "--bar": percentage(bar.value) } as CSSProperties} key={bar.label}><strong>{money(bar.value)}</strong><i aria-hidden="true"/><span>{bar.label}</span></div>)}</div>
     </div>
-    <small>PV Circonomy は住宅用と大規模発電用の現行処理料金の平均、埋立は NREL の推計範囲の中央値です。{THREE_METHODS[0]}と{THREE_METHODS[1]}はカリフォルニア州の試算運営費です。輸送費、税金、設備投資、減価償却費は含みません。NREL の推計にも輸送費は含まれません。</small>
+    <small>PV Circonomy はトラックとトレーラーの現行処理料金の平均、埋立は NREL の推計範囲の中央値です。{THREE_METHODS[0]}と{THREE_METHODS[1]}はカリフォルニア州の試算運営費です。輸送費、税金、設備投資、減価償却費は含みません。NREL の推計にも輸送費は含まれません。</small>
   </figure>;
 }
 function GlobalDeploymentMap() {
@@ -956,7 +954,7 @@ function MaterialsSection({ data }: {
     </aside>
   </section>;
 }
-export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "\u30EF\u30FC\u30AF\u30D6\u30C3\u30AF\u306E\u4FA1\u683C", pricingRules = initialJapanRules, residentialSurchargePct = defaultTransportLimits.residentialSurchargePct, showPublicPricingBenchmark = true }: {
+export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "\u30EF\u30FC\u30AF\u30D6\u30C3\u30AF\u306E\u4FA1\u683C", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
     market?: PublicSolutionMarket;
     equipmentClaims?: EquipmentClaims;
     economicsData?: OurSolutionView;
@@ -972,7 +970,6 @@ export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuanti
     waveAssumptions?: WaveAssumptions;
     priceSources?: string;
     pricingRules?: PricingRules;
-    residentialSurchargePct?: number;
     showPublicPricingBenchmark?: boolean;
 }) {
     const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
@@ -1044,7 +1041,7 @@ export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuanti
           <h2 id="stakes-title">何が問われているのか</h2>
           <p>所有者、リサイクル事業者、材料利用者、一般の人々は、使用済み太陽光パネルをそれぞれ異なる視点で捉えていますが、必要とする四つのことは共通しています。</p>
           <div className="os-stake-tabs" role="group" aria-label="ステークホルダーの目指す成果を選択">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic}/><strong>{stakeSolutions[topic].label}</strong></button>)}</div>
-          {stake === "cost" && (market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="ja-JP" /> : showPublicPricingBenchmark ? <CostBenchmarkChart data={economicsData} rules={pricingRules} residentialSurchargePct={residentialSurchargePct}/> : <MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="ja-JP" />)}
+          {stake === "cost" && (market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="ja-JP" /> : showPublicPricingBenchmark ? <CostBenchmarkChart data={economicsData} rules={pricingRules}/> : <MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="ja-JP" />)}
           {stake === "compliance" && <div className="os-compliance-risk"><strong className="os-compliance-risk-mark">HFCs</strong><div><h3>含フッ素バックシートの環境流出防止</h3><p>一部の太陽光パネルのバックシートには、PVF または PVDF のフッ素ポリマーが含まれています。広義の定義では、これらは「永遠の化学物質」と呼ばれることもある難分解性化学物質、PFAS に該当します。熱処理ではフッ化水素（HF）やその他の含フッ素分解生成物が発生する可能性があり、埋立では難分解性のフッ素ポリマーが環境中に残ります。PV Circonomy の第一の使命は、EVA とバックシートを別々に回収し、適合性が確認された用途に戻すことです。</p></div></div>}
           {stake === "circularity" && <div className="os-compliance-risk os-offtake-service"><strong className="os-circularity-mark"><b>{compactNumber(webNum(economicsData, "stakes.circularity_goal_percent"))}%</b><span>再利用可能</span></strong><div><h3>市場ごとに開拓する次の用途</h3><p>PV Circonomy は、リサイクル技術に加え、マテリアル・アップサイクル技術とオフテイクサービスも提供します。各国・地域の産業エコシステムに合わせた現地化戦略により、回収材料を発生地の近くで継続利用します。EVA とバックシートのオフテイクは、分離した材料を、適合性が確認された地域内または下流の用途につなぎ、すべての回収材料の責任ある利用を可能にします。</p><span><b>回収材料の引き取り支援</b> EVA とバックシートの適合性を確認し、下流の利用先につなぎます。</span></div></div>}
           {stake === "reputation" && <div className="os-compliance-risk os-connected-service"><strong className="os-connected-mark">つながり</strong><div><h3>リサイクルそのものに価値を</h3><p>PV Circonomy は上流と下流のパートナーをつなぎ、リサイクル事業者が投資家に回収材料の行き先を責任を持って説明し、材料利用者が消費者にその出所を開示できるようにします。行き先と出所の両方を可視化することで、リサイクルの取り組みそのものに価値が生まれます。</p></div></div>}

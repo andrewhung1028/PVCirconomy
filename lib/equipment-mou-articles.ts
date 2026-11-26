@@ -1,5 +1,6 @@
+import { defaultMouPolicy } from "./mou-policy";
 import { marketNames } from "./our-solution/market";
-import { equipmentMouSigningLocales, equipmentMouValidityDays, otherSitePowerSupply, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
+import { equipmentMouSigningLocales, otherSitePowerSupply, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
 
 type Wording = readonly [english: string, chinese: string, japanese: string];
 
@@ -35,6 +36,7 @@ export function equipmentMouGoverningLaw(input: EquipmentMouInput) {
 }
 
 export function equipmentMouArticles(input: EquipmentMouInput, terms: EquipmentMouTerms) {
+  const policy = terms.policy ?? defaultMouPolicy;
   const w = (...wording: Wording) => mouWording(input.locale)(...wording);
   const japan = input.installationMarket === "JP";
   const { governingLaw } = terms;
@@ -63,8 +65,8 @@ export function equipmentMouArticles(input: EquipmentMouInput, terms: EquipmentM
   const published = terms.specifications;
   const publishedOverview = published && [
     w(
-      `PV Circulator uses dry, room-temperature mechanical layer separation without heat treatment, chemicals or process water. The base line is rated at ${published.ratedThroughput} modules/min using a standard ${published.standardCells}-cell module. Electricity use: ${published.energyPerPanel}. Compressed air: ${published.compressedAirLpm} L/min at ${published.compressedAirBar} bar.`,
-      `PV Circulator 採常溫乾式逐層機械分離，製程無須熱處理、化學藥劑或用水。以標準 ${published.standardCells} 片電池模組測試，基本產線額定處理量為每分鐘 ${published.ratedThroughput} 片。單片用電量為 ${published.energyPerPanel.replace("/panel", "／片")}。壓縮空氣需求為 ${published.compressedAirLpm} L／分鐘、${published.compressedAirBar} bar。`,
+      `PV Circulator uses dry, room-temperature mechanical layer separation without heat treatment, chemicals or process water. The configured line is rated at ${published.ratedThroughput} modules/min using a standard ${published.standardCells}-cell module. Electricity use: ${published.energyPerPanel}. Compressed air: ${published.compressedAirLpm} L/min at ${published.compressedAirBar} bar.`,
+      `PV Circulator 採常溫乾式逐層機械分離，製程無須熱處理、化學藥劑或用水。以標準 ${published.standardCells} 片電池模組測試，所選產線額定處理量為每分鐘 ${published.ratedThroughput} 片。單片用電量為 ${published.energyPerPanel.replace("/panel", "／片")}。壓縮空氣需求為 ${published.compressedAirLpm} L／分鐘、${published.compressedAirBar} bar。`,
       `PV Circulatorは常温乾式の機械分離方式で、加熱処理、薬剤、工程用水を使用しません。標準${published.standardCells}セルモジュールの定格処理量は毎分${published.ratedThroughput}枚です。消費電力量は${published.energyPerPanel.replace("/panel", "／枚")}、圧縮空気は${published.compressedAirBar} barで${published.compressedAirLpm} L／分です。`,
     ),
     ...(configuration ? [w(
@@ -174,9 +176,9 @@ export function equipmentMouArticles(input: EquipmentMouInput, terms: EquipmentM
       w("Any party may stop the evaluation by written notice to the other parties. No party is liable to pay compensation for doing so.",
         "任何一方得以書面通知其他各方停止評估，任何一方均不因此負賠償責任。",
         "いずれの当事者も、他の当事者に書面で通知して評価を終了でき、いずれの当事者もこれによる賠償責任を負いません。"),
-      w(`This MOU ends at the earliest of the following: expiry of ${equipmentMouValidityDays} days after all parties have signed (or of any extension agreed in writing by all parties), written notice by any party ending the evaluation under this Article, or entry into force of the formal purchase contract. Once that contract takes effect, it governs procurement and performance. Obligations under Article 8 that survive termination remain in effect as provided there.`,
-        `本備忘錄於下列任一情形最先發生時終止：各方完成簽署後屆滿 ${equipmentMouValidityDays} 日（經各方書面同意延長者，依延長後期限）、任一方依本條書面通知停止評估，或正式採購契約生效。正式採購契約生效後，採購及履約事項依該契約辦理。第 8 條約定於終止後繼續有效之義務，仍依其約定辦理。`,
-        `本覚書は、全当事者による署名完了から${equipmentMouValidityDays}日が経過した時（全当事者が書面で延長に合意した場合は延長後の期間満了時）、いずれかの当事者が本条に従い評価の終了を書面で通知した時、または正式な売買契約が発効した時のうち、最も早い時点で終了します。正式な売買契約の発効後、購入および履行に関する事項は同契約に従います。第8条により終了後も存続する義務は、同条に従って引き続き効力を有します。`),
+      w(`This MOU ends at the earliest of the following: expiry of ${policy.validityDays} days after all parties have signed (or of any extension agreed in writing by all parties), written notice by any party ending the evaluation under this Article, or entry into force of the formal purchase contract. Once that contract takes effect, it governs procurement and performance. Obligations under Article 8 that survive termination remain in effect as provided there.`,
+        `本備忘錄於下列任一情形最先發生時終止：各方完成簽署後屆滿 ${policy.validityDays} 日（經各方書面同意延長者，依延長後期限）、任一方依本條書面通知停止評估，或正式採購契約生效。正式採購契約生效後，採購及履約事項依該契約辦理。第 8 條約定於終止後繼續有效之義務，仍依其約定辦理。`,
+        `本覚書は、全当事者による署名完了から${policy.validityDays}日が経過した時（全当事者が書面で延長に合意した場合は延長後の期間満了時）、いずれかの当事者が本条に従い評価の終了を書面で通知した時、または正式な売買契約が発効した時のうち、最も早い時点で終了します。正式な売買契約の発効後、購入および履行に関する事項は同契約に従います。第8条により終了後も存続する義務は、同条に従って引き続き効力を有します。`),
     ]),
     article(8, ["Confidentiality, exclusivity, publicity, governing law, costs and term", "保密、排他性、公開、準據法、費用與期限", "秘密保持、非独占、公表、準拠法、費用及び期間"], [
       [w("This Article is intended to be legally binding.", "本條具有法律約束力。", "本条は法的拘束力を有します。"),
@@ -190,9 +192,9 @@ export function equipmentMouArticles(input: EquipmentMouInput, terms: EquipmentM
       w("Publicity. Public references to this MOU or its contents require the other parties’ prior written consent.", "公開。對外提及本意向書或其內容，須事先取得其他各方書面同意。", "公表。本覚書またはその内容の公表には、他の全当事者の事前の書面同意を要します。"),
       governingLaw,
       w("Costs. Each party bears its own evaluation costs. Any service charge payable by another party requires prior written agreement.", "費用。各方自行負擔評估費用。如需由他方負擔服務費用，應在服務開始前另以書面約定。", "費用。各当事者は評価費用を各自負担します。他の当事者が負担するサービス費用は、開始前に書面で合意します。"),
-      w(`Term. This MOU takes effect on completion of signing under Article 9. The evaluation period is ${equipmentMouValidityDays} days, subject to earlier termination under Article 7 or written extension by all parties. Confidentiality survives expiry or early termination for three years.`,
-        `期限。本意向書自依第 9 條完成簽署之日起生效，評估期為 ${equipmentMouValidityDays} 日。依第 7 條得提前終止，或經各方書面同意延長。期滿或提前終止後，保密義務繼續有效三年。`,
-        `期間。本覚書は、第9条に基づく署名完了日から効力を生じ、評価期間は${equipmentMouValidityDays}日とします。第7条に基づく早期終了または全当事者の書面による延長が可能です。秘密保持義務は満了または中途終了後3年間存続します。`),
+      w(`Term. This MOU takes effect on completion of signing under Article 9. The evaluation period is ${policy.validityDays} days, subject to earlier termination under Article 7 or written extension by all parties. Confidentiality survives expiry or early termination for ${terms.policy ? `${policy.confidentialityYears} ${policy.confidentialityYears === 1 ? "year" : "years"}` : "three years"}.`,
+        `期限。本意向書自依第 9 條完成簽署之日起生效，評估期為 ${policy.validityDays} 日。依第 7 條得提前終止，或經各方書面同意延長。期滿或提前終止後，保密義務繼續有效${terms.policy ? policy.confidentialityYears : "三"}年。`,
+        `期間。本覚書は、第9条に基づく署名完了日から効力を生じ、評価期間は${policy.validityDays}日とします。第7条に基づく早期終了または全当事者の書面による延長が可能です。秘密保持義務は満了または中途終了後${policy.confidentialityYears}年間存続します。`),
     ]),
     article(9, ["Copies and signatures", "文件及簽署", "文書及び署名"], [
       equipmentMouSigningLocales[input.pageMarket] === "ja-JP"

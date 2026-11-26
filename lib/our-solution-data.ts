@@ -68,6 +68,13 @@ export function diffOurSolutionData(before:Parameters|null,after:Parameters,effe
   if (before?.transport || after.transport) {
     diffFields(out, before?.transport ?? emptyMarketTransport(), after.transport ?? emptyMarketTransport(), 'transport');
   }
+  if (after.mouPolicy) diffFields(out, before?.mouPolicy, after.mouPolicy, 'mouPolicy');
+  const previousPoints = before?.transport?.referencePoints ?? [];
+  const nextPoints = after.transport?.referencePoints ?? [];
+  for (let index = nextPoints.length; index < previousPoints.length; index++) {
+    const { distance, cost } = previousPoints[index];
+    diffFields(out, `${distance} / ${cost}`, undefined, `transport.referencePoints.${index}`);
+  }
   if (!before || before.meta.localPerUSD !== after.meta.localPerUSD) diffFields(out, before?.meta.localPerUSD, after.meta.localPerUSD, 'meta.localPerUSD');
   const a = before ? model(before,effective) : null;
   const b = model(after,effective);

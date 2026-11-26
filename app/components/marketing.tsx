@@ -39,56 +39,8 @@ export function Intro({ label, title, description }: { label: string; title: str
 export function EndCTA({ label = 'THE NEXT STEP', title = 'Put circularity into motion.', href = '/recycling-estimate', action = 'Get a recycling estimate' }: { label?: string; title?: string; href?: string; action?: string } = {}) { return <section className="pc-end"><div className="pc-wrap"><p className="pc-eyebrow">{label}</p><h2>{title}</h2><Action href={href}>{action}</Action></div></section>; }
 export function ProductGrid() { return <div className="pc-products">{products.map((p, i) => <article className="pc-product" key={p.name}><div className={'pc-material pc-material-' + i}><img src={'/images/material-' + p.name.toLowerCase() + '.svg'} alt={p.name + ' — illustrative recovered material'} loading="lazy" /><small>ILLUSTRATIVE MATERIAL CATEGORY</small></div><p className="pc-eyebrow">{p.tag}</p><h3>{p.name}</h3><p>{p.description}</p><Link className="pc-text-link" href={'/circular-products#' + p.name.toLowerCase()}>Explore material passport <Arrow /></Link><Link className="pc-text-link" href={'/shop?type=materials&material=' + p.name}>Request a quote <Arrow /></Link></article>)}</div>; }
 
-const equipmentConfigurations = ['Premium', 'Basic', 'Economic'];
 const unspecified = 'Not yet determined';
 
-function EquipmentOverview({ configuration }: { configuration: string }) {
-  return (
-    <fieldset className="pc-booking-fieldset">
-      <legend>Inquiry overview</legend>
-      <div className="pc-form-pair">
-        <label>Inquiry purpose (required)
-          <select name="purpose" required defaultValue="">
-            <option value="" disabled>Select a purpose</option>
-            <option>Request a quote</option>
-            <option>Discuss equipment and configuration</option>
-          </select>
-        </label>
-        <fieldset className="pc-configuration-options">
-          <legend>Equipment configuration</legend>
-          <div className="pc-configuration-choices">
-            {equipmentConfigurations.map(option => (
-              <label className="pc-configuration-choice" key={option}>
-                <input type="checkbox" name="configuration" value={option} defaultChecked={configuration === option} />
-                {option}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <label className="pc-configuration-requirements">Configuration requirements
-          <textarea name="configurationRequirements" rows={3} />
-        </label>
-        <label>Project stage
-          <select name="stage" defaultValue={unspecified}>
-            <option>{unspecified}</option>
-            <option>Initial feasibility</option>
-            <option>Planning a new facility</option>
-            <option>Expanding an operation</option>
-          </select>
-        </label>
-        <label>Target start date<input name="startDate" type="month" /></label>
-        <label>Number of equipment lines<input name="lineQuantity" type="number" min="1" defaultValue={1} /></label>
-        <label>Itemize installation and training in the quote?
-          <select name="itemizeServices" defaultValue={unspecified}>
-            <option>{unspecified}</option>
-            <option>Yes, show each service separately</option>
-            <option>No preference</option>
-          </select>
-        </label>
-      </div>
-    </fieldset>
-  );
-}
 
 type InquiryTranslate = (text: string) => string;
 export function inquiryTranslate(locale: OurSolutionLocale): InquiryTranslate {
@@ -168,12 +120,12 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
       <div className="pc-form-pair">
         <label>{t("Target capacity (panels/month)")}
           <input name="targetCapacity" type="number" min={fromSpecification ? 0 : 500} step={fromSpecification ? 1 : 500}
-            value={capacityOverride ?? (fromSpecification ? specificationPerformance?.monthlyAverage ?? "" : 3000)}
+            value={capacityOverride ?? (fromSpecification ? specificationPerformance?.monthlyAverage ?? "" : "")}
             onChange={event => setCapacityOverride(event.currentTarget.value)} />
         </label>
         <label>{t("Operating hours per day")}
           <input name="dailyHours" type="number" min={fromSpecification ? 0.25 : 1} max="24" step={fromSpecification ? 0.25 : 1}
-            value={hoursOverride ?? (fromSpecification ? specificationPerformance?.dailyHours ?? "" : 8)}
+            value={hoursOverride ?? (fromSpecification ? specificationPerformance?.dailyHours ?? "" : "")}
             onChange={event => setHoursOverride(event.currentTarget.value)} />
         </label>
         <label>{t("Panel technology")}
@@ -287,14 +239,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
   </>;
 }
 
-export function ShopForm({ type, requestedConfiguration, requestedMaterial }: {
-  type: 'equipment' | 'materials';
-  requestedConfiguration?: string;
-  requestedMaterial?: string;
-}) {
-  const configuration = requestedConfiguration && equipmentConfigurations.includes(requestedConfiguration)
-    ? requestedConfiguration
-    : '';
+export function ShopForm({ requestedMaterial }: { requestedMaterial?: string }) {
   const initialMaterial = products.find(product => product.name === requestedMaterial)?.name ?? 'Glass';
   const [submitted, setSubmitted] = useState(false);
 
@@ -307,21 +252,6 @@ export function ShopForm({ type, requestedConfiguration, requestedMaterial }: {
     <button className="pc-button" type="submit">Preview inquiry</button>
     {submitted && <div className="pc-confirm" role="status"><strong>Inquiry preview complete.</strong><p>Your details passed local validation.</p></div>}
   </>;
-
-  if (type === 'equipment') return <div className="pc-wrap pc-shop">
-    <form className="pc-shop-grid" onSubmit={submit} onChange={() => setSubmitted(false)}>
-      <div>
-        <h1 className="pc-shop-title">Equipment inquiry</h1>
-        <p>Share your feedstock, target capacity, and installation plans so we can understand what your operation needs.</p>
-        <div className="pc-form pc-inquiry-overview"><EquipmentOverview configuration={configuration} /></div>
-        <Link className="pc-text-link" href="/business-case">Open the business case calculator <Arrow /></Link>
-      </div>
-      <div className="pc-form">
-        <EquipmentFields />
-        {previewControls}
-      </div>
-    </form>
-  </div>;
 
   return <div className="pc-wrap pc-shop">
     <Link className="pc-text-link pc-shop-back" href="/shop/">Back to Shop</Link>

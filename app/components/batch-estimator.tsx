@@ -1,4 +1,5 @@
 'use client';
+import {pricingMisc} from "../../lib/pricing-rules";
 import {residentialCopy} from '../../lib/pickup';
 import {validQuotationContact,type QuotationContact} from '../../lib/quotation-contact';
 import type {QuotationBundle} from '../../lib/quotation-types';
@@ -10,7 +11,7 @@ import { batchTotals, generateQuote, estimatedLineWeight, estimatedLineArea, res
 const identifyModes=[['model','Model'],['dimensions','Dimensions'],['watts','Watts'],['ai','AI']] as const;
 function modelSummary(m:ReferenceModel){const confirmed=m.dimension_category==='CEC'||m.dimension_category==='datasheet';const size=confirmed&&m.length_mm&&m.width_mm?`${m.length_mm} × ${m.width_mm} mm`:'—';return `${m.manufacturer} | ${m.model} | ${m.rated_watts!==null?m.rated_watts+' W':'—'} | ${size}`}
 export function BatchEstimator({onPlanDelivery,onQuoteInvalidated}:{onPlanDelivery?:(bundle:QuotationBundle)=>void;onQuoteInvalidated?:()=>void}){
- const [lines,setLines]=useState<QuoteLine[]>([{id:'first',mode:'watts',quantity:'300',watts:'350',condition:'complete',scale:'truck',modelQuery:'',selectedModel:null,length:'',width:'',dimensionUnit:'mm',construction:'unknown'}]);
+ const [lines,setLines]=useState<QuoteLine[]>([{id:'first',mode:'watts',quantity:String(pricingMisc().defaultEstimatePanels),watts:String(pricingMisc().defaultEstimateWatts),condition:'complete',scale:'truck',modelQuery:'',selectedModel:null,length:'',width:'',dimensionUnit:'mm',construction:'unknown'}]);
  const [selected,setSelected]=useState('first');const line=lines.find(l=>l.id===selected)!;
  const currentFlags=line.flags??flagsFor(line.condition);
  const [mailReady,setMailReady]=useState(false);
@@ -22,12 +23,15 @@ export function BatchEstimator({onPlanDelivery,onQuoteInvalidated}:{onPlanDelive
  useEffect(()=>()=>{for(const url of photoUrls.current.values())URL.revokeObjectURL(url)},[]);
  function removePhoto(id:string){const url=photoUrls.current.get(id);if(url)URL.revokeObjectURL(url);photoUrls.current.delete(id);setPhotos(previous=>{const next={...previous};delete next[id];return next});setPhotoError('')}
  const {pricing,pricingError,loading,refresh}=usePricing();
+ const edited=useRef(false);
+ const defaults=pricingMisc(pricing?.rules);
+ useEffect(()=>{if(pricing&&!edited.current)setLines(ls=>ls.map(l=>l.id==='first'?{...l,quantity:String(defaults.defaultEstimatePanels),watts:String(defaults.defaultEstimateWatts)}:l));},[pricing,defaults.defaultEstimatePanels,defaults.defaultEstimateWatts]);
  const pricingVersion=useRef<string|null>(null);useEffect(()=>{if(!pricing)return;if(pricingVersion.current&&pricingVersion.current!==pricing.version+'|'+(pricing.transportVersion||'')){quoteSerial.current++;setCreating(false);setStoredBundle(null);setQuote(null);setCopyStatus('Current pricing has been updated. Generate a new quotation to use these rates.');onQuoteInvalidated?.()}pricingVersion.current=pricing.version+'|'+(pricing.transportVersion||'')},[pricing?.version,pricing?.transportVersion,onQuoteInvalidated]);
  const totals=batchTotals(lines,pricing?.rules,pricing?.transport,pricing?.profile,pricing?.batchPricing);const price=totals.prices[lines.findIndex(l=>l.id===selected)];
  function clearSearch(){serial.current++;setMatches([]);setSearchStatus('');setSearching(false)}
- function patch(change:Partial<QuoteLine>){quoteSerial.current++;setCreating(false);onQuoteInvalidated?.();setStoredBundle(null);setLines(ls=>ls.map(l=>l.id===selected?{...l,...change}:l));setQuote(null);setCopyStatus('')}
+ function patch(change:Partial<QuoteLine>){edited.current=true;quoteSerial.current++;setCreating(false);onQuoteInvalidated?.();setStoredBundle(null);setLines(ls=>ls.map(l=>l.id===selected?{...l,...change}:l));setQuote(null);setCopyStatus('')}
  function edit(id:string){clearSearch();setPhotoError('');setSelected(id)}
- function add(){if(lines.length>=50)return;quoteSerial.current++;setCreating(false);onQuoteInvalidated?.();setStoredBundle(null);const next=newQuoteLine();setLines(ls=>[...ls,next]);edit(next.id);setQuote(null);setCopyStatus('')}
+ function add(){edited.current=true;if(lines.length>=50)return;quoteSerial.current++;setCreating(false);onQuoteInvalidated?.();setStoredBundle(null);const next=newQuoteLine();setLines(ls=>[...ls,next]);edit(next.id);setQuote(null);setCopyStatus('')}
  function remove(id:string){if(lines.length===1)return;quoteSerial.current++;setCreating(false);onQuoteInvalidated?.();setStoredBundle(null);removePhoto(id);const remaining=lines.filter(l=>l.id!==id);setLines(remaining);if(id===selected)edit(remaining[0].id);setQuote(null);setCopyStatus('')}
  async function search(){
   const request=++serial.current;setSearching(true);setMatches([]);setSearchStatus('Searching model reference…');
@@ -68,13 +72,13 @@ export function BatchEstimator({onPlanDelivery,onQuoteInvalidated}:{onPlanDelive
   <p>{pricing?`Up to ${pricing.rules.baseMaxWatts} W: ${rateMoney(pricing.rules.panelBase)} per panel or ${rateMoney(pricing.rules.weightBase)} per lb. Each additional ${pricing.rules.stepWatts} W (or part thereof) adds ${rateMoney(pricing.rules.panelIncrement)} per panel or ${rateMoney(pricing.rules.weightIncrement)} per lb.`:'Load current prices to view the rules.'}</p>
   <p>{pricing?`Broken glass +${pricing.rules.brokenPercent}%, missing junction box +${pricing.rules.missingBoxPercent}%, missing frame +${pricing.rules.missingFramePercent}%. Applicable percentages are added, not multiplied, and apply only to the affected processing charge.`:''} Intact and complete panels have no condition surcharge. Double glass has no separate surcharge. Actual transport vehicles are arranged separately from the requested pricing scale.</p>
   <p>Per-panel processing settlement uses accepted panel count. Per-lb estimates use model weight, dimensions or rated watts with panel construction. Final scale weight includes pallets and packaging. Third-party scale tickets are accepted.</p>
-  <p>A quotation is valid for seven days from its issue time. It does not book a slot, take payment or submit a request.</p>
+  <p>A quotation is valid for {defaults.quotationValidityDays} days from its issue time. It does not book a slot, take payment or submit a request.</p>
  </details>
 
  <div className="pv-quotation-actions"><button className="pv-text-button" type="button" disabled={!pricing||loading||creating||!mailReady} onClick={()=>openContact('email')}>Email quotation</button></div>{!mailReady&&<p className="pv-note">Emailing quotations is coming soon. You can still plan your delivery now.</p>}
  {contactOpen&&<form ref={contactForm} className="pv-form pv-quotation-contact" onSubmit={exportQuotation}><h3>Your quotation details</h3><p className="pv-note">Your name and email are required to prepare your quotation. No account is required.</p><fieldset disabled={creating}>{(['name','email','company','phone'] as const).map(field=><label key={field}>{{name:'Full name',email:'Email address',company:'Company (optional)',phone:'Phone (optional)'}[field]}<input type={field==='email'?'email':field==='phone'?'tel':'text'} autoComplete={{name:'name',email:'email',company:'organization',phone:'tel'}[field]} value={contact[field]} required={field==='name'||field==='email'} minLength={field==='name'?2:undefined} maxLength={field==='email'?254:field==='name'?120:field==='company'?160:40} onChange={e=>{setContact(c=>({...c,[field]:e.target.value}));quoteSerial.current++;setStoredBundle(null);setQuote(null);onQuoteInvalidated?.()}}/></label>)}<p className="pv-note">We use these details for your quotation and recycling service. This does not subscribe you to marketing.</p><button type="submit" className="pv-button">{creating?'Preparing…':pendingAction==='plan'?'Continue to delivery':'Send quotation'}</button><button type="button" className="pv-text-button" onClick={()=>setContactOpen(false)}>Cancel</button></fieldset></form>}
  {pricingError&&<p className="pv-note" role="alert">{pricingError}<button className="pv-text-button" disabled={loading} onClick={()=>void refresh()}>Retry current pricing</button></p>}
  {copyStatus&&<p className="pv-note" role="status">{copyStatus}</p>}
- {quote&&<details className="pv-details" open><summary>Quotation · valid for 7 days</summary><p className="pv-note">Issued: {quote.issued}<br/>Valid until: {quote.expires} (UTC)</p><pre className="pv-quote-document">{quote.text}</pre></details>}
+ {quote&&<details className="pv-details" open><summary>Quotation · valid until {quote.expires.slice(0,10)}</summary><p className="pv-note">Issued: {quote.issued}<br/>Valid until: {quote.expires} (UTC)</p><pre className="pv-quote-document">{quote.text}</pre></details>}
  </>;
 }

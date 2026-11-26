@@ -23,7 +23,6 @@ import { websiteNumber } from "../../lib/our-solution/public-data";
 import { scenarioPanelWeightKg } from "../../lib/our-solution/parameters";
 import { formatCurrency } from "../../lib/region-format";
 import { initialJapanRules, tierRate, type PricingRules } from "../../lib/pricing-rules";
-import { defaultTransportLimits } from "../../lib/pickup";
 import "./review-home.css";
 export type BreakevenView = {
     region: string;
@@ -83,16 +82,15 @@ function Arrow({ direction = "right" }: {
 }) {
     return <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d={direction === "right" ? "M3 9h11M10 5l4 4-4 4" : "M15 9H4m4-4L4 9l4 4"} stroke="currentColor" strokeWidth="1.3"/></svg>;
 }
-function CostBenchmarkChart({ data, rules, residentialSurchargePct }: {
+function CostBenchmarkChart({ data, rules }: {
     data: OurSolutionView;
     rules: PricingRules;
-    residentialSurchargePct: number;
 }) {
     const watts = webNum(data, "stakes.cost.reference_panel_watts"), panelsPerMw = 1e6 / watts, weightLb = data.scenario.panelWeightLb;
     const truckRate = tierRate(watts, "panel", {}, rules)?.rate ?? 0, utilityRate = tierRate(watts, "lb", {}, rules)?.rate ?? 0;
-    const residential = truckRate * (1 + residentialSurchargePct / 100) * panelsPerMw, utility = utilityRate * weightLb * panelsPerMw;
+    const truckCost = truckRate * panelsPerMw, utility = utilityRate * weightLb * panelsPerMw;
     const landfillLow = webNum(data, "stakes.cost.nrel_landfill_low_usd_per_panel") * panelsPerMw, landfillHigh = webNum(data, "stakes.cost.nrel_landfill_high_usd_per_panel") * panelsPerMw;
-    const { conventional, hotKnife } = economicsSolutions(data), pvCirconomy = (residential + utility) / 2, landfill = (landfillLow + landfillHigh) / 2;
+    const { conventional, hotKnife } = economicsSolutions(data), pvCirconomy = (truckCost + utility) / 2, landfill = (landfillLow + landfillHigh) / 2;
     const shredding = conventional.opexPerPanel.total * panelsPerMw, thermal = hotKnife.opexPerPanel.total * panelsPerMw;
     const bars = [
         { label: "垃圾掩埋場", value: landfill, className: "is-landfill" },
@@ -102,11 +100,11 @@ function CostBenchmarkChart({ data, rules, residentialSurchargePct }: {
     ];
     const max = Math.max(...bars.map(bar => bar.value)) * 1.16, money = (value: number) => `$${Math.round(value).toLocaleString("zh-TW")}`, percentage = (value: number) => `${value / max * 100}%`;
     return <figure className="os-cost-benchmark">
-    <figcaption><strong>每MW回收成本</strong><span>{compactNumber(watts)} W模組/住宅使用/大型發電當前費用和預計營運成本</span></figcaption>
-    <div className="os-cost-plot" role="img" aria-label={`每MW成本：垃圾掩埋場價格中位數 ${money(landfill)}、PV Circonomy 目前住宅和大型發電處理成本的中間值 ${money(pvCirconomy)}、${THREE_METHODS[0]} ${money(shredding)}、${THREE_METHODS[1]} ${money(thermal)}。`}>
+    <figcaption><strong>每MW回收成本</strong><span>{compactNumber(watts)} W模組/卡車／拖車當前費用和預計營運成本</span></figcaption>
+    <div className="os-cost-plot" role="img" aria-label={`每MW成本：垃圾掩埋場價格中位數 ${money(landfill)}、PV Circonomy 目前卡車與拖車處理費的平均值 ${money(pvCirconomy)}、${THREE_METHODS[0]} ${money(shredding)}、${THREE_METHODS[1]} ${money(thermal)}。`}>
       <div className="os-cost-columns">{bars.map(bar => <div className={`os-cost-column ${bar.className}`} style={{ "--bar": percentage(bar.value) } as CSSProperties} key={bar.label}><strong>{money(bar.value)}</strong><i aria-hidden="true"/><span>{bar.label}</span></div>)}</div>
     </div>
-    <small>PV Circonomy 是目前住宅和大型發電處理成本的中間值，垃圾掩埋場是 NREL 估計範圍的中位數。{THREE_METHODS[0]}和{THREE_METHODS[1]}是在加州的估計營運成本。不包括運輸成本、稅金、資本投資和折舊。 NREL 的估算也不包括運輸成本。</small>
+    <small>PV Circonomy 是目前卡車與拖車處理費的平均值，垃圾掩埋場是 NREL 估計範圍的中位數。{THREE_METHODS[0]}和{THREE_METHODS[1]}是在加州的估計營運成本。不包括運輸成本、稅金、資本投資和折舊。 NREL 的估算也不包括運輸成本。</small>
   </figure>;
 }
 function GlobalDeploymentMap() {
@@ -956,7 +954,7 @@ function MaterialsSection({ data }: {
     </aside>
   </section>;
 }
-export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "作業本價格", pricingRules = initialJapanRules, residentialSurchargePct = defaultTransportLimits.residentialSurchargePct, showPublicPricingBenchmark = true }: {
+export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "作業本價格", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
     market?: PublicSolutionMarket;
     equipmentClaims?: EquipmentClaims;
     economicsData?: OurSolutionView;
@@ -972,7 +970,6 @@ export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuanti
     waveAssumptions?: WaveAssumptions;
     priceSources?: string;
     pricingRules?: PricingRules;
-    residentialSurchargePct?: number;
     showPublicPricingBenchmark?: boolean;
 }) {
     const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
@@ -1044,7 +1041,7 @@ export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuanti
           <h2 id="stakes-title">業主與回收業者面臨哪些問題？</h2>
           <p>業主、回收商、材料使用者和公眾以不同的方式使用太陽能板，但他們都有四個需求：</p>
           <div className="os-stake-tabs" role="group" aria-label="選擇利害關係人想要實現的結果">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic}/><strong>{stakeSolutions[topic].label}</strong></button>)}</div>
-          {stake === "cost" && (market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="zh-TW" /> : showPublicPricingBenchmark ? <CostBenchmarkChart data={economicsData} rules={pricingRules} residentialSurchargePct={residentialSurchargePct}/> : <MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="zh-TW" />)}
+          {stake === "cost" && (market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="zh-TW" /> : showPublicPricingBenchmark ? <CostBenchmarkChart data={economicsData} rules={pricingRules}/> : <MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="zh-TW" />)}
           {stake === "compliance" && <div className="os-compliance-risk"><strong className="os-compliance-risk-mark">HFCs</strong><div><h3>防止含氟背板洩漏到環境中</h3><p>大多數太陽能板的背板使用含氟聚合物、PVF 或 PVDF。從廣義上講，這些物質屬於 PFAS，亦為持久性化學物質，有時被稱為「永久化學物質」。熱處理會產生氟化氫 (HF) 和其他含氫氟碳分解產物，掩埋會在環境中留下持久性含氟聚合物。 PV Circonomy 的主要任務是分別收集 EVA 和背板，不讓其洩漏到自然環境中，並將它們返回到適合的應用中。</p></div></div>}
           {stake === "circularity" && <div className="os-compliance-risk os-offtake-service"><strong className="os-circularity-mark"><b>{compactNumber(webNum(economicsData, "stakes.circularity_goal_percent"))}%</b><span>可重複使用的</span></strong><div><h3>接下來將在每個市場開發的應用程式</h3><p>除了回收技術外，PV Circonomy 還提供材料升級回收技術和承購服務。我們將繼續透過適合每個國家和地區工業生態系統的在地化策略，在回收材料的產地附近進行使用。<br />針對缺乏在地供應鏈的市場，我們提供EVA 和背板承接服務將分離的材料連接到經批准的區域內或下游應用，從而能夠負責任地使用所有回收材料。</p><span><b>支援採集收集到的素材</b> 檢查EVA和背板的兼容性並連接到下游應用。</span></div></div>}
           {stake === "reputation" && <div className="os-compliance-risk os-connected-service"><strong className="os-connected-mark">連接</strong><div><h3>為回收本身增加價值</h3><p>PV Circonomy 連接上下游合作夥伴，使業者能夠負責任地向投資者解釋其廢舊光電板回收及回收材料的去向，並使材料使用者能夠向消費者披露其來源。最終使用目的地和來源的可視化為回收工作本身增加了價值。</p></div></div>}

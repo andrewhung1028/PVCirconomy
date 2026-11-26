@@ -6,7 +6,7 @@ import { CapacityEstimate, useCapacityEstimate } from "./pv-capacity-estimate";
 import { EquipmentMouPreview, SpecificationInquiry } from "./specification-inquiry";
 import type { EquipmentBaseVariant, EquipmentMouReview, EquipmentVariant } from "../../lib/equipment-mou";
 import { inquiryTranslate } from "./marketing";
-import { defaultEquipmentConfigurations, equipmentElectricalRows, equipmentLineRating, equipmentSpecificationGroups, type EquipmentConfigurations } from "../../lib/equipment-configurations";
+import { defaultEquipmentConfigurations, equipmentElectricalRows, equipmentLineRating, integratedEquipmentThroughput, equipmentSpecificationGroups, type EquipmentConfigurations } from "../../lib/equipment-configurations";
 import { defaultEquipmentQuantitative, type EquipmentClaims, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
@@ -462,7 +462,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <figure className="pvc2-machine"><img src="/images/pvc-machine.webp" alt={t("PV Circulator industrial solar panel recycling line")} /></figure>
           <div className="pvc2-card-row">{performance.map(([value, title, text]) => <article key={value}><strong>{formatCopy(t(value), claimValues)}</strong><h3>{t(title)}</h3><p>{formatCopy(t(text), claimValues)}</p></article>)}</div>
         </div>
-        <CapacityEstimate estimate={estimate} rating={rating} shareThroughput={shareThroughput} businessCaseHref={businessCaseHref} locale={locale} t={t}
+        <CapacityEstimate estimate={estimate} rating={rating} shareThroughput={shareThroughput} plusThroughput={integratedEquipmentThroughput(equipmentConfigurations)} businessCaseHref={businessCaseHref} locale={locale} t={t}
           reference={reference} feeInput={feeInput} setFeeInput={value => setFeeOverride({ market, value })} annualFeeRevenue={annualFeeRevenue} />
       </section>
 
@@ -470,7 +470,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
         heading={<>{t("Simple principle.")}<br />{t("Layer by layer.")}<br />{t("Material by material.")}</>} />
 
       <section id="functions" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="functions-title">
-        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process", true)}><div><h2 id="functions-title">{t("Configure the line.")}<br />{t("Fit your operation.")}</h2><p>{t("Start with the core line, then add what your operation needs: intelligent identification, integrated junction-box removal or material preparation for downstream buyers.")}</p><Link className="pv-button" href="/shop/?type=equipment">{t("Request equipment information")}{' '}<Arrow /></Link></div></div>
+        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process", true)}><div><h2 id="functions-title">{t("Configure the line.")}<br />{t("Fit your operation.")}</h2><p>{t("Start with the core line, then add what your operation needs: intelligent identification, integrated junction-box removal or material preparation for downstream buyers.")}</p><Link className="pv-button" href={`?market=${market}&inquiry=1#specification`}>{t("Request equipment information")}{' '}<Arrow /></Link></div></div>
         <div className="pvc2-split-scroll" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process")}>{functions.map(([number, title, lead, text, image]) => <article className="pvc2-function" key={number}><img src={image} alt="" /><div><span>{locale === "zh-TW" ? t(number) : number}</span><h3>{t(title)}</h3><strong>{t(lead)}</strong><p>{t(text)}</p></div></article>)}</div>
       </section>
 

@@ -123,7 +123,7 @@ export function equipmentElectricalRows(electrical: EquipmentElectrical, locale:
   ] as const;
 }
 
-export function equipmentLineRating(configurations: EquipmentConfigurations, variant: EquipmentBaseVariant = "basic") {
+export function equipmentLineRating(configurations: EquipmentConfigurations, variant: EquipmentVariant = "basic") {
   const values = configurations[variant].values;
   const fallback = defaultEquipmentConfigurations[variant].values;
   const number = (key: SpecificationLabel, pattern: RegExp) => Number(
@@ -134,4 +134,8 @@ export function equipmentLineRating(configurations: EquipmentConfigurations, var
     direct: number("Direct operating personnel", /^(\d+)\s*(?:persons?\s*\/\s*shift)?$/i),
     support: number("Indirect operating personnel", /^(\d+)\s*(?:persons?\s*\/\s*shift)?$/i),
   };
+}
+
+export function integratedEquipmentThroughput(configurations: EquipmentConfigurations, base: EquipmentBaseVariant = "basic") {
+  return Math.min(equipmentLineRating(configurations, base).panelsPerMinute, equipmentLineRating(configurations, "plus").panelsPerMinute);
 }

@@ -26,7 +26,7 @@ export function DistanceSensitivity({ annualPanels, reference, pricing, market, 
   const annual = freightDetails !== null;
   const points = freightDetails
     ? freightDetails.map((row, index) => ({ distance: freightDistanceSteps[index], cost: row.total }))
-    : freightCostTrend(market);
+    : pricing?.referencePoints ?? freightCostTrend(market);
 
   return <section className="pvc2-distance-cost" aria-labelledby="pvc2-distance-title">
     <h3 id="pvc2-distance-title">{t("Owner cost = freight + recycling fee")}</h3>

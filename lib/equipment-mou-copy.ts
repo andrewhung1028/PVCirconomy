@@ -1,5 +1,6 @@
+import { defaultMouPolicy } from "./mou-policy";
 import { equipmentMouArticles, mouWording } from "./equipment-mou-articles";
-import { equipmentMouValidityDays, type EquipmentMou, type EquipmentMouContact, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
+import { type EquipmentMou, type EquipmentMouContact, type EquipmentMouInput, type EquipmentMouTerms } from "./equipment-mou";
 import { isSitePowerOption } from "./equipment-quantitative";
 import { marketNames, type OurSolutionLocale } from "./our-solution/market";
 import translations from "./i18n/equipment-inquiry.json";
@@ -24,6 +25,7 @@ export function equipmentMouPriceRows(locale: OurSolutionLocale, mou: EquipmentM
 }
 
 export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact: EquipmentMouContact, terms: EquipmentMouTerms) {
+  const policy = terms.policy ?? defaultMouPolicy;
   const t = equipmentInquiryTranslate(input.locale);
   const w = mouWording(input.locale);
   const number = new Intl.NumberFormat(input.locale, { maximumFractionDigits: 2 });
@@ -65,9 +67,9 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
   rows.push(
     ...equipmentMouPriceRows(input.locale, mou),
     [w("Budget estimate validity", "概估報價有效期限", "概算見積の有効期間"),
-      w(`Up to ${equipmentMouValidityDays} days from completion of signing, subject to Article 7. A formal quotation states its own validity.`,
-        `自完成簽署起最長 ${equipmentMouValidityDays} 日，依第 7 條終止。正式報價以其所載有效期限為準。`,
-        `署名完了日から最長${equipmentMouValidityDays}日。第7条に従い終了します。正式見積書の有効期限は当該見積書に明記します。`)],
+      w(`Up to ${policy.validityDays} days from completion of signing, subject to Article 7. A formal quotation states its own validity.`,
+        `自完成簽署起最長 ${policy.validityDays} 日，依第 7 條終止。正式報價以其所載有效期限為準。`,
+        `署名完了日から最長${policy.validityDays}日。第7条に従い終了します。正式見積書の有効期限は当該見積書に明記します。`)],
   );
   if (mou.msrpTotal === null && mou.investment !== null)
     rows.push([t("Modeled equipment investment"), money.format(mou.investment)]);

@@ -1,3 +1,4 @@
+import { validMouPolicy } from "../mou-policy";
 import schema from '../../data/our-solution-parameter-schema.json';
 import { eu27Countries, markets, parameter as n, type Parameters } from './parameters';
 import { parameterProfileForRegion } from './market';
@@ -12,6 +13,7 @@ export function validateParameters(value: unknown):string[] {
     const p=value as Parameters;
     if(p?.format!=='parameters-v2')return ['舊版結果格式不再支援，請下載現行參數範本。'];
     const parameterSchema=schemaFor(p);
+    if (p.mouPolicy !== undefined && !validMouPolicy(p.mouPolicy)) fail("MOU · 請填寫有效的評估天數及保密年數。");
     if (p.transport !== undefined) errors.push(...validateMarketTransport(p.transport));
     const japanFeeKeys = Object.keys(japanFeeBenchmarkRows);
     const feeRows = p.assumptions?.[12] ?? {};

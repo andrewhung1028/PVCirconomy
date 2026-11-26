@@ -3,7 +3,10 @@ import type { OurSolutionParameterMarket } from "./market";
 
 export const transportVehicles = ["truck", "trailer"] as const;
 
+export type FreightPoint = { distance: number; cost: number };
+
 export type MarketTransport = {
+  referencePoints?: FreightPoint[];
   maxPanelsPerPallet: number | null;
   palletTare: number | null;
   palletLengthM: number | null;
@@ -32,6 +35,11 @@ export function validateMarketTransport(value: unknown): string[] {
   const nonnegative = (n: unknown): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1_000_000;
   const errors: string[] = [];
   if (!transport || !transport.vehicles) return ["Transport 欄位不完整。"];
+  const points = transport.referencePoints;
+  if (points !== undefined && (!Array.isArray(points) || points.length < 2 || points.length > 6
+    || points.some((p,i)=>!p || !nonnegative(p.distance) || !nonnegative(p.cost) || (i===0 ? p.distance!==0 || p.cost!==0 : p.distance<=points[i-1].distance)))) {
+    errors.push("Transport · 運費參考點須從 0 距離、0 費用開始，距離依序遞增。");
+  }
   if (transport.maxPanelsPerPallet !== null && (!nonnegative(transport.maxPanelsPerPallet) || !Number.isInteger(transport.maxPanelsPerPallet) || transport.maxPanelsPerPallet < 1)) errors.push("Transport · max_panels_per_pallet 必須為正整數。");
   if (transport.palletTare !== null && !nonnegative(transport.palletTare)) errors.push("Transport · pallet_tare 必須為非負數字。");
   const validLength = (n: unknown) => n === null || (nonnegative(n) && n > 0 && n <= 100);

@@ -1,5 +1,17 @@
 import type {TransportLimits} from './pickup';
-export type PricingRules = {baseMaxWatts:number;stepWatts:number;panelBase:number;panelIncrement:number;weightBase:number;weightIncrement:number;discountStartExponent:number;discountPercentPerExponent:number;discountMaxPercent:number;brokenPercent:number;missingBoxPercent:number;missingFramePercent:number;doubleGlassGramsPerWatt:number;backsheetGramsPerWatt:number;doubleGlassKgPerSqm:number;backsheetKgPerSqm:number;unknownGramsPerWatt:number|null;unknownKgPerSqm:number;minimumProcessingUsd?:number};
+export type PricingRules = {baseMaxWatts:number;stepWatts:number;panelBase:number;panelIncrement:number;weightBase:number;weightIncrement:number;discountStartExponent:number;discountPercentPerExponent:number;discountMaxPercent:number;brokenPercent:number;missingBoxPercent:number;missingFramePercent:number;doubleGlassGramsPerWatt:number;backsheetGramsPerWatt:number;doubleGlassKgPerSqm:number;backsheetKgPerSqm:number;unknownGramsPerWatt:number|null;unknownKgPerSqm:number;minimumProcessingUsd?:number} & Partial<PricingMisc>;
+export const pricingMiscFields = [
+ ["projectThresholdMw", "Project Support 門檻", "MW", 1, 0, 100000],
+ ["quotationValidityDays", "報價有效期", "天", 7, 1, 365],
+ ["batchIntervalDays", "分批交付間隔", "天", 7, 1, 365],
+ ["defaultEstimatePanels", "估價預填片數", "片", 300, 1, 1000000],
+ ["defaultEstimateWatts", "估價預填瓦數", "W", 350, 1, 2000],
+] as const;
+type PricingMisc = Record<typeof pricingMiscFields[number][0], number>;
+const miscKeys: readonly string[] = pricingMiscFields.map(([key]) => key);
+export function pricingMisc(rules?: PricingRules): PricingMisc {
+ return Object.fromEntries(pricingMiscFields.map(([key,,,fallback])=>[key,rules?.[key]??fallback])) as PricingMisc;
+}
 export type PricingMarket='US'|'JP';
 export type PricingProfile={market:PricingMarket;currency:'USD'|'JPY';locale:'en-US'|'ja-JP';weightUnit:'lb'|'kg'};
 export const pricingProfiles:Record<PricingMarket,PricingProfile>={US:{market:'US',currency:'USD',locale:'en-US',weightUnit:'lb'},JP:{market:'JP',currency:'JPY',locale:'ja-JP',weightUnit:'kg'}};
@@ -8,7 +20,8 @@ export type BatchPricingPolicy = { minimumProcessingUsd: number };
 export const defaultMinimumProcessingUsd = 300;
 export const maximumMinimumProcessingUsd = 100000;
 export type PricingSnapshot = {version:string;createdAt:string;rules:PricingRules;profile?:PricingProfile;transport?:TransportLimits;transportVersion?:string;batchPricing?:BatchPricingPolicy};
-export const initialRules:PricingRules={baseMaxWatts:300,stepWatts:50,panelBase:10,panelIncrement:1.25,weightBase:.18,weightIncrement:.025,discountStartExponent:2,discountPercentPerExponent:0,discountMaxPercent:100,brokenPercent:10,missingBoxPercent:5,missingFramePercent:25,doubleGlassGramsPerWatt:53.4,backsheetGramsPerWatt:50.3,doubleGlassKgPerSqm:12.25,backsheetKgPerSqm:10.76,unknownGramsPerWatt:null,unknownKgPerSqm:11.5};
+export const defaultWeightRules={doubleGlassGramsPerWatt:53.4,backsheetGramsPerWatt:50.3,doubleGlassKgPerSqm:12.25,backsheetKgPerSqm:10.76,unknownGramsPerWatt:null,unknownKgPerSqm:11.5};
+export const initialRules:PricingRules={baseMaxWatts:300,stepWatts:50,panelBase:10,panelIncrement:1.25,weightBase:.18,weightIncrement:.025,discountStartExponent:2,discountPercentPerExponent:0,discountMaxPercent:100,brokenPercent:10,missingBoxPercent:5,missingFramePercent:25,...defaultWeightRules};
 // System bootstrap only. JP administrators must review and publish a market
 // version before the Japanese quotation surface is enabled.
 export const initialJapanRules:PricingRules={...initialRules,panelBase:1580,panelIncrement:197.5125,weightBase:62.699,weightIncrement:8.709};
@@ -17,7 +30,8 @@ export function validRules(value:unknown):value is PricingRules{
  const r=value as Record<string,unknown>;const keys=Object.keys(initialRules);
  const minimum=r.minimumProcessingUsd;
  if('minimumProcessingUsd' in r&&(typeof minimum!=='number'||!Number.isFinite(minimum)||minimum<0||minimum>maximumMinimumProcessingUsd||Math.abs(minimum*100-Math.round(minimum*100))>1e-7))return false;
- if(Object.keys(r).filter(key=>key!=='minimumProcessingUsd').length!==keys.length||keys.some(k=>k==='unknownGramsPerWatt'&&r[k]===null?false:typeof r[k]!=='number'||!Number.isFinite(r[k])||Number(r[k])<0))return false;
+ if(pricingMiscFields.some(([key,,,,min,max])=>{const n=r[key];return key in r&&(typeof n!=='number'||!Number.isFinite(n)||n<min||n>max||(key!=='projectThresholdMw'&&!Number.isInteger(n)))}))return false;
+ if(Object.keys(r).filter(key=>key!=='minimumProcessingUsd'&&!miscKeys.includes(key)).length!==keys.length||keys.some(k=>k==='unknownGramsPerWatt'&&r[k]===null?false:typeof r[k]!=='number'||!Number.isFinite(r[k])||Number(r[k])<0))return false;
  return (r.unknownGramsPerWatt===null||(Number(r.unknownGramsPerWatt)>0&&Number(r.unknownGramsPerWatt)<=1000))&&Number.isInteger(r.baseMaxWatts)&&Number(r.baseMaxWatts)>=1&&Number(r.baseMaxWatts)<=2000&&Number.isInteger(r.stepWatts)&&Number(r.stepWatts)>=1&&Number(r.stepWatts)<=2000&&Number.isInteger(r.discountStartExponent)&&Number(r.discountStartExponent)>=1&&Number(r.discountStartExponent)<=6&&Number(r.discountPercentPerExponent)<=100&&Number(r.discountMaxPercent)<=100&&Number(r.panelBase)<=100000&&Number(r.panelIncrement)<=100000&&Number(r.weightBase)<=100&&Number(r.weightIncrement)<=100&&['brokenPercent','missingBoxPercent','missingFramePercent'].every(k=>Number(r[k])<=1000)&&['doubleGlassGramsPerWatt','backsheetGramsPerWatt','doubleGlassKgPerSqm','backsheetKgPerSqm','unknownKgPerSqm'].every(k=>Number(r[k])>0&&Number(r[k])<=1000)&&keys.every(k=>r[k]===null||Math.abs(Number(r[k])*1e6-Math.round(Number(r[k])*1e6))<1e-5);
 }
 export type ConditionFlags={broken?:boolean;missingBox?:boolean;missingFrame?:boolean};
@@ -34,6 +48,9 @@ export function quantityDiscount(quantity:number,r:PricingRules){
 }
 
 // Upgrade only newly introduced coefficients. Existing price fields must be present and valid.
-export const defaultWeightRules={doubleGlassGramsPerWatt:53.4,backsheetGramsPerWatt:50.3,doubleGlassKgPerSqm:12.25,backsheetKgPerSqm:10.76,unknownGramsPerWatt:null,unknownKgPerSqm:11.5};
 export const defaultDiscountRules={discountStartExponent:2,discountPercentPerExponent:0,discountMaxPercent:100};
-export function normalizeRules(value:unknown):PricingRules|null{if(validRules(value))return value;if(!value||typeof value!=='object'||Array.isArray(value))return null;const r=value as Record<string,unknown>;const optional={...defaultWeightRules,...defaultDiscountRules};const baseKeys=Object.keys(initialRules).filter(k=>!(k in optional));if(!baseKeys.every(k=>k in r)||!Object.keys(r).every(k=>k in initialRules||k==='minimumProcessingUsd'))return null;const upgraded={...optional,...r};return validRules(upgraded)?upgraded:null}
+export function normalizeRules(value:unknown):PricingRules|null{if(validRules(value))return value;if(!value||typeof value!=='object'||Array.isArray(value))return null;const r=value as Record<string,unknown>;const optional={...defaultWeightRules,...defaultDiscountRules};const baseKeys=Object.keys(initialRules).filter(k=>!(k in optional));if(!baseKeys.every(k=>k in r)||!Object.keys(r).every(k=>k in initialRules||k==='minimumProcessingUsd'||miscKeys.includes(k)))return null;const upgraded={...optional,...r};return validRules(upgraded)?upgraded:null}
+
+export function panelAreaWeightFactors(rules: Pick<PricingRules, "doubleGlassKgPerSqm" | "backsheetKgPerSqm" | "unknownKgPerSqm"> = defaultWeightRules) {
+ return {"glass-glass":rules.doubleGlassKgPerSqm,"glass-backsheet":rules.backsheetKgPerSqm,unknown:rules.unknownKgPerSqm};
+}

@@ -108,7 +108,6 @@ export async function loadSolutionView(market: PublicSolutionMarket, locale: Our
       fees: Object.values(result.solutions).map(solution => ({ code: solution.code, breakevenFee: solution.breakevenFee })),
     },
     pricingRules: pricing?.rules ?? (market === "JP" ? initialJapanRules : initialRules),
-    residentialSurchargePct: pricing?.transport?.residentialSurchargePct,
     showPublicPricingBenchmark: market === "US",
     priceSources: Object.entries(prices).map(([metal, value]) => {
       if (!citation) return `${metal}: ${value.source}${value.workbookValue ? "" : `, ${value.asOf}`}`;

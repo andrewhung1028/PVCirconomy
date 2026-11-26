@@ -1,3 +1,4 @@
+import { permanentRedirect } from "next/navigation";
 import Link from 'next/link';
 import { Arrow, Intro, Shell, ShopForm } from '../components/marketing';
 import { products } from '../components/marketing-data';
@@ -9,7 +10,7 @@ const equipment = [
     name: 'PV Circulator',
     description: 'Industrial solar panel recycling line',
     image: '/images/pvc-machine.webp',
-    href: '/shop/?type=equipment',
+    href: "/pv-circulator/?inquiry=1#specification",
   },
   {
     name: 'JB Removal Tool',
@@ -63,15 +64,18 @@ function ShopCatalog() {
 }
 
 export default async function Shop({ searchParams }: PageProps<'/shop'>) {
-  const { type, configuration, material } = await searchParams;
-  if (type !== 'equipment' && type !== 'materials') return <Shell overlayHeader showMarketPicker><ShopCatalog /></Shell>;
+  const { type, market, material } = await searchParams;
+  if (type === 'equipment') {
+    const query = new URLSearchParams({ inquiry: '1' });
+    if (typeof market === 'string') query.set('market', market);
+    permanentRedirect(`/pv-circulator/?${query}#specification`);
+  }
+  if (type !== 'materials') return <Shell overlayHeader showMarketPicker><ShopCatalog /></Shell>;
 
   return <Shell showMarketPicker>
     {type === 'materials' && <Intro label="SHOP" title="Source materials" description="Tell us what recovered material you need." />}
     <ShopForm
-      key={JSON.stringify([type, configuration, material])}
-      type={type}
-      requestedConfiguration={typeof configuration === 'string' ? configuration : undefined}
+      key={JSON.stringify(material)}
       requestedMaterial={typeof material === 'string' ? material : undefined}
     />
   </Shell>;

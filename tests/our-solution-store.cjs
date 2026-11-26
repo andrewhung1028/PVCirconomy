@@ -109,7 +109,12 @@ const assert=require('node:assert/strict'),{PGlite}=require('@electric-sql/pglit
   assert.equal(workbookCheck.getWorksheet('Capacity History'), undefined);
   assert.equal(workbookCheck.getWorksheet('Transport').getRow(1).getCell(1).value, 'field_key');
   const auParsed = await parseOurSolutionWorkbook(scopedWorkbook, australia, shared.data);
-  assert.deepEqual(auParsed.transport, auTransport);
+  const { freightCostTrend } = require('../lib/our-solution/freight-cost-trends.ts');
+  assert.deepEqual(auParsed.transport, {...auTransport, referencePoints:freightCostTrend('AU')});
+  assert.deepEqual(auParsed.mouPolicy, {validityDays:180, confidentialityYears:3});
+  workbookCheck.getWorksheet('MOU').getCell('B2').value=120;
+  const changed = await parseOurSolutionWorkbook(Buffer.from(await workbookCheck.xlsx.writeBuffer()), australia, shared.data);
+  assert.deepEqual(changed.mouPolicy,{validityDays:120, confidentialityYears:3});
   assert.deepEqual(auParsed.capacityHistory, shared.data.capacityHistory);
   australia.transport = auTransport;
   const australiaFirst = await store.saveOurSolutionData(australia,null,actor,'Australia initial version','AU');

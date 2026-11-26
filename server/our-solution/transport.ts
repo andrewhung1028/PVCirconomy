@@ -24,19 +24,21 @@ function fromDeliverySettings(settings: DeliverySettings, palletAreaM2: number):
 }
 
 export async function resolveMarketTransport(market: OurSolutionParameterMarket, configured: MarketTransport | undefined, palletAreaM2: number) {
-  if (configured !== undefined || market !== "US") return configured;
+  if (market !== "US" || (configured && transportVehicles.some(vehicle => configured.vehicles[vehicle].maxWeight !== null))) return configured;
   const delivery = await deliverySettings().catch(() => null);
   const legacy = delivery ? fromDeliverySettings(delivery.settings, palletAreaM2) : undefined;
-  if (legacy || process.env.VERCEL_ENV !== "preview") return legacy;
+  if (legacy) return { ...legacy, ...(configured?.referencePoints && { referencePoints: configured.referencePoints }) };
+  if (process.env.VERCEL_ENV !== "preview") return configured;
   try {
     const response = await fetch("https://www.pvcirconomy.com/api/delivery/settings/", {
       signal: AbortSignal.timeout(4000),
       next: { revalidate: 60 },
     });
-    if (!response.ok) return undefined;
+    if (!response.ok) return configured;
     const { settings } = await response.json() as { settings?: unknown };
-    return validDeliverySettings(settings) ? fromDeliverySettings(settings, palletAreaM2) : undefined;
+    const preview = validDeliverySettings(settings) ? fromDeliverySettings(settings, palletAreaM2) : undefined;
+    return preview ? { ...preview, ...(configured?.referencePoints && { referencePoints: configured.referencePoints }) } : configured;
   } catch {
-    return undefined;
+    return configured;
   }
 }

@@ -50,10 +50,11 @@ export function useCapacityEstimate(rating: LineRating, defaults: CapacityDefaul
   return { current, setField: (key: Field, value: string) => setCurrent(current => ({ ...current, [key]: value })), valid, dailyHours, monthlyAverage, scheduledHours, theoretical, afterMaintenance, availableCapacity, netAnnual };
 }
 
-export function CapacityEstimate({ estimate, rating, shareThroughput, businessCaseHref, locale, t, reference, feeInput, setFeeInput, annualFeeRevenue }: {
+export function CapacityEstimate({ estimate, rating, shareThroughput, plusThroughput, businessCaseHref, locale, t, reference, feeInput, setFeeInput, annualFeeRevenue }: {
   estimate: ReturnType<typeof useCapacityEstimate>;
   rating: LineRating;
   shareThroughput: boolean;
+  plusThroughput: number;
   businessCaseHref: string;
   locale: OurSolutionLocale;
   t: Translate;
@@ -87,7 +88,7 @@ export function CapacityEstimate({ estimate, rating, shareThroughput, businessCa
       <h3 id="capacity-estimate-title" tabIndex={-1}>{t("Capacity and staffing estimate")}</h3>
       <p>{t(shareThroughput
         ? "Economic, Basic and Premium share the same rated throughput. With PLUS integrated, line throughput is {throughput} panels/min."
-        : "This estimate uses the Basic line’s rated throughput of {throughput} panels/min.").replace("{throughput}", rating.panelsPerMinute.toLocaleString(locale, { maximumFractionDigits: 2 }))}</p>
+        : "This estimate uses the Basic line’s rated throughput of {throughput} panels/min.").replace("{throughput}", (shareThroughput ? plusThroughput : rating.panelsPerMinute).toLocaleString(locale, { maximumFractionDigits: 2 }))}</p>
       <div className="pvc2-capacity-fields">
         {fields.map(field => <label key={field.key}>{t(field.label)}
           <input type="number" min={field.min} max={field.max} step={field.step} value={current[field.key]}

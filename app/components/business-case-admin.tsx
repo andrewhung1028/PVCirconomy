@@ -10,7 +10,7 @@ type History = { number: number; id: string; createdAt: string; actorEmail: stri
 type State = { active: Snapshot; history: History[] };
 type Draft = { data: BusinessCaseData; diff: DataDiff[]; expectedVersion: string; fileName: string };
 
-const sheetNames=['Operating Regions','Processing Solutions','OPEX Parameters','Currency Exchange','Materials','Solution Material Recovery','Payable'];
+const sheetNames=['Operating Regions','Processing Solutions','OPEX Parameters','Currency Exchange','Materials','Solution Material Recovery'];
 function DiffSheet({name,rows}:{name:string;rows:DataDiff[]}) {
   const [page,setPage]=useState(0);
   const pages=Math.max(1,Math.ceil(rows.length/50));
@@ -74,7 +74,7 @@ export function BusinessCaseAdmin() {
   async function restore(id:string){if(!state)return;setBusy(true);try{const response=await fetch('/api/admin/business-case-data/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({restoreVersion:id,expectedVersion:state.active.version,note:'Restore '+id})});if(!response.ok){setStatus(response.status===409?'版本衝突，請重新載入。':'還原失敗。');return;}setState(await response.json());setDraft(null);setStatus('已建立還原版本。');}finally{setBusy(false);}}
 
   return <section id="business-case-parameters" className="pa-parameter-section" aria-label="Business Case 主檔">
-    <div className="pa-heading"><h2>Business Case 主檔</h2><p><strong>Business Case 主檔</strong>：以版本化 Excel 管理情境假設、年度損益、每片 OPEX、材料收益與敏感度。上傳只建立驗證草稿；按下發布後才會更新網站。Payable 僅儲存資料，不參與計算。</p></div>
+    <div className="pa-heading"><h2>Business Case 主檔</h2><p><strong>Business Case 主檔</strong>：以版本化 Excel 管理情境假設、年度損益、每片 OPEX、材料收益與敏感度。上傳只建立驗證草稿；按下發布後才會更新網站。</p></div>
     {session?.user?.role !== "staff" ? <section className="pa-login"><h2>Log in</h2><p>使用 pvcirconomy.com 或 tsgc.com.tw 的 Microsoft 公司帳號管理資料。</p>{session?.configured ? <a className="pa-primary" href="/api/auth/microsoft/login/">Log in with Microsoft</a> : session ? <p>Microsoft 登入尚未設定完成。</p> : null}<p role="status">{status}</p><button onClick={load}>重新檢查</button></section> : <>
       <div className="pa-meta"><span>{session.user.email}</span><span>{state ? `現行版本：v${state.active.number} · ${new Date(state.active.createdAt).toLocaleString("zh-TW")}` : "尚未讀取資料"}</span></div>
       <ol className="pa-data-steps" aria-label="資料更新流程"><li><strong>下載</strong><span>取得現行版本</span></li><li><strong>編輯</strong><span>依原欄位編輯資料</span></li><li><strong>驗證</strong><span>預覽新舊差異</span></li><li><strong>發布</strong><span>建立可回溯版本</span></li></ol>

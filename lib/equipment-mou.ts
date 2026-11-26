@@ -1,3 +1,4 @@
+import type { MouPolicy } from "./mou-policy";
 import type { EquipmentBaseVariant, EquipmentVariant } from "./equipment-configurations";
 import type { OurSolutionLocale, PublicSolutionMarket } from "./our-solution/market";
 
@@ -86,6 +87,7 @@ export type EquipmentMouTerms = {
   agentCandidates: string[];
   agent: EquipmentMouAgent | null;
   governingLaw: string;
+  policy?: MouPolicy;
   specifications?: EquipmentMouSpecifications;
 };
 

@@ -1,7 +1,9 @@
+import { defaultMouPolicy } from "../../lib/mou-policy";
+import { activeOurSolutionParameterData } from "../our-solution/store";
 import { otherSitePowerSupply, type EquipmentMouAgent, type EquipmentMouInput, type EquipmentMouTerms } from "../../lib/equipment-mou";
 
 import { configuredEquipmentMarkets } from "../equipment-configurations/pricing";
-import { defaultEquipmentConfigurations, equipmentLineRating } from "../../lib/equipment-configurations";
+import { defaultEquipmentConfigurations, equipmentLineRating, integratedEquipmentThroughput } from "../../lib/equipment-configurations";
 import { defaultEquipmentQuantitative } from "../../lib/equipment-quantitative";
 import { equipmentMarketAmount, equipmentUsdTotal } from "../../lib/equipment-module-pricing";
 import { ourSolutionParameterMarkets } from "../../lib/our-solution/market";
@@ -36,9 +38,10 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
   }
   const governingLaw = equipmentMouGoverningLaw(input);
   const currency = ourSolutionParameterMarkets[market].currency;
-  const [settings, fx] = await Promise.all([
+  const [settings, fx, marketParameters] = await Promise.all([
     equipmentSettingsForInquiry().catch(() => null),
     currency === "USD" ? Promise.resolve(null) : loadEquipmentExchangeRates(),
+    activeOurSolutionParameterData(market).catch(() => null),
   ]);
   const prices = settings?.modulePrices;
   const quantitative = settings?.quantitative ?? defaultEquipmentQuantitative;
@@ -49,7 +52,7 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
   const specification = configurations[variant].values;
   const mou = quantitative.mou;
   const specifications = {
-    ratedThroughput: equipmentLineRating(configurations, variant).panelsPerMinute,
+    ratedThroughput: input.configuration === "plus" ? integratedEquipmentThroughput(configurations, variant) : equipmentLineRating(configurations, variant).panelsPerMinute,
     standardCells: mou.standardCells,
     energyPerPanel: specification["Energy consumption"],
     compressedAirLpm: mou.compressedAirLpm,
@@ -68,5 +71,5 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
   const msrpPerLine = usd > 0 ? equipmentMarketAmount(usd, currency, fx?.rates[currency], quantitative.pricing.nonUsdFactor) : null;
   const seller = market === "JP" ? "東建安股份有限公司" : "PV Circonomy Company";
   const agentCandidates = market === "JP" && !agent ? ["住友商社", "川重商事"] : [];
-  return { terms: { seller, agent, agentCandidates, governingLaw, specifications }, msrpPerLine };
+  return { terms: { seller, agent, agentCandidates, governingLaw, specifications, policy: marketParameters?.data.mouPolicy ?? defaultMouPolicy }, msrpPerLine };
 }

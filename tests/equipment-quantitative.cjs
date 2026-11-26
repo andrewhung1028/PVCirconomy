@@ -17,7 +17,7 @@ async function main() {
   try {
     const store = require('../server/equipment-configurations/store.ts');
     const { exportEquipmentWorkbook, importEquipmentWorkbook } = require('../server/equipment-configurations/workbook.ts');
-    const { equipmentLineRating } = require('../lib/equipment-configurations.ts');
+    const { equipmentLineRating, integratedEquipmentThroughput } = require('../lib/equipment-configurations.ts');
     const { equipmentSchedule } = require('../lib/equipment-quantitative.ts');
     const { equipmentMouMarket } = require('../server/equipment-mou/market.ts');
     const { equipmentMouArticles } = require('../lib/equipment-mou-articles.ts');
@@ -67,6 +67,10 @@ async function main() {
     assert.deepEqual(equipment.quantitative.sitePower.JP, ['200 V · 50 Hz', '220 V · 60 Hz']);
     assert.equal(equipmentSchedule(equipment.quantitative.markets.JP).dailyHours, 16);
     assert.equal(equipmentLineRating(equipment.configurations).panelsPerMinute, 1.5);
+    assert.equal(integratedEquipmentThroughput(equipment.configurations),1.5);
+    const slowerPlus=structuredClone(equipment.configurations);
+    slowerPlus.plus.values['Rated throughput']='0.5 panel/min';
+    assert.equal(integratedEquipmentThroughput(slowerPlus),0.5);
     assert.ok(!Object.hasOwn(equipment, 'modulePrices'));
 
     const input = { configuration: 'basic', installationMarket: 'JP', locale: 'en-US' };

@@ -1,3 +1,5 @@
+import { defaultMouPolicy, validMouPolicy } from "../../lib/mou-policy";
+import { freightCostTrend } from "../../lib/our-solution/freight-cost-trends";
 import ExcelJS from 'exceljs';
 import layout from '../../data/our-solution-workbook-layout.json';
 import schema from '../../data/our-solution-parameter-schema.json';
@@ -146,10 +148,14 @@ function transportRows(data: MarketTransport, market: NonNullable<ReturnType<typ
   ] as const;
 }
 
+const referenceSlots = Array.from({ length: 6 }, (_, index) => index + 1);
+
 function readTransport(sheet: ExcelJS.Worksheet, market: NonNullable<ReturnType<typeof ourSolutionMarket>>): MarketTransport {
   const fields = rows(sheet)['0'];
   const definitions = transportRows(emptyMarketTransport(), market);
-  if (!fields.has('field_key') || fields.size !== definitions.length + 1) throw Error('Transport 欄位不符。');
+  const referenceKeys = referenceSlots.flatMap(i => [`reference_${i}_distance`, `reference_${i}_cost`]);
+  const hasReferences = referenceKeys.some(key => fields.has(key));
+  if (!fields.has('field_key') || fields.size !== definitions.length + 1 + (hasReferences ? referenceKeys.length : 0)) throw Error('Transport 欄位不符。');
   const values = Object.fromEntries(definitions.map(([key,, unit]) => {
     const row = get(fields, key, 'Transport');
     const cell = row.getCell(2);
@@ -157,7 +163,21 @@ function readTransport(sheet: ExcelJS.Worksheet, market: NonNullable<ReturnType<
     if ((value !== null && typeof value !== 'number') || row.getCell(3).value !== unit) throw Error(`Transport · ${key} 必須使用 ${unit}，並填入數字或留空。`);
     return [key, value];
   }));
+  const { distance } = transportUnits(market);
+  const currency = ourSolutionParameterMarkets[market].currency;
+  const referencePoints = hasReferences ? referenceSlots.flatMap(i => {
+    const distanceRow = get(fields, `reference_${i}_distance`, 'Transport');
+    const costRow = get(fields, `reference_${i}_cost`, 'Transport');
+    const distanceValue = distanceRow.getCell(2).value, cost = costRow.getCell(2).value;
+    if (distanceRow.getCell(3).value !== distance || costRow.getCell(3).value !== currency)
+      throw Error(`Transport · 運費參考點 ${i} 的單位不得更改。`);
+    if (distanceValue == null && cost == null) return [];
+    if (typeof distanceValue !== 'number' || typeof cost !== 'number')
+      throw Error(`Transport · 運費參考點 ${i} 必須同時填寫距離與費用。`);
+    return [{ distance: distanceValue, cost }];
+  }) : undefined;
   return {
+    ...(referencePoints?.length ? { referencePoints } : {}),
     maxPanelsPerPallet: values.max_panels_per_pallet, palletTare: values.pallet_tare,
     palletLengthM: values.pallet_length, palletWidthM: values.pallet_width,
     vehicles: Object.fromEntries((['truck', 'trailer'] as const).map(vehicle => [vehicle, {
@@ -172,7 +192,7 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters, 
   const w=new ExcelJS.Workbook();await w.xlsx.load(buffer as never);
   if(w.getWorksheet('Annual Summary')||!w.getWorksheet('Assumptions'))throw Error('舊版結果格式工作簿不再支援，請下載現行參數範本後重新匯入。');
   for(const s of layout)if(!w.getWorksheet(s.name) && !(shared && sharedSheets.some(name => name === s.name)))throw Error(`缺少工作表：${s.name}。`);
-  if(w.worksheets.some(s=>s.name!=='Transport' && !layout.some(l=>l.name===s.name)))throw Error('工作表格式不符，請下載現行範本。');
+  if(w.worksheets.some(s=>!['Transport','MOU'].includes(s.name) && !layout.some(l=>l.name===s.name)))throw Error('工作表格式不符，請下載現行範本。');
   const sr=rows(w.getWorksheet('Scenario')!)['0'];
   const regionCode=String(raw(get(sr,'region_code','Scenario').getCell(3)));
   const profile=parameterProfileForRegion(regionCode);
@@ -244,7 +264,13 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters, 
   const transportSheet = w.getWorksheet('Transport');
   const market = ourSolutionMarket(profile?.regionCode === 'GB' ? 'UK' : profile?.regionCode);
   const transport = transportSheet && market ? readTransport(transportSheet, market) : base?.transport;
-  const marketData = { format: 'parameters-v2' as const, scenario, assumptions, meta, ...(transport ? { transport } : {}) };
+  if (transport && !transport.referencePoints && !transportSheet?.getColumn(1).values.includes('reference_1_distance') && base?.transport?.referencePoints)
+    transport.referencePoints = base.transport.referencePoints;
+  const mouSheet = w.getWorksheet('MOU');
+  const mouPolicy = mouSheet ? { validityDays: mouSheet.getCell('B2').value, confidentialityYears: mouSheet.getCell('B3').value } : base?.mouPolicy;
+  if (mouSheet && (mouSheet.getCell('A2').value !== 'validity_days' || mouSheet.getCell('A3').value !== 'confidentiality_years' || !validMouPolicy(mouPolicy)))
+    throw Error("MOU · 請保留欄位鍵並填寫有效年日數。");
+  const marketData = { ...(validMouPolicy(mouPolicy) ? { mouPolicy } : {}), format: 'parameters-v2' as const, scenario, assumptions, meta, ...(transport ? { transport } : {}) };
   const data: Parameters = shared ? withSharedParameters(marketData, shared) : { ...marketData, ...readGlobalTables(w) };
   const errors=validateParameters(data);if(errors.length)throw Error(errors.join('\n'));return data;
 }
@@ -287,7 +313,7 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
   }
   const sr=rows(scenarioSheet)['0'];for(const [k,v] of Object.entries(data.scenario))get(sr,k,'Scenario').getCell(3).value=v;
   writeGlobalTables(w, data);
-  if (marketOnly || data.transport) {
+  if (marketOnly || data.transport || data.mouPolicy) {
     const profile = parameterProfileForRegion(data.scenario.region_code);
     const market = ourSolutionMarket(profile?.regionCode === 'GB' ? 'UK' : profile?.regionCode);
     if (market) {
@@ -297,6 +323,18 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
       for (const [key, value, unit] of transportRows(data.transport ?? emptyMarketTransport(), market)) {
         sheet.addRow([key,value,unit]).getCell(2).fill = editable;
       }
+      const points = data.transport?.referencePoints ?? freightCostTrend(market);
+      const { distance } = transportUnits(market);
+      for (const i of referenceSlots) {
+        sheet.addRow([`reference_${i}_distance`,points[i-1]?.distance ?? null,distance]).getCell(2).fill = editable;
+        sheet.addRow([`reference_${i}_cost`,points[i-1]?.cost ?? null,currency]).getCell(2).fill = editable;
+      }
+      const mou = w.addWorksheet('MOU');
+      mou.columns = [{width:34},{width:18},{width:20}];
+      const policy = data.mouPolicy ?? defaultMouPolicy;
+      mou.addRow(['field_key','Value','Unit']);
+      mou.addRow(['validity_days',policy.validityDays,'days']).getCell(2).fill = editable;
+      mou.addRow(['confidentiality_years',policy.confidentialityYears,'years']).getCell(2).fill = editable;
     }
   }
   const instructions=rows(w.getWorksheet('Instructions')!)['0'];
@@ -365,7 +403,7 @@ export async function createOurSolutionWorkbook(data:Parameters, _template=false
   }
   if (marketOnly) {
     get(instructions,'Contents','Instructions').getCell(2).value='Market-specific calculations use Assumptions, Scenario and Transport. Capacity History, Population, EU-27 Population and fixed constants are managed in the shared workbook. Fixed constants shown in Assumptions are references for the formulas.';
-    get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions · Scenario · Product Value · Transport. Leave all entries for an unavailable vehicle blank, or provide the full rate and loading inputs.';
+    get(instructions,'Sheets','Instructions').getCell(2).value='Assumptions · Scenario · Product Value · Transport · MOU. Leave all entries for an unavailable vehicle blank, or provide the full rate and loading inputs.';
   }
   // Silicon is deliberately workbook-only; no claim of an automated SMM feed.
   w.getWorksheet('Instructions')!.getCell('B12').value=additional ? `This market uses the ${currency} benchmark prices entered in the workbook.` : 'Weekly prices: silver XAG/USD spot via currency-api; LME aluminium cash and LME copper 3-month via Westmetall. Silicon SMM #553 remains the workbook value (no reliable free feed).';
