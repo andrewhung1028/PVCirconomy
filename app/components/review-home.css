@@ -1287,10 +1287,11 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   padding-inline-start: var(--pvc2-pad);
 }
 .pvc2-config-copy, .pvc2-business-offtake {
-  background: var(--pv-gray);
+  background: var(--pv-paper);
   padding-inline: clamp(28px, 3vw, 56px);
 }
 .pvc2-config-copy { border-inline-start: 1px solid var(--pv-line); }
+.pvc2-business-purchase { background: var(--pv-gray); }
 .pvc2-business-model { border-block-start: 1px solid var(--pv-line); }
 .pvc2-business-purchase > div { margin-block: auto; }
 .pvc2-purchase-option, .pvc2-offtake-list > div {
