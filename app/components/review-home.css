@@ -1223,6 +1223,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   .pv-review .pv-faq-heading{align-self:center}
   .pvc2-page .pvc2-split-copy{align-items:safe center;padding-block:84px}
   .pvc2-page .pvc2-config-copy{display:block;padding-block-start:var(--pv-right-heading-top)}
+  .pvc2-business-purchase{padding-inline-start:max(var(--pvc2-pad), 10rem)}
   .os-page :is(.os-story-split .os-data-slide,.os-regulation-main,.os-economic-visual,.os-audience-heading){padding-block:84px}
   .os-page :is(.os-story-split .os-data-slide,.os-regulation-main,.os-audience-heading){justify-content:safe center}
   .os-page .os-story-split .os-data-slide{overflow-y:auto}

@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { useState, type WheelEventHandler } from "react";
+import type { WheelEventHandler } from "react";
 import type { EquipmentPurchaseOption } from "../../lib/equipment-mou";
 import type { PublicSolutionMarket } from "../../lib/our-solution/market";
 
-export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }: {
+export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, hasRecyclingPermit, onPermitChange }: {
   market: PublicSolutionMarket;
+  hasRecyclingPermit: boolean;
+  onPermitChange: (checked: boolean) => void;
   t: (text: string) => string;
   onPurchase: (option: EquipmentPurchaseOption) => void;
   onPaneWheel: WheelEventHandler<HTMLDivElement>;
 }) {
-  const [hasRecyclingPermit, setHasRecyclingPermit] = useState(false);
   const applyLabel = <>{t("Apply for a Trial-based PO")} <span aria-hidden="true">→</span></>;
   const trialOffered = market !== "JP";
 
@@ -32,7 +33,7 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel }
           </details>
           <label className="pvc2-trial-permit">
             <input type="checkbox" checked={hasRecyclingPermit}
-              onChange={event => setHasRecyclingPermit(event.currentTarget.checked)} />
+              onChange={event => onPermitChange(event.currentTarget.checked)} />
             {t("Our organization holds a valid permit to recycle solar PV panels.")}
           </label>
           {hasRecyclingPermit

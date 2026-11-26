@@ -224,9 +224,10 @@ function ConfigurationValue({ value, premium = false, t }: { value: boolean | st
     aria-label={t(value ? "Included" : "Not included")}>{!value && "—"}</span>;
 }
 
-function Specifications({ locale, market, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions, inquiry, setInquiry, purchaseOption, setPurchaseOption, mouReview, setMouReview }: {
+function Specifications({ locale, market, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions, inquiry, setInquiry, hasRecyclingPermit, purchaseOption, setPurchaseOption, mouReview, setMouReview }: {
   inquiry: boolean;
   setInquiry: (open: boolean) => void;
+  hasRecyclingPermit: boolean;
   purchaseOption: EquipmentPurchaseOption;
   setPurchaseOption: (option: EquipmentPurchaseOption) => void;
   mouReview: EquipmentMouReview | null;
@@ -337,7 +338,7 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
     </div>
     {inquiry && <SpecificationInquiry
       configuration={baseVariant}
-      purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
+      hasRecyclingPermit={hasRecyclingPermit} purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
       configurations={variants.filter(value => value !== "plus").map(value => ({ value, label: specificationVariants[value].label }))}
       onConfigurationChange={selectSpecification}
       includePlus={includePlus}
@@ -427,14 +428,13 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
   const [active, setActive] = useState<(typeof sections)[number][0]>("pvcirculator");
   const [inquiry, setInquiry] = useState(false);
   const [purchaseOption, setPurchaseOption] = useState<EquipmentPurchaseOption>("Standard sales");
+  const [permitMarket, setPermitMarket] = useState<PublicSolutionMarket | null>(null);
+  const hasRecyclingPermit = permitMarket === market && market !== "JP";
   const [mouReview, setMouReview] = useState<EquipmentMouReview | null>(null);
   const paneNavigationLocked = useRef(false);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get("inquiry") === "1") {
-      setInquiry(true);
-      if (market !== "JP" && params.get("purchase") === "tbp") setPurchaseOption("Trial-based PO (TBP)");
-    }
+    if (params.get("inquiry") === "1") setInquiry(true);
   }, [market]);
   useEffect(() => {
     document.documentElement.classList.add("pv-section-scroll");
@@ -606,7 +606,14 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <p>{t("Premium integrates junction-box removal. Economic and Basic require separate preparation for that step. Check power, floor loading and staffing in the specifications.")}</p><a className="pv-text-button" href={businessCaseHref}>{t("Calculate your business case")}{' '}<Arrow /></a></div></div></div>
       </section>
 
-      <PVCirculatorBusinessModel key={market} market={market} t={t}
+      <PVCirculatorBusinessModel market={market} t={t} hasRecyclingPermit={hasRecyclingPermit}
+        onPermitChange={checked => {
+          setPermitMarket(checked ? market : null);
+          if (!checked && purchaseOption === "Trial-based PO (TBP)") {
+            setPurchaseOption("Standard sales");
+            setMouReview(null);
+          }
+        }}
         onPaneWheel={event => navigateSplitPane(event, "specification", "configurations")}
         onPurchase={option => {
           setPurchaseOption(option);
@@ -614,7 +621,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           setInquiry(true);
         }} />
 
-      <Specifications inquiry={inquiry} setInquiry={setInquiry} purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
+      <Specifications inquiry={inquiry} setInquiry={setInquiry} hasRecyclingPermit={hasRecyclingPermit} purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
         mouReview={mouReview} setMouReview={setMouReview} locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} recyclingFee={feeRate} marketDefaults={marketDefaults} sitePowerOptions={sitePowerOptions} equipmentConfigurations={equipmentConfigurations} />
     </main>
   </div>;
