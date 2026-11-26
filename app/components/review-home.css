@@ -1283,7 +1283,6 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-specification.is-inquiry .pvc2-spec-hero { grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .pvc2-specification.is-inquiry .pvc2-spec-hero img { height: clamp(160px, 24vw, 300px); max-height: none; object-fit: contain; }
 .pvc2-specification.is-inquiry > .pv-footer { margin-inline: 0; padding-inline: var(--pv-safe-inline); }
-.pvc2-page:has(.pvc2-specification.is-inquiry)[data-active-section="specification"] .pv-dots { display: none; }
 .pvc2-inquiry-pane {
   min-height: 100%;
   background: var(--pv-paper);
@@ -1316,6 +1315,11 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   .pvc2-specification.is-inquiry .pvc2-spec-actions .pvc2-inquiry-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .pvc2-inquiry-pane { border-inline-start: 0; border-top: 1px solid var(--pv-line); padding: var(--pvc2-inquiry-gutter); }
   .pvc2-spec-actions .pvc2-inquiry-jump { display: inline-flex; }
+  .pvc2-page:has(.pvc2-specification.is-inquiry)[data-active-section="specification"] .pv-dots a { min-width: 28px; }
+  .pvc2-page:has(.pvc2-specification.is-inquiry)[data-active-section="specification"] .pv-dots span { display: none; }
+  .pvc2-specification.is-inquiry :is(.pvc2-spec-main, .pvc2-inquiry-pane) {
+    padding-inline-start: max(44px, var(--pvc2-inquiry-gutter));
+  }
 }
 
 .pv-icon-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
