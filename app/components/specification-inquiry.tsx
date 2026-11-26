@@ -7,7 +7,7 @@ import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
 import { equipmentMouPriceRows, equipmentOfftakeLabel, inquiryText } from "../../lib/equipment-mou-copy";
 import { defaultMouSalesAgents } from "../../lib/mou-policy";
-import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentPurchaseOptions, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview } from "../../lib/equipment-mou";
+import { equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentPurchaseOptions, type EquipmentBaseVariant, type EquipmentMouInput, type EquipmentMouReview, type EquipmentPurchaseOption } from "../../lib/equipment-mou";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 
 const identityFields = ["email", "company", "name"] as const;
@@ -43,8 +43,10 @@ const msrpErrors: Readonly<Record<string, string>> = {
   msrp_code_invalid: "The code is incorrect, expired or already used. Try again or request a new code.",
 };
 
-export function SpecificationInquiry({ configuration, configurations, onConfigurationChange, includePlus, onPlusChange, performance, recyclingFee, locale, market, review, setReview, defaults, sitePowerOptions }: {
+export function SpecificationInquiry({ configuration, configurations, onConfigurationChange, includePlus, onPlusChange, performance, recyclingFee, locale, market, review, setReview, defaults, sitePowerOptions, purchaseOption, setPurchaseOption }: {
   configuration: EquipmentBaseVariant;
+  purchaseOption: EquipmentPurchaseOption;
+  setPurchaseOption: (option: EquipmentPurchaseOption) => void;
   configurations: ReadonlyArray<{ value: EquipmentBaseVariant; label: string }>;
   onConfigurationChange: (value: EquipmentBaseVariant) => void;
   includePlus: boolean;
@@ -71,7 +73,6 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const codeField = useRef<HTMLInputElement>(null);
   const [rateLimited, setRateLimited] = useState(false);
   const [installationMarket, setInstallationMarket] = useState(market);
-  const [purchaseOption, setPurchaseOption] = useState<(typeof equipmentPurchaseOptions)[number]>(equipmentPurchaseOptions[0]);
   const [salesAgentStatus, setSalesAgentStatus] = useState<{ market: PublicSolutionMarket; throughSalesAgent: boolean }>();
   const noMsrp = installationMarket === "JP" || (salesAgentStatus?.market === installationMarket
     ? salesAgentStatus.throughSalesAgent
@@ -235,7 +236,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
       <fieldset className="pc-booking-fieldset">
         <legend>{t("Equipment configuration")}</legend>
         <label>{t("Purchase option")}
-          <select name="purchaseOption" value={purchaseOption}
+          <select name="purchaseOption" value={installationMarket === "JP" ? equipmentPurchaseOptions[0] : purchaseOption}
             onChange={event => setPurchaseOption(equipmentPurchaseOptions.find(option => option === event.currentTarget.value) ?? equipmentPurchaseOptions[0])}>
             {equipmentPurchaseOptions.slice(0, installationMarket === "JP" ? 1 : undefined).map(option => (
               <option key={option} value={option}>{t(option)}</option>
