@@ -4,6 +4,7 @@ import { capacityHistory, impactRouteMetrics, model } from "../../lib/our-soluti
 import { scenarioPanelWeightKg, scenarioPanelWeightLb } from "../../lib/our-solution/parameters";
 import { isAdditionalParameterMarket, solutionDemandMarket, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 import { initialJapanRules, initialRules } from "../../lib/pricing-rules";
+import { publicEquipmentData } from "../equipment-configurations/store";
 import { computeRetirementWave } from "../../lib/us-retirement-wave";
 import { effectiveMetalPrices } from "../metal-prices/store";
 import { activePricing } from "../pricing/store";
@@ -56,10 +57,11 @@ export async function loadSolutionView(market: PublicSolutionMarket, locale: Our
     : locale === "ja-JP"
       ? { metals: japaneseMetalNames, sources: japanesePriceSources, master: "ソリューションのマスター設定" }
       : null;
-  const [operatingData, globalPressureBaseline, pricing] = await Promise.all([
+  const [operatingData, globalPressureBaseline, pricing, equipment] = await Promise.all([
     loadSolutionOperatingData(market),
     market !== "US" ? activeOurSolutionDataOrSeed("US") : null,
     market === "US" ? activePricing(market).catch(() => null) : null,
+    publicEquipmentData(),
   ]);
   if (!operatingData) return null;
   const { data, prices } = operatingData;
@@ -70,7 +72,7 @@ export async function loadSolutionView(market: PublicSolutionMarket, locale: Our
   const tonnesPerMw = result.kgPerMw / 1000;
   const retirementMarketWaves = Object.fromEntries(retirementMarkets.map(country => [
     country,
-    computeRetirementWave(new Map(Object.entries(installed[country]).map(([year, gw]) => [Number(year), gw * 1000])), tonnesPerMw, result.shapes),
+    computeRetirementWave(new Map(Object.entries(installed[country]).map(([year, gw]) => [Number(year), gw * 1000])), tonnesPerMw, result.shapes, result.retirementWave.thresholds),
   ])) as Record<typeof retirementMarkets[number], ReturnType<typeof computeRetirementWave>>;
   const economicsData = economicsView(data, prices);
   const { region, currency, panelsPerMonth, processingFeeUnit } = economicsData.scenario;
@@ -81,6 +83,7 @@ export async function loadSolutionView(market: PublicSolutionMarket, locale: Our
   return {
     market,
     economicsData,
+    equipmentClaims: equipment.quantitative.claims,
     capacityTrend: capacityTrend(data),
     retirementWave: retirementMarketWaves[solutionDemandMarket(market)],
     retirementMarketWaves,
@@ -105,7 +108,6 @@ export async function loadSolutionView(market: PublicSolutionMarket, locale: Our
       fees: Object.values(result.solutions).map(solution => ({ code: solution.code, breakevenFee: solution.breakevenFee })),
     },
     pricingRules: pricing?.rules ?? (market === "JP" ? initialJapanRules : initialRules),
-    residentialSurchargePct: pricing?.transport?.residentialSurchargePct,
     showPublicPricingBenchmark: market === "US",
     priceSources: Object.entries(prices).map(([metal, value]) => {
       if (!citation) return `${metal}: ${value.source}${value.workbookValue ? "" : `, ${value.asOf}`}`;

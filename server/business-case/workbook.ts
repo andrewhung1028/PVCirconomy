@@ -1,10 +1,11 @@
+import { businessCasePositiveInteger, defaultPanelsParameter, shiftsPerLineParameter } from "../../lib/business-case/defaults";
 import {checkRegionUnit, checkMaterialUnit, REGION_UNIT_SUFFIXES, unitCurrency} from '../../lib/business-case/units';
 import ExcelJS from 'exceljs';
 import {fallback} from '../../lib/business-case/fallback';
 import type {MasterData} from '../../lib/business-case/types';
 import {calculateBusinessCase} from '../../lib/business-case/calculator/engine';
-export type BusinessCaseData = MasterData & {payable: {material:string;route:string;payable:number;source:string;note:string}[]};
-export const seed:BusinessCaseData={...fallback,payable:[]};
+export type BusinessCaseData = MasterData;
+export const seed:BusinessCaseData=fallback;
 type Sheet={name:string;key:keyof Omit<BusinessCaseData,'source'>;columns:string[];fields:string[]};
 const sheet=(name:string,key:Sheet['key'],headers:string,fields:string):Sheet=>({name,key,columns:headers.split('|'),fields:fields.split('|')});
 export const sheets:Sheet[]=[
@@ -14,23 +15,22 @@ export const sheets:Sheet[]=[
  sheet('Currency Exchange','fx','Currency Code|Local per USD|Effective Date|Active','currency|localPerUSD|effectiveDate|active'),
  sheet('Materials','materials','Material Code|Material|Category|Default Composition|Benchmark Price|Currency|Price Unit|Active|Sort Order','code|name|category|composition|benchmarkPrice|currency|priceUnit|active|sortOrder'),
  sheet('Solution Material Recovery','recovery','Solution Code|Material Code|Recovery Rate|Realization vs Benchmark|Saleable|Recovered Material Treatment|Unrecovered Material Treatment|Active','solutionCode|materialCode|recoveryRate|realization|saleable|recoveredTreatment|unrecoveredTreatment|active'),
- sheet('Payable','payable','Material|Route/Solution|Payable %|Source|Note','material|route|payable|source|note'),
 ];
-const numberFields=new Set('defaultFee hourlyWage baseRent cam electricityPrice landfillCost sortOrder capexUSD capacity operators spaceSqFt kwhPerPanel consumablesUSDPerPanel maintenanceRate value localPerUSD composition benchmarkPrice recoveryRate realization payable'.split(' '));
+const numberFields=new Set('defaultFee hourlyWage baseRent cam electricityPrice landfillCost sortOrder capexUSD capacity operators spaceSqFt kwhPerPanel consumablesUSDPerPanel maintenanceRate value localPerUSD composition benchmarkPrice recoveryRate realization'.split(' '));
 const nullable=new Set(['benchmarkPrice','recoveryRate','realization']);
 const booleanFields=new Set(['active','saleable']);
 export function validateData(input:unknown):BusinessCaseData {
  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Workbook row 1, cell A1: Invalid dataset');
  // Stored v1 JSON remains valid; normalize without mutating the caller.
- const raw=input as BusinessCaseData;
+ const {payable: _legacyPayable, ...raw}=input as BusinessCaseData & {payable?:unknown};
  const data={...raw,regions:Array.isArray(raw.regions)?raw.regions.map(r=>r && typeof r==='object' && !Object.hasOwn(r,'wageUnit')?{...r,wageUnit:`${r.currency}/hour`}:r):raw.regions} as BusinessCaseData;
  if(Object.keys(data).some(k=>!['source',...sheets.map(s=>s.key)].includes(k)))throw Error('Workbook row 1, cell A1: Unexpected data field');
- for(const s of sheets){const rows=data[s.key] as unknown as Record<string,unknown>[];if(!Array.isArray(rows)||rows.length>10000||(s.key!=='payable'&&!rows.length))throw Error(s.name+' row 1, cell A1: Missing or excessive rows');
+ for(const s of sheets){const rows=data[s.key] as unknown as Record<string,unknown>[];if(!Array.isArray(rows)||rows.length>10000||!rows.length)throw Error(s.name+' row 1, cell A1: Missing or excessive rows');
  const keys=new Set<string>();
  for(const [index,row] of rows.entries()){
  const fail=(message:string,field=s.fields[0]):Error=>{return Error(`${s.name} row ${index+2}, column ${s.columns[s.fields.indexOf(field)]} (${field}): ${message}`);};if(!row||typeof row!=='object'||Object.keys(row).length!==s.fields.length||s.fields.some(f=>!Object.hasOwn(row,f)))throw fail('Invalid fields');
- for(const f of s.fields){const v=row[f];if(nullable.has(f)&&v===null)continue;if(numberFields.has(f)){if(typeof v!=='number'||!Number.isFinite(v)||v<0)throw fail('Invalid nonnegative number',f);if(['composition','recoveryRate','realization','maintenanceRate'].includes(f)&&v>1)throw fail('Rate must be between 0 and 1',f);if(f==='payable'&&v>100)throw fail('Payable % must be 0–100',f);if(['capacity','localPerUSD'].includes(f)&&v===0)throw fail('Positive value required',f);}else if(booleanFields.has(f)){if(typeof v!=='boolean')throw fail('Boolean required',f);}else if(typeof v!=='string'||v.length>2000||v.includes('\0'))throw fail('Invalid text',f);}
- const identity=s.key==='opex'?row.countryCode+'|'+row.parameter:s.key==='recovery'?row.solutionCode+'|'+row.materialCode:s.key==='payable'?row.material+'|'+row.route:row.code??row.currency;
+ for(const f of s.fields){const v=row[f];if(nullable.has(f)&&v===null)continue;if(numberFields.has(f)){if(typeof v!=='number'||!Number.isFinite(v)||v<0)throw fail('Invalid nonnegative number',f);if(['composition','recoveryRate','realization','maintenanceRate'].includes(f)&&v>1)throw fail('Rate must be between 0 and 1',f);if(['capacity','localPerUSD'].includes(f)&&v===0)throw fail('Positive value required',f);}else if(booleanFields.has(f)){if(typeof v!=='boolean')throw fail('Boolean required',f);}else if(typeof v!=='string'||v.length>2000||v.includes('\0'))throw fail('Invalid text',f);}
+ const identity=s.key==='opex'?row.countryCode+'|'+row.parameter:s.key==='recovery'?row.solutionCode+'|'+row.materialCode:row.code??row.currency;
  if(!identity||keys.has(String(identity)))throw fail('Missing or duplicate key');keys.add(String(identity));
  }
  }
@@ -46,6 +46,15 @@ export function validateData(input:unknown):BusinessCaseData {
  }
  for(const [i,m] of data.materials.entries())if(m.active){try{checkMaterialUnit(m.priceUnit);}catch(error){throw Error(`Materials row ${i+2}, column Price Unit: ${(error as Error).message}`);}}
  for(const o of data.opex)if(!regionCodes.has(o.countryCode))throw Error(`OPEX Parameters row ${data.opex.indexOf(o)+2}, column Country Code: Unknown OPEX country`);
+ for(const [index,row] of data.opex.entries()){
+  const code=row.parameter.trim().toUpperCase();
+  const prefix=`${row.countryCode}-`;
+  const key=code.startsWith(prefix)?code.slice(prefix.length):code;
+  if((key===defaultPanelsParameter||key===shiftsPerLineParameter)
+   && (!businessCasePositiveInteger(row.value)||(key===shiftsPerLineParameter&&row.value>24)))
+   throw Error(`OPEX Parameters row ${index+2}, column Value: ${key} requires a positive integer`);
+ }
+
  for(const r of data.recovery)if(!data.solutions.some(s=>s.code===r.solutionCode)||!data.materials.some(m=>m.code===r.materialCode))throw Error(`Solution Material Recovery row ${data.recovery.indexOf(r)+2}, columns Solution Code / Material Code: Unknown recovery reference`);
  for(const r of data.regions.filter(r=>r.active)){try{calculateBusinessCase(data,{regionCode:r.code,panelsPerMonth:1000,processingFee:r.defaultFee,solutionCodes:data.solutions.filter(s=>s.active).map(s=>s.code)});}catch{throw Error(`Operating Regions row ${data.regions.indexOf(r)+2}, column Region Code: Calculation validation failed for ${r.code}; check linked OPEX, FX and recovery data`);}}
  return {...data,source:'master'};
@@ -53,13 +62,13 @@ export function validateData(input:unknown):BusinessCaseData {
 export async function exportWorkbook(data:BusinessCaseData=seed){const book=new ExcelJS.Workbook();for(const s of sheets){const ws=book.addWorksheet(s.name);ws.addRow(s.columns);for(const row of data[s.key])ws.addRow(s.fields.map(f=>f==='wageUnit'?((row as any).wageUnit??`${(row as any).currency}/hour`):(row as unknown as Record<string,ExcelJS.CellValue>)[f]));ws.getRow(1).font={bold:true};ws.views=[{state:'frozen',ySplit:1}];ws.columns.forEach(c=>{c.width=28});}return Buffer.from(await book.xlsx.writeBuffer());}
 /** Keys are shared by validation and diffing; row position is never an identity. */
 function rowKey(s:Sheet,row:Record<string,unknown>):string {
- return JSON.stringify((s.key==='opex'?['countryCode','parameter']:s.key==='recovery'?['solutionCode','materialCode']:s.key==='payable'?['material','route']:s.key==='fx'?['currency']:['code']).map(f=>row[f]));
+ return JSON.stringify((s.key==='opex'?['countryCode','parameter']:s.key==='recovery'?['solutionCode','materialCode']:s.key==='fx'?['currency']:['code']).map(f=>row[f]));
 }
 export async function parseWorkbook(bytes:Buffer){
  if(bytes.length>3_000_000)throw Error('Workbook row 1, cell A1: Workbook exceeds 3 MB');
  const book=new ExcelJS.Workbook();
  try{await book.xlsx.load(bytes as never);}catch{throw Error('Workbook row 1, cell A1: Unable to read XLSX');}
- if(book.worksheets.length!==7)throw Error('Workbook row 1, cell A1: Exactly seven sheets required');
+ if(book.worksheets.filter(sheet=>sheet.name!=='Payable').length!==sheets.length)throw Error('Workbook row 1, cell A1: Exactly six supported sheets required');
  const data:Record<string,unknown>={source:'master'};
  for(const s of sheets){
   const ws=book.getWorksheet(s.name);

@@ -78,7 +78,7 @@ export function QuotationDocument({
       <div className="pa-document-terms">
         <h4>Terms</h4>
         <p>Processing charges only. Transportation and applicable taxes are separate. Final charges are subject to receiving verification of panel model, quantity and condition.</p>
-        <p>This quotation is valid for seven days. It does not reserve delivery, submit an order request, take payment or confirm acceptance.</p>
+        <p>This quotation is valid until the date shown above. It does not reserve delivery, submit an order request, take payment or confirm acceptance.</p>
       </div>
     </section>
   );

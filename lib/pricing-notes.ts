@@ -1,3 +1,4 @@
+import {pricingMisc} from "./pricing-rules";
 import type {BatchPricingPolicy,PricingRules} from './pricing-rules';
 export const defaultPricingNoteTitle='價格計算邏輯與設定備註';
 export function pricingLogic(r:PricingRules,batchPricing?:BatchPricingPolicy){return `計價範圍：美國；幣別：USD。N＝片數，W＝每片瓦數。
@@ -34,4 +35,4 @@ ${batchPricing?`先加總整批處理費，折扣後四捨五入至美分。每�
 
 6. 其他條件
 運輸費、適用稅額另計。自行送達仍按適用處理費計價；實際車型與報價級距分開安排。
-報價有效期為開立後 7 天；產生報價單不代表訂單成立或已預約時段。`}
+報價有效期為開立後 ${pricingMisc(r).quotationValidityDays} 天；產生報價單不代表訂單成立或已預約時段。`}

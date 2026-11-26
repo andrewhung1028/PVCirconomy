@@ -16,6 +16,14 @@ assert.doesNotMatch(component,/Elkem|Actual measured value 1\.5%/,'measured silv
 assert.doesNotMatch(component,/direct_staff_per_shift|indirect_staff_per_shift/,'the current UI uses one total-staff value per method');
 
 const baseline=model(seed),edited=structuredClone(seed);
+const revisedWave=structuredClone(seed);
+revisedWave.assumptions[12]['wave.threshold_low_t'][0]=200000;
+const revisedRetirement=model(revisedWave).retirementWave;
+assert.deepEqual(revisedRetirement.thresholds,[200000,500000,1000000]);
+assert.equal(revisedRetirement.crossings.early_T18[100000],undefined);
+assert.ok(revisedRetirement.crossings.early_T18[200000]>=baseline.retirementWave.crossings.early_T18[100000]);
+revisedWave.assumptions[12]['wave.threshold_low_t'][0]=500001;
+assert.ok(validateParameters(revisedWave).some(error=>error.includes('Wave Settings')));
 const saleWorkbook=structuredClone(seed);
 saleWorkbook.assumptions[6].Silver[7]=0.25;
 saleWorkbook.assumptions[6].Silicon[7]=0.15;

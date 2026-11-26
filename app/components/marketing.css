@@ -988,6 +988,15 @@ html.pv-public-section-scroll:has(.pv-support-page) { scroll-snap-type: none; }
   min-height: var(--pv-control-height);
   padding: 8px 12px;
 }
+.pvc2-inquiry-pane .pc-form :is(input:not([type="checkbox"]), textarea) {
+  font-size: var(--pv-type-caption);
+}
+.pvc2-inquiry-pane .pc-form select {
+  font-size: var(--pv-type-interface);
+}
+.pvc2-inquiry-pane .pc-form textarea {
+  min-height: var(--space-76);
+}
 .pvc2-inquiry-pane .pc-form :is(input, select, textarea):focus-visible {
   outline: 2px solid var(--pv-yellow); outline-offset: 2px;
 }

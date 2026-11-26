@@ -1,7 +1,8 @@
+import { validMouPolicy } from "../mou-policy";
 import schema from '../../data/our-solution-parameter-schema.json';
 import { eu27Countries, markets, parameter as n, type Parameters } from './parameters';
 import { parameterProfileForRegion } from './market';
-import { japanFeeBenchmarkRows, websiteAssumptionRows } from './public-data';
+import { japanFeeBenchmarkRows, retirementThresholdKeys, websiteAssumptionRows } from './public-data';
 import { validateMarketTransport } from "./transport";
 const baseParameterSchema:Record<string,Record<string,(string|number)[]>>={...(schema as Record<string,Record<string,(string|number)[]>>),'12':websiteAssumptionRows};
 const schemaFor=(p:Parameters)=>{const out=structuredClone(baseParameterSchema);if(p.meta?.currency && p.meta.currency!=='USD'){out[11]['Processing fee steps']=out[11]['Processing fee steps (USD/lb)'];delete out[11]['Processing fee steps (USD/lb)'];}return out;};
@@ -12,9 +13,13 @@ export function validateParameters(value: unknown):string[] {
     const p=value as Parameters;
     if(p?.format!=='parameters-v2')return ['舊版結果格式不再支援，請下載現行參數範本。'];
     const parameterSchema=schemaFor(p);
+    if (p.mouPolicy !== undefined && !validMouPolicy(p.mouPolicy)) fail("MOU · 請填寫有效的評估天數及保密年數。");
     if (p.transport !== undefined) errors.push(...validateMarketTransport(p.transport));
     const japanFeeKeys = Object.keys(japanFeeBenchmarkRows);
     const feeRows = p.assumptions?.[12] ?? {};
+    const thresholds = retirementThresholdKeys.map(key => Number(feeRows[key]?.[0]));
+    if (thresholds.some((value, index) => !Number.isSafeInteger(value) || value <= (thresholds[index - 1] ?? 0)))
+      fail('Wave Settings：三個退役量門檻須為由小到大排列的正整數。');
     const productRecovery = Number(feeRows['methods.circulator.product_recovery_percent']?.[0]);
     if (productRecovery > 100) fail('PV Circulator 產品回收率不得超過 100%。');
     if (p.scenario?.region_code === 'JP' && japanFeeKeys.some(key => key in feeRows)) {

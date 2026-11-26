@@ -2,9 +2,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bc-parity-'));
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{try{
-for(const f of ['units','types','fallback','input','supported-countries','calculator/engine']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync('lib/business-case/'+f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText);}
+for(const f of ['units','types','defaults','fallback','input','supported-countries','calculator/engine']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync('lib/business-case/'+f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText);}
 const {fallback}=require(path.join(dir,'fallback.js')),{calculateBusinessCase}=require(path.join(dir,'calculator/engine.js')),{calculationInput}=require(path.join(dir,'input.js'));
-for(const f of ['lib/business-case/units','lib/business-case/types','lib/business-case/fallback','lib/business-case/calculator/engine','server/business-case/workbook']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync(f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);}
+for(const f of ['lib/business-case/units','lib/business-case/types','lib/business-case/defaults','lib/business-case/fallback','lib/business-case/calculator/engine','server/business-case/workbook']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync(f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);}
 const {parseWorkbook}=require(path.join(dir,'server/business-case/workbook.js'));
 const v2=await parseWorkbook(fs.readFileSync('tests/fixtures/business-case-master-v2.xlsx'));
 const fixtures=require('./fixtures/parity-live-responses.json');assert.equal(fixtures.length,225);

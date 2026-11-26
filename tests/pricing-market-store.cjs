@@ -14,8 +14,12 @@ process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').
   const updated={...initialJapanRules,panelBase:1600};const saved=await store.savePricing(updated,jp.version,{oid:'test',email:'andrew@tsgc.com.tw'},'JP test','JP profile','JP');assert.equal(saved.rules.panelBase,1600);assert.equal((await store.activePricing('US')).version,us.version);assert.equal((await store.pricingHistory('JP'))[0].rules.panelBase,1600);
   assert.equal(us.batchPricing.minimumProcessingUsd,300);
   assert.equal(jp.batchPricing,undefined);
-  const revised=await store.savePricing({...us.rules,minimumProcessingUsd:350.25},us.version,{oid:'test',email:'andrew@tsgc.com.tw'},'US minimum test','US profile','US');
+  assert.equal(us.transport.residentialMaxPanels,0);
+  assert.equal(us.transport.residentialSurchargePct,0);
+  const revised=await store.savePricing({...us.rules,minimumProcessingUsd:350.25,quotationValidityDays:10,batchIntervalDays:9,projectThresholdMw:1.5,defaultEstimatePanels:400,defaultEstimateWatts:450},us.version,{oid:'test',email:'andrew@tsgc.com.tw'},'US minimum test','US profile','US');
   assert.equal(revised.batchPricing.minimumProcessingUsd,350.25);
+  assert.equal(revised.rules.quotationValidityDays,10);
+  assert.equal((await store.pricingHistory('US'))[0].rules.projectThresholdMw,1.5);
   assert.equal((await store.activePricing('US')).batchPricing.minimumProcessingUsd,350.25);
   assert.equal((await store.pricingHistory('US'))[0].rules.minimumProcessingUsd,350.25);
   assert.equal((await store.activePricing('JP')).batchPricing,undefined);

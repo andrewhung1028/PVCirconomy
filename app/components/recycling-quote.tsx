@@ -1,4 +1,5 @@
-'use client';
+"use client";
+import {pricingMisc} from "../../lib/pricing-rules";
 import {usePricing} from './use-pricing';
 import { useEffect, useState } from 'react';
 import type { QuoteInput } from '../../lib/recycling-quote';
@@ -6,8 +7,8 @@ import { estimateProcessing } from '../../lib/batch-quote';
 import './recycling-quote.css';
 const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 export function RecyclingQuote() {
-  const [quantity, setQuantity] = useState('300');
-  const [watts, setWatts] = useState('350');
+  const [quantityOverride, setQuantity] = useState<string>();
+  const [wattsOverride, setWatts] = useState<string>();
   const [scale, setScale] = useState<QuoteInput['scale']>('truck');
   const [condition, setCondition] = useState<QuoteInput['condition']>('complete');
   const [model, setModel] = useState('');
@@ -43,10 +44,12 @@ export function RecyclingQuote() {
     finally { setSaving(false); }
   }
   const {pricing,pricingError,loading,refresh}=usePricing();
+  const defaults=pricingMisc(pricing?.rules);
+  const quantity=quantityOverride??String(defaults.defaultEstimatePanels);
+  const watts=wattsOverride??String(defaults.defaultEstimateWatts);
   const quote = pricing?estimateProcessing({ quantity: Number(quantity), watts: Number(watts), scale, condition },pricing):{total:null,reason:loading?'Loading current rates…':'Current rates unavailable.',rate:undefined,unit:undefined,weight:undefined,qualificationNote:undefined,processingScale:undefined};
   useEffect(() => { if (!photo) { setPhotoUrl(''); return; } const url = URL.createObjectURL(photo); setPhotoUrl(url); return () => URL.revokeObjectURL(url); }, [photo]);
   useEffect(() => { setShowSummary(false); setSaveStatus(''); }, [quantity, watts, scale, condition, model, delivery, zip, photo]);
-  function example(q: string, w: string, s: QuoteInput['scale']) { setQuantity(q); setWatts(w); setScale(s); setCondition('complete'); }
   function download() {
     const text = `PV Circonomy — estimate worksheet, not a formal quote\nModel: ${model || 'Not verified'}\nPanels: ${quantity}\nRated watts: ${watts}\nCondition: ${condition}\nProcessing tier: ${quote.processingScale==='residential'?'Residential':quote.processingScale==='trailer'?'Trailer':'Truck'}\nBasis: ${quote.qualificationNote??'Pending'}\nDelivery: ${delivery}\nUS ZIP: ${zip || 'Not provided'}\nProcessing estimate: ${quote.total === null ? 'Rate confirmation required' : money(quote.total)}\nTransport: quoted separately. Tax: to be confirmed.\nComplete-panel pricing already applied. No additional discount deducted.\nTrailer final billing uses scale weight including pallets and packaging.\nNo request, booking or payment has been submitted.\n`;
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); const a = document.createElement('a'); a.href = url; a.download = 'pv-circonomy-estimate.txt'; a.click(); URL.revokeObjectURL(url);
@@ -79,7 +82,6 @@ export function RecyclingQuote() {
       <button className="rq-primary" type="button" disabled={!pricing||loading} onClick={() => setShowSummary(true)}>Prepare quote details</button><p className="rq-help rq-centered">View estimates without sharing contact details.</p>
       {showSummary && <div className="rq-next" role="status"><strong>Details ready for your records</strong><p>Save an estimate reference or download your worksheet. Saving stores panel and delivery details, not the photo. It does not issue a formal quote, request a pickup, or create a booking or payment.</p><button type="button" className="rq-secondary" onClick={saveEstimate} disabled={saving}>{saving ? 'Saving…' : 'Save estimate reference'}</button><p role="status">{saveStatus}</p><button type="button" className="rq-secondary" onClick={download}>Download estimate worksheet</button></div>}
     </aside></div>
-    <section className="rq-examples"><h2>Quick-fill panel quantities</h2><p>These quantities use current pricing rules. Trailer settlement requires weight information.</p><div><button onClick={() => example('300','350','truck')}>300 × 350 W · Truck</button><button onClick={() => example('150','450','truck')}>150 × 450 W · Truck</button><button onClick={() => example('7000','275','trailer')}>7,000 × 275 W · Trailer</button></div></section>
-    <div className="rq-notes"><p><strong>Trailer settlement.</strong> Final billing uses actual scale weight, including pallets and packaging. No default panel weight is assumed. Third-party scale tickets are accepted.</p><p><strong>Scheduled batches.</strong> Deliveries may be scheduled in batches seven days apart, with agreed dates, quantities and minimum-volume conditions. Dates and availability require confirmation.</p><p><strong>Receiving checks.</strong> If condition differs from your description, affected quantities and price changes are documented with photos for your approval before processing.</p><p>PV Circonomy uses PV Circulator technology, developed by its parent company TSGC.</p></div>
+    <div className="rq-notes"><p><strong>Trailer settlement.</strong> Final billing uses actual scale weight, including pallets and packaging. No default panel weight is assumed. Third-party scale tickets are accepted.</p><p><strong>Scheduled batches.</strong> Deliveries may be scheduled in batches {defaults.batchIntervalDays} days apart, with agreed dates, quantities and minimum-volume conditions. Dates and availability require confirmation.</p><p><strong>Receiving checks.</strong> If condition differs from your description, affected quantities and price changes are documented with photos for your approval before processing.</p><p>PV Circonomy uses PV Circulator technology, developed by its parent company TSGC.</p></div>
   </section>;
 }

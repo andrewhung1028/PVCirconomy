@@ -1,5 +1,5 @@
 import { labels, localPerUSD, markets, parameter as n, parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeightLb, solutionCodes, type Parameters } from './parameters';
-import { websiteDataFromAssumptions, websiteNumber } from './public-data';
+import { retirementThresholds, websiteDataFromAssumptions, websiteNumber } from './public-data';
 import { retirementSeries, computeRetirementWave } from '../us-retirement-wave';
 export type EffectivePrice = { price: number; unit: string; source: string; asOf: string; workbookValue?:boolean };
 export type EffectivePrices = Record<string, EffectivePrice>;
@@ -17,7 +17,7 @@ export function capacityHistory(p: Parameters) {
   for(let y=2000;y<=2050;y++) cap['Other markets'][y] = cap.World[y] - markets.slice(1).reduce((s,m)=>s+cap[m][y],0);
   return cap;
 }
-export function model(p: Parameters, effective: EffectivePrices = {}) {
+export function model(p: Parameters, effective: EffectivePrices = {}, options: { circulatorLines?: number } = {}) {
   const websiteData=websiteDataFromAssumptions(p.assumptions);
   const gridKgCo2ePerKwh=websiteNumber(websiteData,'impact.grid_kg_co2e_per_kwh');
   const sc=p.scenario, panelWeightKg=scenarioPanelWeightKg(p),panelWeightLb=scenarioPanelWeightLb(p),annualPanels=sc.panels_per_month*12, inputT=annualPanels*panelWeightKg/1000;
@@ -31,7 +31,8 @@ export function model(p: Parameters, effective: EffectivePrices = {}) {
     const staffPrefix=code==='SHREDDING'?'methods.shredding':code==='HOT_KNIFE'?'methods.thermal':'methods.circulator';
     const staffPerShift=websiteNumber(websiteData,`${staffPrefix}.total_staff_per_shift`);
     const shifts=Math.max(1,Math.ceil(sc.panels_per_month/(s('Capacity')*sc.operating_hours_per_day*operatingDays)));
-    const lines=Math.max(1,Math.ceil(shifts/n(p,3,'Shifts per equipment line (limit)')));
+    const requiredLines=Math.max(1,Math.ceil(shifts/n(p,3,'Shifts per equipment line (limit)')));
+    const lines=code==='PVCIRCULATOR'?Math.max(requiredLines,options.circulatorLines??0):requiredLines;
     const labor=staffPerShift*n(p,1,'Hourly wage')*sc.operating_hours_per_day*operatingDays*12*shifts;
     const burden=labor*(n(p,2,'Labor burden')+n(p,2,"Workers' compensation"));
     const storageM2=Math.ceil(annualPanels/sc.working_weeks_per_year*n(p,7,'Storage time')/n(p,7,'Panels per pallet'))*n(p,7,'Pallet footprint')*(1+n(p,7,'Aisle space added per pallet'))/n(p,7,'Pallet stack levels');
@@ -63,7 +64,7 @@ export function model(p: Parameters, effective: EffectivePrices = {}) {
   const cellPowder={silverT:ag,siliconT:si,powderT:ag+si,directSaleRealization,scenario1:directSaleRevenue,scenario2Revenue,reagentCost,electroKwh,electroCost,scenario2Net:scenario2Revenue-reagentCost-electroCost,reagentsT,silverPurity:cp('Silver product purity'),siliconPurity:cp('Silicon product purity')};
   const capacity=capacityHistory(p),T=n(p,10,'Average lifetime T'),shapes={early:n(p,10,'Shape, early-loss'),regular:n(p,10,'Shape, regular-loss')},loss: 'early'|'regular'=String(p.assumptions[10]['Loss scenario'][0]).toLowerCase().startsWith('early')?'early':'regular';
   const toMw=(m:string)=>new Map(Object.entries(capacity[m]).map(([y,v])=>[Number(y),v*1000]));
-  const retirementWave=computeRetirementWave(toMw('United States'),kgPerMw/1000,shapes);
+  const retirementWave=computeRetirementWave(toMw('United States'),kgPerMw/1000,shapes,retirementThresholds(websiteData));
   const perCapitaKg=Object.fromEntries(markets.map(m=>{const {mass}=retirementSeries(toMw(m),T,shapes[loss],kgPerMw/1000);return [m,Object.fromEntries([2025,2030,2035,2040,2045,2050].map(y=>[y,mass.get(y)!/p.population[m][y]]))];}));
   return {annualPanels,inputT,operatingDays,panelsPerMw,kgPerMw,solutions,cellPowder,capacity,retirementWave,perCapitaKg,defaultLifetime:T,loss,shapes};
 }

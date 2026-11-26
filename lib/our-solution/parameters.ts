@@ -1,3 +1,4 @@
+import type { MouPolicy } from "../mou-policy";
 import type { OurSolutionParameterProfile } from './market';
 import type { MarketTransport } from "./transport";
 
@@ -12,6 +13,7 @@ export type Parameters = {
   /** Section number → unique column-A label → value columns (units and sources retained). */
   assumptions: Record<string, Record<string, (number | string)[]>>;
   transport?: MarketTransport;
+  mouPolicy?: MouPolicy;
   capacityHistory: Record<Market, Record<string, number>>;
   population: Record<Market, Record<string, number>> & { eu27: Record<string, Record<string, number>> };
   meta: { currency: OurSolutionParameterProfile['currency']; locale?: OurSolutionParameterProfile['locale']; localPerUSD?: number; extractedAt: string; sourceSite: string; note: string };

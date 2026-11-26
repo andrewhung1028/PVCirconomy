@@ -1,5 +1,6 @@
 /* Japanese edition of Our Solution. Keep its market behavior in sync with the English edition. */
 "use client";
+import { defaultEquipmentQuantitative, type EquipmentClaims } from "../../lib/equipment-quantitative";
 import { EconomicLineChart, type EconomicSeries } from "./economic-line-chart";
 import Link from "next/link";
 import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
@@ -22,7 +23,6 @@ import { websiteNumber } from "../../lib/our-solution/public-data";
 import { scenarioPanelWeightKg } from "../../lib/our-solution/parameters";
 import { formatCurrency } from "../../lib/region-format";
 import { initialJapanRules, tierRate, type PricingRules } from "../../lib/pricing-rules";
-import { defaultTransportLimits } from "../../lib/pickup";
 import "./review-home.css";
 export type BreakevenView = {
     region: string;
@@ -82,16 +82,15 @@ function Arrow({ direction = "right" }: {
 }) {
     return <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d={direction === "right" ? "M3 9h11M10 5l4 4-4 4" : "M15 9H4m4-4L4 9l4 4"} stroke="currentColor" strokeWidth="1.3"/></svg>;
 }
-function CostBenchmarkChart({ data, rules, residentialSurchargePct }: {
+function CostBenchmarkChart({ data, rules }: {
     data: OurSolutionView;
     rules: PricingRules;
-    residentialSurchargePct: number;
 }) {
     const watts = webNum(data, "stakes.cost.reference_panel_watts"), panelsPerMw = 1e6 / watts, weightLb = data.scenario.panelWeightLb;
     const truckRate = tierRate(watts, "panel", {}, rules)?.rate ?? 0, utilityRate = tierRate(watts, "lb", {}, rules)?.rate ?? 0;
-    const residential = truckRate * (1 + residentialSurchargePct / 100) * panelsPerMw, utility = utilityRate * weightLb * panelsPerMw;
+    const truckCost = truckRate * panelsPerMw, utility = utilityRate * weightLb * panelsPerMw;
     const landfillLow = webNum(data, "stakes.cost.nrel_landfill_low_usd_per_panel") * panelsPerMw, landfillHigh = webNum(data, "stakes.cost.nrel_landfill_high_usd_per_panel") * panelsPerMw;
-    const { conventional, hotKnife } = economicsSolutions(data), pvCirconomy = (residential + utility) / 2, landfill = (landfillLow + landfillHigh) / 2;
+    const { conventional, hotKnife } = economicsSolutions(data), pvCirconomy = (truckCost + utility) / 2, landfill = (landfillLow + landfillHigh) / 2;
     const shredding = conventional.opexPerPanel.total * panelsPerMw, thermal = hotKnife.opexPerPanel.total * panelsPerMw;
     const bars = [
         { label: "\u57CB\u7ACB", value: landfill, className: "is-landfill" },
@@ -101,11 +100,11 @@ function CostBenchmarkChart({ data, rules, residentialSurchargePct }: {
     ];
     const max = Math.max(...bars.map(bar => bar.value)) * 1.16, money = (value: number) => `$${Math.round(value).toLocaleString("ja-JP")}`, percentage = (value: number) => `${value / max * 100}%`;
     return <figure className="os-cost-benchmark">
-    <figcaption><strong>1 MW 当たりのリサイクル費用</strong><span>{compactNumber(watts)} W モジュール・住宅用／大規模発電用の現行料金と試算運営費</span></figcaption>
-    <div className="os-cost-plot" role="img" aria-label={`1 MW 当たりの費用：埋立の中央値 ${money(landfill)}、PV Circonomy の住宅用／大規模発電用の現行料金の平均 ${money(pvCirconomy)}、${THREE_METHODS[0]} ${money(shredding)}、${THREE_METHODS[1]} ${money(thermal)}。`}>
+    <figcaption><strong>1 MW 当たりのリサイクル費用</strong><span>{compactNumber(watts)} W モジュール・トラック／トレーラーの現行料金と試算運営費</span></figcaption>
+    <div className="os-cost-plot" role="img" aria-label={`1 MW 当たりの費用：埋立の中央値 ${money(landfill)}、PV Circonomy のトラック／トレーラーの現行料金の平均 ${money(pvCirconomy)}、${THREE_METHODS[0]} ${money(shredding)}、${THREE_METHODS[1]} ${money(thermal)}。`}>
       <div className="os-cost-columns">{bars.map(bar => <div className={`os-cost-column ${bar.className}`} style={{ "--bar": percentage(bar.value) } as CSSProperties} key={bar.label}><strong>{money(bar.value)}</strong><i aria-hidden="true"/><span>{bar.label}</span></div>)}</div>
     </div>
-    <small>PV Circonomy は住宅用と大規模発電用の現行処理料金の平均、埋立は NREL の推計範囲の中央値です。{THREE_METHODS[0]}と{THREE_METHODS[1]}はカリフォルニア州の試算運営費です。輸送費、税金、設備投資、減価償却費は含みません。NREL の推計にも輸送費は含まれません。</small>
+    <small>PV Circonomy はトラックとトレーラーの現行処理料金の平均、埋立は NREL の推計範囲の中央値です。{THREE_METHODS[0]}と{THREE_METHODS[1]}はカリフォルニア州の試算運営費です。輸送費、税金、設備投資、減価償却費は含みません。NREL の推計にも輸送費は含まれません。</small>
   </figure>;
 }
 function GlobalDeploymentMap() {
@@ -765,7 +764,7 @@ function RetirementContext({ lifetime, wave: retirementWave, assumptions = defau
     return <div className="os-retirement-context" aria-live="polite">
     <p><strong>{lifetime}-year EoL lifetime, IRENA {assumptions.loss}-loss scenario.</strong> {sources[lifetime]}</p>
     <p>Default: {assumptions.defaultLifetime}-year lifetime, IRENA {assumptions.loss}-loss scenario. In {retirementWave.years[retirementWave.years.length - 1]}, early-loss retirements reach {(retirementWave[`early_T${lifetime}`][retirementWave.years.length - 1] / 1e6).toFixed(2)} million t; regular loss, for comparison, {(retirementWave[`regular_T${lifetime}`][retirementWave.years.length - 1] / 1e6).toFixed(2)} million t.</p>
-    <table><caption>First year annual retirements cross each threshold ({assumptions.loss} loss is the main scenario)</caption><thead><tr><th scope="col">年間質量</th><th scope="col">Early loss ({assumptions.loss === "early" ? "main" : "comparison"})</th><th scope="col">Regular loss ({assumptions.loss === "regular" ? "main" : "comparison"})</th></tr></thead><tbody>{[100000, 500000, 1000000].map(threshold => <tr key={threshold}><th scope="row">{threshold === 1000000 ? "1 Mt" : `${threshold / 1000} kt`}</th><td>{retirementWave.crossings[`early_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td><td>{retirementWave.crossings[`regular_T${lifetime}`][String(threshold) as "100000" | "500000" | "1000000"]}</td></tr>)}</tbody></table>
+    <table><caption>First year annual retirements cross each threshold ({assumptions.loss} loss is the main scenario)</caption><thead><tr><th scope="col">年間質量</th><th scope="col">Early loss ({assumptions.loss === "early" ? "main" : "comparison"})</th><th scope="col">Regular loss ({assumptions.loss === "regular" ? "main" : "comparison"})</th></tr></thead><tbody>{retirementWave.thresholds.map(threshold => <tr key={threshold}><th scope="row">{threshold >= 1000000 ? `${threshold / 1000000} Mt` : `${threshold / 1000} kt`}</th><td>{retirementWave.crossings[`early_T${lifetime}`][threshold]}</td><td>{retirementWave.crossings[`regular_T${lifetime}`][threshold]}</td></tr>)}</tbody></table>
     <p className="os-chart-source">予測ではなくシナリオです。IRENA Weibull 形状係数：早期損失 {assumptions.shapes.early}、通常損失 {assumptions.shapes.regular}。パネル質量は {displayWeight(assumptions)}、定格 {assumptions.panelRating} W（MW 当たり約 {assumptions.tonnesPerMw.toFixed(1)} t）。</p>
   </div>;
 }
@@ -955,8 +954,9 @@ function MaterialsSection({ data }: {
     </aside>
   </section>;
 }
-export function OurSolutionJa({ market, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "\u30EF\u30FC\u30AF\u30D6\u30C3\u30AF\u306E\u4FA1\u683C", pricingRules = initialJapanRules, residentialSurchargePct = defaultTransportLimits.residentialSurchargePct, showPublicPricingBenchmark = true }: {
+export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "\u30EF\u30FC\u30AF\u30D6\u30C3\u30AF\u306E\u4FA1\u683C", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
     market?: PublicSolutionMarket;
+    equipmentClaims?: EquipmentClaims;
     economicsData?: OurSolutionView;
     routeMetrics?: ImpactRouteMetric[];
     breakeven?: BreakevenView;
@@ -970,7 +970,6 @@ export function OurSolutionJa({ market, economicsData = economicsView(seededOurS
     waveAssumptions?: WaveAssumptions;
     priceSources?: string;
     pricingRules?: PricingRules;
-    residentialSurchargePct?: number;
     showPublicPricingBenchmark?: boolean;
 }) {
     const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
@@ -1023,8 +1022,8 @@ export function OurSolutionJa({ market, economicsData = economicsView(seededOurS
     ];
     const pvFacility = economicsSolutions(economicsData).circulator.facilityFootprint;
     const conventionalSlides: DeckSlide[] = [
-        { label: "\u30B9\u30DA\u30FC\u30B9\u3068\u6280\u8853", navigationLabel: "\u8A2D\u7F6E\u9762\u7A4D", visual: <FootprintMethodVisual data={economicsData}/>, noteTitle: "\u5C0F\u3055\u306A\u8A2D\u7F6E\u9762\u7A4D\u304C\u30EA\u30B5\u30A4\u30AF\u30EB\u306E\u5834\u6240\u3092\u5909\u9769", note: <><p>PV Circulator はモジュール式で配置可能なため、処理量の変化に応じて現場やその近くに処理能力を設置できます。考え方はシンプルで、パネルではなく機械を移動させます。</p><div className="os-deployment-time"><p><strong>24</strong><span>時間</span></p><small>モジュール式の PV Circulator は、24時間以内に設置または撤去でき、移設が可能です。</small></div></> },
-        { label: "\u904B\u55B6\u30B3\u30B9\u30C8\uFF08OPEX\uFF09", navigationLabel: "運営コスト", visual: <OperatingCostMethodVisual economicsData={economicsData}/>, noteTitle: "PV Circulator \u304C\u904B\u55B6\u30B3\u30B9\u30C8\u69CB\u9020\u3092\u5909\u9769", note: <><p>自動化を優先します。搬送、測定、層分離の統合により反復作業を減らし、安定した出力を支えます。この運営シナリオでは、人員、電力、床面積の要件削減により、モデル上のパネル当たりコストが低下します。設備の減価償却費と施設外への輸送費は比較対象外です。</p><p className="os-operating-cost-note">主な運営コストは人件費と施設賃料です。PV Circulator は1シフト当たり運転スタッフ1人と構内物流スタッフ2人を想定しています。</p><FacilityRentArea footprint={pvFacility} locale="ja-JP" /></> },
+        { label: "\u30B9\u30DA\u30FC\u30B9\u3068\u6280\u8853", navigationLabel: "\u8A2D\u7F6E\u9762\u7A4D", visual: <FootprintMethodVisual data={economicsData}/>, noteTitle: "\u5C0F\u3055\u306A\u8A2D\u7F6E\u9762\u7A4D\u304C\u30EA\u30B5\u30A4\u30AF\u30EB\u306E\u5834\u6240\u3092\u5909\u9769", note: <><p>PV Circulator はモジュール式で配置可能なため、処理量の変化に応じて現場やその近くに処理能力を設置できます。考え方はシンプルで、パネルではなく機械を移動させます。</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>時間</span></p><small>モジュール式の PV Circulator は、{compactNumber(equipmentClaims.relocationHours)}時間以内に設置または撤去でき、移設が可能です。</small></div></> },
+        { label: "\u904B\u55B6\u30B3\u30B9\u30C8\uFF08OPEX\uFF09", navigationLabel: "運営コスト", visual: <OperatingCostMethodVisual economicsData={economicsData}/>, noteTitle: "PV Circulator \u304C\u904B\u55B6\u30B3\u30B9\u30C8\u69CB\u9020\u3092\u5909\u9769", note: <><p>自動化を優先します。搬送、測定、層分離の統合により反復作業を減らし、安定した出力を支えます。この運営シナリオでは、人員、電力、床面積の要件削減により、モデル上のパネル当たりコストが低下します。設備の減価償却費と施設外への輸送費は比較対象外です。</p><p className="os-operating-cost-note">主な運営コストは人件費と施設賃料です。PV Circulator は、1シフト当たり運転・構内物流スタッフ合計 {compactNumber(webNum(economicsData, "methods.circulator.total_staff_per_shift"))} 人を想定しています。</p><FacilityRentArea footprint={pvFacility} locale="ja-JP" /></> },
         { label: "\u4E8C\u6B21\u51E6\u7406\u3068\u6750\u6599", navigationLabel: "二次処理", visual: <MaterialMethodVisual data={economicsData}/>, noteTitle: "\u771F\u306E\u9055\u3044\u306F\u3001\u306A\u304A\u51E6\u7406\u304C\u5FC5\u8981\u306A\u6750\u6599\u306B\u3042\u308A\u307E\u3059\u3002", note: <p>PV Circulator は第一原理から出発します。太陽光パネルは層構造のため、製造工程を逆にたどり、層ごとに分離します。これにより、ガラス、シリコン（セル）粉末、ポリマーをそれぞれ独立した回収物として保持し、二次処理が必要な材料を減らします。</p> },
     ];
     const scaleSlides: DeckSlide[] = [
@@ -1042,7 +1041,7 @@ export function OurSolutionJa({ market, economicsData = economicsView(seededOurS
           <h2 id="stakes-title">何が問われているのか</h2>
           <p>所有者、リサイクル事業者、材料利用者、一般の人々は、使用済み太陽光パネルをそれぞれ異なる視点で捉えていますが、必要とする四つのことは共通しています。</p>
           <div className="os-stake-tabs" role="group" aria-label="ステークホルダーの目指す成果を選択">{(Object.keys(stakeSolutions) as StakeTopic[]).map((topic) => <button type="button" key={topic} aria-pressed={stake === topic} onClick={() => setStake(topic)}><StakeIcon topic={topic}/><strong>{stakeSolutions[topic].label}</strong></button>)}</div>
-          {stake === "cost" && (market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="ja-JP" /> : showPublicPricingBenchmark ? <CostBenchmarkChart data={economicsData} rules={pricingRules} residentialSurchargePct={residentialSurchargePct}/> : <MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="ja-JP" />)}
+          {stake === "cost" && (market === "JP" ? <JapanFeeBenchmark data={economicsData.websiteData} locale="ja-JP" /> : showPublicPricingBenchmark ? <CostBenchmarkChart data={economicsData} rules={pricingRules}/> : <MarketOperatingCostChart data={economicsData} watts={waveAssumptions.panelRating} locale="ja-JP" />)}
           {stake === "compliance" && <div className="os-compliance-risk"><strong className="os-compliance-risk-mark">HFCs</strong><div><h3>含フッ素バックシートの環境流出防止</h3><p>一部の太陽光パネルのバックシートには、PVF または PVDF のフッ素ポリマーが含まれています。広義の定義では、これらは「永遠の化学物質」と呼ばれることもある難分解性化学物質、PFAS に該当します。熱処理ではフッ化水素（HF）やその他の含フッ素分解生成物が発生する可能性があり、埋立では難分解性のフッ素ポリマーが環境中に残ります。PV Circonomy の第一の使命は、EVA とバックシートを別々に回収し、適合性が確認された用途に戻すことです。</p></div></div>}
           {stake === "circularity" && <div className="os-compliance-risk os-offtake-service"><strong className="os-circularity-mark"><b>{compactNumber(webNum(economicsData, "stakes.circularity_goal_percent"))}%</b><span>再利用可能</span></strong><div><h3>市場ごとに開拓する次の用途</h3><p>PV Circonomy は、リサイクル技術に加え、マテリアル・アップサイクル技術とオフテイクサービスも提供します。各国・地域の産業エコシステムに合わせた現地化戦略により、回収材料を発生地の近くで継続利用します。EVA とバックシートのオフテイクは、分離した材料を、適合性が確認された地域内または下流の用途につなぎ、すべての回収材料の責任ある利用を可能にします。</p><span><b>回収材料の引き取り支援</b> EVA とバックシートの適合性を確認し、下流の利用先につなぎます。</span></div></div>}
           {stake === "reputation" && <div className="os-compliance-risk os-connected-service"><strong className="os-connected-mark">つながり</strong><div><h3>リサイクルそのものに価値を</h3><p>PV Circonomy は上流と下流のパートナーをつなぎ、リサイクル事業者が投資家に回収材料の行き先を責任を持って説明し、材料利用者が消費者にその出所を開示できるようにします。行き先と出所の両方を可視化することで、リサイクルの取り組みそのものに価値が生まれます。</p></div></div>}
@@ -1051,7 +1050,7 @@ export function OurSolutionJa({ market, economicsData = economicsView(seededOurS
         <aside className="os-speaker-notes" aria-live="polite"><div key={stake}><span className="os-note-label">{selectedStake.label}</span><h3>{selectedStake.heading}</h3><div className="os-note-copy"><p>{selectedStake.intro}</p></div><p className="os-stake-goal"><strong>私たちの目標</strong><span>{selectedGoal}</span></p><div className="os-solution-drivers">{selectedStake.drivers.map(([driver, outcome]) => <div key={driver}><strong>{driver}</strong><p>{outcome}</p></div>)}</div><div className="os-stakes-bridge"><strong> {activeMarket !== "US" && stake === "cost" ? `収益性のセクションで${marketNames["ja-JP"][activeMarket]}の運営条件による試算をご覧ください。` : selectedStake.conclusion}</strong><small>{selectedStake.note}</small><a className="pv-text-button" href="#conventional">従来の方法の限界を見る <Arrow /></a></div></div></aside>
       </section>
       <section id="system" className="pv-screen os-system" aria-labelledby="system-title"><div className="os-system-stage"><div className="os-system-heading"><h2 id="system-title">ソリューション</h2><p>一つの循環システムで、コスト削減、証明可能な法令遵守、材料循環、根拠のある評判という四つの共通ニーズに応えます。</p></div><div className="os-system-flow" role="list" aria-label="PV Circonomy の循環価値システム">{(Object.keys(systemTopics) as SystemTopic[]).map((topic) => <article key={topic} role="listitem"><figure><img src={systemVisuals[topic].src} alt={systemVisuals[topic].alt}/></figure><div className="os-system-card-copy"><div><strong>{systemTopics[topic][0]}</strong><span> | {cards[topic].tagline}</span></div><ul>{cards[topic].bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul></div></article>)}</div></div></section>
-      <ProcessPlaylist locale="ja-JP" active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" heading={<>シンプルな原理。<br />層ごとに。<br />材料ごとに。</>}/>
+      <ProcessPlaylist infeedPanelsPerPallet={equipmentClaims.infeedPanelsPerPallet} locale="ja-JP" active={active === "first-principles"} sectionId="first-principles" titleId="first-principles-title" heading={<>シンプルな原理。<br />層ごとに。<br />材料ごとに。</>}/>
       <section id="conventional" className="pv-screen os-deck-section" aria-label="従来のリサイクルが価値を損なう理由"><StoryDeck id="conventional-deck" title="従来のリサイクルが価値を損なう理由" slides={conventionalSlides} variant="split" autoAdvanceMs={30000}/></section>
       <RegulationSection metrics={routeMetrics} assumptions={waveAssumptions} data={economicsData} locale="ja-JP"/>
       <MaterialsSection data={economicsData}/>

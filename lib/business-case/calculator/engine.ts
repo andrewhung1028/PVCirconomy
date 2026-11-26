@@ -1,3 +1,4 @@
+import { businessCaseDefaultShiftsPerLine, businessCaseOpexValue, businessCasePositiveInteger, shiftsPerLineParameter } from "../defaults";
 import {annualFacilityCost, checkRegionUnit, checkMaterialUnit, KG_PER_LB, REGION_UNIT_SUFFIXES, SHORT_TON_PER_METRIC_TON, unitSuffix} from '../units';
 import type {
   CalcInput,
@@ -110,6 +111,10 @@ export function calculateBusinessCase(
   const countryCode = region.countryCode;
   const days = requiredOpex(op, 'OPERATING_DAYS_MONTH', countryCode);
   const hours = requiredOpex(op, 'OPERATING_HOURS_DAY', countryCode);
+  const configuredShifts = businessCaseOpexValue(op, shiftsPerLineParameter, countryCode);
+  const shiftsPerLineLimit = configuredShifts ?? businessCaseDefaultShiftsPerLine;
+  if (!businessCasePositiveInteger(shiftsPerLineLimit) || shiftsPerLineLimit > 24)
+    throw Error(`Invalid OPEX parameter: ${shiftsPerLineParameter} (${countryCode})`);
   if (days <= 0 || hours <= 0) {
     throw new Error(`Operating days and hours must be positive (${countryCode})`);
   }
@@ -452,7 +457,7 @@ export function calculateBusinessCase(
 
     /* =====================================================
        CAPACITY-CONSTRAINED FULL-SHIFT MODEL
-       One line supports up to three complete shifts/day.
+       The per-line limit comes from the country schedule policy.
        Shift and line counts are calculated per solution.
     ===================================================== */
 
@@ -462,7 +467,6 @@ export function calculateBusinessCase(
     }
 
     const requiredShifts = Math.max(1, Math.ceil(input.panelsPerMonth / capacityPerShift));
-    const shiftsPerLineLimit = 3;
     const equipmentLines = Math.max(1, Math.ceil(requiredShifts / shiftsPerLineLimit));
     const shiftsPerLine = Array.from({ length: equipmentLines }, (_, i) =>
       Math.min(shiftsPerLineLimit, Math.max(0, requiredShifts - i * shiftsPerLineLimit))

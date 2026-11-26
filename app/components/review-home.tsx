@@ -1,4 +1,6 @@
 "use client";
+import {usePricing} from "./use-pricing";
+import {pricingMisc} from "../../lib/pricing-rules";
 import {ResidentialNote} from './residential-note';
 import { useEffect, useState } from "react";
 import { DeliveryPlanner } from "./delivery-planner";
@@ -28,6 +30,8 @@ function Arrow() {
   );
 }
 export function ReviewHome() {
+  const {pricing}=usePricing();
+  const defaults=pricingMisc(pricing?.rules);
   const [active, setActive] = useState("recycling");
   const [heroPlaying, setHeroPlaying] = useState(true);
   const [heroVideoReady, setHeroVideoReady] = useState(false);
@@ -307,10 +311,10 @@ export function ReviewHome() {
               </p>
             </details>
             <details className="pv-details">
-              <summary>Seven-day batch scheduling</summary>
+              <summary>Batch scheduling</summary>
               <p>
                 Deliveries may be divided into scheduled batches with specified
-                dates and quantities; batches may be seven days apart. Agree a
+                dates and quantities; batches may be {defaults.batchIntervalDays} days apart. Agree a
                 minimum delivered quantity for any volume rate. We confirm exact
                 delivery windows, reservation length and any below-minimum rate
                 with you before shipment.
@@ -328,7 +332,7 @@ export function ReviewHome() {
             <details className="pv-details">
               <summary>Is my estimate a confirmed order?</summary>
               <p>
-                Your processing quotation is valid for seven days from its issue
+                Your processing quotation is valid for {defaults.quotationValidityDays} days from its issue
                 date. Choose your delivery method and time windows, then submit
                 a recycling order request. Selected windows are held pending
                 company confirmation. Transportation is priced separately.
@@ -462,7 +466,7 @@ export function ReviewHome() {
             <details className="pv-details">
               <summary>Can I split a large delivery into batches?</summary>
               <p>
-                Yes, with agreed dates and quantities. Batches may be seven days
+                Yes, with agreed dates and quantities. Batches may be {defaults.batchIntervalDays} days
                 apart. Minimum delivered quantities and the applicable volume
                 rate must be agreed before shipment; receiving slots are held
                 only after you submit an order request.
@@ -505,7 +509,7 @@ export function ReviewHome() {
           </div>
           <footer className="pv-footer">
             <span>© {new Date().getFullYear()} PV Circonomy</span>
-            <span>USD processing quotations · valid for 7 days</span>
+            <span>USD processing quotations · valid for {defaults.quotationValidityDays} days</span>
             <button
               className="pv-text-button"
               onClick={() => jump("recycling")}

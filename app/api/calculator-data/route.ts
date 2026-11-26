@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loadJapanBusinessCase, loadMasterData } from '@/lib/business-case/master-data';
+import { defaultPanelsParameter } from "@/lib/business-case/defaults";
 import { isSupportedCountry } from '@/lib/business-case/supported-countries';
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +30,7 @@ export async function GET() {
       'OPERATING_HOURS_DAY': 'OPERATING_HOURS_DAY',
       'OPERATING DAYS': 'OPERATING_DAYS_MONTH',
       'OPERATING HOURS': 'OPERATING_HOURS_DAY',
+      [defaultPanelsParameter]: defaultPanelsParameter,
     };
     const opex = [...d.opex.filter(row => row.countryCode !== 'JP'), ...(japan?.data.opex ?? [])]
       .filter((row) => row.active && isSupportedCountry(row.countryCode))

@@ -4,7 +4,7 @@ function compile(source,target){const out=path.join(dir,target);fs.mkdirSync(pat
 // Resolve installed dependencies from this repository, even though compiled files are isolated.
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{try{
- for(const f of ['units','types','fallback','input','supported-countries','market','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
+ for(const f of ['units','types','defaults','fallback','input','supported-countries','market','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
  for(const f of ['business-case-pdf','report-time','solution-labels'])compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');
  compile('lib/region-format.ts','lib/region-format.js');
  compile('server/business-case/workbook.ts','server/business-case/workbook.js');compile('server/auth/roles.ts','server/auth/roles.js');
@@ -53,7 +53,7 @@ process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').
  try{for(const code of ['SE','US-CA']){printed.length=0;const r=v2.regions.find(r=>r.code===code);const result=calc(v2,{regionCode:code,panelsPerMonth:5000,processingFee:r.defaultFee,solutionCodes:['PVCIRCULATOR','CONVENTIONAL']});await require(path.join(dir,'lib/business-case/business-case-pdf.js')).createBusinessCasePdf(result,'OFFLINE-TEST');assert.ok(printed.some(t=>code==='SE'?/Panel weight: 20 kg \(44.09 lb\)/.test(t):/Panel weight: 44.09 lb \|/.test(t)));assert.ok(printed.some(t=>t.startsWith('FX:')&&t.includes(r.currency+'/USD')));}}finally{PDFDocument.create=createDocument;}
  console.log('Passed: PDF metric/imperial panel weights, unchanged US weight label and explicit FX currency.');
  console.log('Passed: v2 round trip, legacy workbook/JSON normalization/diff, strict units, missing/inactive FX, OPEX currency, 30 EU countries and local-currency labor/electricity.');
- const bytes=await exportWorkbook(),parsed=await parseWorkbook(bytes);assert.equal(diffData(seed,parsed).length,0);assert.equal(sheets.length,7);
+ const bytes=await exportWorkbook(),parsed=await parseWorkbook(bytes);assert.equal(diffData(seed,parsed).length,0);assert.equal(sheets.length,6);
  let scenarios=0,numeric=0;function equal(a,b){if(typeof a==='number'){assert.ok(Math.abs(a-b)===0,`${a} vs ${b}`);numeric++;}else if(a&&typeof a==='object'){for(const k of Object.keys(a))equal(a[k],b[k]);}else assert.deepEqual(a,b);}
  for(const r of fallback.regions)for(const s of fallback.solutions)for(const volume of [1000,10000]){const input={regionCode:r.code,panelsPerMonth:volume,processingFee:r.defaultFee,solutionCodes:[s.code]};const expected=calc(fallback,input);equal(calc(parsed,input),expected);equal(calc({...parsed,payable:[{material:'SILVER',route:s.code,payable:1,source:'test',note:''}]},input),expected);scenarios++;}
  const ExcelJS=require('exceljs');async function changed(fn){const b=new ExcelJS.Workbook();await b.xlsx.load(bytes);fn(b);return Buffer.from(await b.xlsx.writeBuffer());}

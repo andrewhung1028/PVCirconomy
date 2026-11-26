@@ -1,3 +1,5 @@
+import { retirementThresholds, websiteDataDefaults } from "./our-solution/public-data";
+
 // US end-of-life PV panel mass, IRENA/IEA-PVPS 2016 Weibull model.
 // F(t) = 1 − exp(−(t/T)^α); early loss α = 2.4928, regular loss α = 5.3759.
 // Rules (Andrew, t524u):
@@ -12,9 +14,8 @@ export type Lifetime = (typeof LIFETIMES)[number];
 export const DEFAULT_LIFETIME: Lifetime = 18;
 export const WAVE_FIRST_YEAR = 2016;
 export const WAVE_LAST_YEAR = 2050;
-const THRESHOLDS = [100000, 500000, 1000000] as const;
 type SeriesKey = `${"early" | "regular"}_T${Lifetime}`;
-export type RetirementWave = { years: number[]; crossings: Record<SeriesKey, Record<"100000" | "500000" | "1000000", number | ">2050">> } & Record<SeriesKey, number[]>;
+export type RetirementWave = { years: number[]; thresholds: readonly number[]; crossings: Record<SeriesKey, Record<number, number | ">2050">> } & Record<SeriesKey, number[]>;
 
 /** Fixed module mass from the Our Solution scenario (45 lb, 350 W by default). */
 export function tonnesPerMw(_year?: number) { return 45 * 0.45359237 * 1e6 / 350 / 1000; }
@@ -39,15 +40,15 @@ export function retirementSeries(cumulativeMw: Map<number, number>, lifetime: nu
   return { added, retiredMw, mass };
 }
 
-export function computeRetirementWave(cumulativeMw: Map<number, number>, tonnesPerMW = tonnesPerMw(), shapes: {early:number;regular:number} = WEIBULL_ALPHA): RetirementWave {
+export function computeRetirementWave(cumulativeMw: Map<number, number>, tonnesPerMW = tonnesPerMw(), shapes: {early:number;regular:number} = WEIBULL_ALPHA, thresholds: readonly number[] = retirementThresholds(websiteDataDefaults)): RetirementWave {
   const years = Array.from({ length: WAVE_LAST_YEAR - WAVE_FIRST_YEAR + 1 }, (_, index) => WAVE_FIRST_YEAR + index);
-  const wave = { years, crossings: {} } as RetirementWave;
+  const wave = { years, thresholds, crossings: {} } as RetirementWave;
   for (const lifetime of LIFETIMES) for (const loss of ["regular", "early"] as const) {
     const key = `${loss}_T${lifetime}` as SeriesKey;
     const { mass } = retirementSeries(cumulativeMw, lifetime, shapes[loss], tonnesPerMW);
     const all = [...mass.keys()].sort((a, b) => a - b);
     wave[key] = years.map((year) => Math.round(mass.get(year) ?? 0));
-    wave.crossings[key] = Object.fromEntries(THRESHOLDS.map((threshold) => [String(threshold), all.find((year) => year <= WAVE_LAST_YEAR && mass.get(year)! >= threshold) ?? ">2050"])) as RetirementWave["crossings"][SeriesKey];
+    wave.crossings[key] = Object.fromEntries(thresholds.map((threshold) => [String(threshold), all.find((year) => year <= WAVE_LAST_YEAR && mass.get(year)! >= threshold) ?? ">2050"])) as RetirementWave["crossings"][SeriesKey];
   }
   return wave;
 }

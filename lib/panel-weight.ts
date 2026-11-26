@@ -1,5 +1,6 @@
+import { panelAreaWeightFactors } from "./pricing-rules";
 export type Construction = 'glass-glass'|'glass-backsheet'|'unknown';
-export const weightFactors:Record<Construction,number>={'glass-glass':12.25,'glass-backsheet':10.76,unknown:11.5};
+export const weightFactors:Record<Construction,number>=panelAreaWeightFactors();
 // Input dimensions in millimeters; area in m²; weight in kg. Never promote an estimate to a measured weight.
 export function panelWeight(lengthMm:number|null,widthMm:number|null,construction:string|null,verifiedKg:number|null,factors:Record<Construction,number>=weightFactors){
  if(verifiedKg!==null&&Number.isFinite(verifiedKg)&&verifiedKg>0)return {kg:verifiedKg,estimated:false,factor:null,area:null};

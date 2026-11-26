@@ -5,7 +5,7 @@ function compile(source){const target=path.join(dir,source.replace(/\.ts$/,'.js'
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{const db=new PGlite();try{
  const migration=fs.readFileSync('server/db/business-case-phase1.sql','utf8');await db.exec(migration);await db.exec(migration);assert.equal((await db.query('SELECT count(*)::int AS n FROM pv_business_case_versions')).rows[0].n,1);
- for(const f of ['server/business-case/store.ts','server/business-case/workbook.ts','lib/business-case/units.ts','lib/business-case/types.ts','lib/business-case/fallback.ts','lib/business-case/calculator/engine.ts'])compile(f);
+ for(const f of ['server/business-case/store.ts','server/business-case/workbook.ts','lib/business-case/units.ts','lib/business-case/types.ts','lib/business-case/defaults.ts','lib/business-case/fallback.ts','lib/business-case/calculator/engine.ts'])compile(f);
  const client=path.join(dir,'server/db/client.js');fs.mkdirSync(path.dirname(client),{recursive:true});fs.writeFileSync(client,'exports.database=()=>global.__businessCaseSql;');
  global.__businessCaseSql=(parts,...values)=>db.query(parts.reduce((s,p,i)=>s+p+(i<values.length?'$'+(i+1):''),''),values).then(r=>r.rows);
  const store=require(path.join(dir,'server/business-case/store.js')),workbook=require(path.join(dir,'server/business-case/workbook.js'));
