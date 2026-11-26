@@ -63,7 +63,7 @@ export function SpecificationInquiry<Variant extends string>({ configuration, co
     <p className="pv-note">{t("Preview only. Use sample contact details.")}</p>
     <form className="pc-form" onSubmit={preview} hidden={Boolean(review)}>
       <fieldset className="pc-booking-fieldset">
-        <legend>{t("Equipment configuration")}</legend>
+        <legend className="pvc2-inquiry-configuration-legend">{t("Equipment configuration")}</legend>
         <div className="pc-form-pair">
           <label>{t("Configuration")}
             <select name="configuration" value={configuration}

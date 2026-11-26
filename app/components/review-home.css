@@ -1272,6 +1272,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 }
 .pvc2-inquiry-pane h2 { margin: 0; font-size: var(--pv-type-panel); letter-spacing: var(--pv-heading-tracking); }
 .pvc2-inquiry-pane .pc-form { margin-top: 22px; }
+.pvc2-inquiry-pane .pvc2-inquiry-configuration-legend { font-weight: 700; }
 .pvc2-inquiry-pane .pc-form[hidden] { display: none; }
 .pvc2-inquiry-pane .pc-form-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pvc2-inquiry-pane :is(.pc-booking-fieldset, input, select, textarea) { min-width: 0; }
