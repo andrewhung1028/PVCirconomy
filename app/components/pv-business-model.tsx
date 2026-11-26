@@ -76,15 +76,15 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
       <p>{t("PV Circonomy buys qualifying cell powder and arranges offtake for EVA and backsheets from your PV Circulator. You can ship materials that meet the agreed specifications without secondary treatment. Keeping them out of landfill and incineration can reduce disposal costs and associated carbon emissions.")}</p>
       <dl className="pvc2-offtake-list">
         {market === "US" && <div>
-          <dt>{t("Glass")}</dt>
+          <dt><strong>{t("Glass")}</strong></dt>
           <dd>{t("Glass accounts for about 70% of a panel’s weight. In the US, we also take qualifying glass without a secondary treatment fee. You pay freight and ship a full trailer or container, about 1,500 panels’ worth of glass per load.")}</dd>
         </div>}
         <div>
-          <dt>{t("Cell powder")}</dt>
+          <dt><strong>{t("Cell powder")}</strong></dt>
           <dd>{t("We buy qualifying cell powder. The agreement sets how assay results, market prices, the payable rate and treatment charges determine what you receive.")}</dd>
         </div>
         <div>
-          <dt>{t("Backsheet and EVA")}</dt>
+          <dt><strong>{t("Backsheet and EVA")}</strong></dt>
           <dd>{t("We accept qualifying backsheet and EVA free of charge, giving you an outlet for both polymer streams.")}</dd>
         </div>
       </dl>
