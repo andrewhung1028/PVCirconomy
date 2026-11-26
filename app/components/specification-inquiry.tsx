@@ -111,7 +111,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
     <p className="pv-note">{t("Review your inquiry to preview a draft MOU.")}</p>
     <form className="pc-form" onSubmit={preview} hidden={Boolean(review)}>
       <fieldset className="pc-booking-fieldset">
-        <legend className="pvc2-inquiry-configuration-legend">{t("Equipment configuration")}</legend>
+        <legend>{t("Equipment configuration")}</legend>
         <div className="pc-form-pair">
           <label>{t("Configuration")}
             <select name="configuration" value={configuration}
