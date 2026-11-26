@@ -118,8 +118,8 @@ function CapacityInput({ name, label, value, onChange, t }: {
           adjust(event.key === "ArrowUp" ? 1 : -1);
         }} />
       <div className="pc-capacity-buttons">
-        <button type="button" aria-label={t(isCapacity ? "Increase target capacity" : "Increase operating hours")} onClick={() => adjust(1)}>+</button>
-        <button type="button" aria-label={t(isCapacity ? "Decrease target capacity" : "Decrease operating hours")} onClick={() => adjust(-1)}>−</button>
+        <button type="button" aria-label={t(isCapacity ? "Increase target capacity" : "Increase operating hours")} onClick={() => adjust(1)} />
+        <button type="button" aria-label={t(isCapacity ? "Decrease target capacity" : "Decrease operating hours")} onClick={() => adjust(-1)} />
       </div>
     </div>
   </div>;
