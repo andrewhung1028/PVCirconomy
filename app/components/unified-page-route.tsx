@@ -1,12 +1,8 @@
-import localFont from "next/font/local";
 import { UnifiedPublicPage, type UnifiedPublicPageProps } from "./unified-public-page";
 
-const manrope = localFont({
-  src: "../../public/fonts/Manrope-Variable.ttf",
-  weight: "300 800",
-  display: "swap",
-});
 
 export function UnifiedPageRoute(props: UnifiedPublicPageProps) {
-  return <div className={manrope.className}><UnifiedPublicPage {...props} /></div>;
+  const japanese = props.locale === "ja-JP";
+  const chinese = props.locale === "zh-TW";
+  return <div className={chinese ? "pv-traditional-chinese" : undefined} lang={japanese ? "ja" : chinese ? "zh-TW" : undefined}><UnifiedPublicPage {...props} /></div>;
 }

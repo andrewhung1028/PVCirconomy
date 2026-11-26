@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict');const ts=require('typescript');const fs=require('node:fs');const path=require('node:path');const os=require('node:os');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pv-quote-test-'));try{
- for(const name of['pickup','panel-weight','pricing-rules','recycling-quote','batch-quote'])fs.writeFileSync(path.join(dir,name+'.js'),ts.transpileModule(fs.readFileSync(path.join(__dirname,'../lib',name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText);
- const {initialRules,tierRate,validRules,normalizeRules}=require(path.join(dir,'pricing-rules.js'));const {panelWeight}=require(path.join(dir,'panel-weight.js'));const {newQuoteLine,lineQuote,estimatedLineWeight,resolvedPanelWatts,estimatedLineArea,batchTotals,generateQuote,quoteHtml}=require(path.join(dir,'batch-quote.js'));
+ for(const name of['pickup','panel-weight','pricing-rules','recycling-quote','batch-quote','quotation-document'])fs.writeFileSync(path.join(dir,name+'.js'),ts.transpileModule(fs.readFileSync(path.join(__dirname,'../lib',name+'.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText);
+ const {pricingProfiles,initialRules,tierRate,validRules,normalizeRules}=require(path.join(dir,'pricing-rules.js'));const {panelWeight}=require(path.join(dir,'panel-weight.js'));const {newQuoteLine,lineQuote,estimatedLineWeight,resolvedPanelWatts,estimatedLineArea,batchTotals,estimateProcessing,generateQuote,quoteHtml}=require(path.join(dir,'batch-quote.js'));
  assert.equal(panelWeight(2000,1000,'glass-glass',null).kg,24.5);assert.equal(panelWeight(2000,1000,'glass-backsheet',null).kg,21.52);assert.equal(panelWeight(2000,1000,'unknown',null).kg,23);assert.equal(panelWeight(2000,1000,'glass-glass',19).kg,19);assert.equal(panelWeight(null,1000,'unknown',null),null);
  for(const [watts,panel,lb]of [[1,10,.18],[300,10,.18],[301,11.25,.205],[350,11.25,.205],[351,12.5,.23],[400,12.5,.23],[450,13.75,.255]]){assert.equal(tierRate(watts,'panel',{},initialRules).rate,panel);assert.equal(tierRate(watts,'lb',{},initialRules).rate,lb)}
  assert.equal(tierRate(300,'panel',{broken:true,missingBox:true,missingFrame:true},initialRules).rate,14);assert.equal(tierRate(300,'lb',{broken:true,missingBox:true,missingFrame:true},initialRules).rate,.252);assert.equal(validRules({...initialRules,stepWatts:0}),false);assert.equal(validRules({...initialRules,panelBase:-1}),false);assert.equal(validRules({...initialRules,brokenPercent:NaN}),false);assert.equal(validRules({...initialRules,extra:1}),false);
@@ -16,5 +16,43 @@ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pv-quote-test-'));try{
  const unknown={...newQuoteLine(),mode:'dimensions',length:'1600',width:'1000',quantity:'300',construction:'unknown'};const unknownConfigured={...initialRules,unknownGramsPerWatt:51.85};assert.equal(resolvedPanelWatts(unknown),null);assert.equal(estimatedLineWeight(unknown).kg,18.4);assert.equal(resolvedPanelWatts(unknown,unknownConfigured).watts,355);assert.equal(lineQuote(unknown,unknownConfigured).total,3750);assert.ok(lineQuote({...unknown,scale:'trailer'},unknownConfigured).total>0);assert.equal(estimatedLineWeight({...a,construction:'unknown'},unknownConfigured).kg,18.148);assert.equal(validRules({...initialRules,unknownGramsPerWatt:0}),false);assert.equal(validRules({...initialRules,unknownGramsPerWatt:-1}),false);const oldRules={...initialRules};delete oldRules.unknownGramsPerWatt;assert.equal(normalizeRules(oldRules).unknownGramsPerWatt,null);
  const changed={...initialRules,panelBase:12};assert.equal(lineQuote(a,changed).total,3975);
  const doc=generateQuote([a,drop],new Date('2026-12-28T12:00:00Z'),{version:'test-version',createdAt:'2026-12-01T00:00:00Z',rules:initialRules});assert.equal(doc.expires,'2027-01-04T12:00:00.000Z');assert.match(doc.text,/NOT the complete batch price/);assert.match(doc.text,/Pricing version: test-version/);assert.match(doc.text,/Validity: 7 days/);assert.ok(!quoteHtml('<script>alert(1)</script>').includes('<script>'));
+ const {quotationLineViews}=require(path.join(dir,'quotation-document.js'));
+ const batchRules={...initialRules,baseMaxWatts:350,discountStartExponent:3,discountPercentPerExponent:5,discountMaxPercent:20};
+ const transport={residentialMaxPanels:29,residentialSurchargePct:50,trailerMinimumPanels:400};
+ const policy={minimumProcessingUsd:300};
+ const calculate=(lines,minimum=policy)=>batchTotals(lines,batchRules,transport,pricingProfiles.US,minimum);
+ const panels=(n,fields={})=>({...a,quantity:String(n),...fields});
+ for(const n of [1,10,20,29,30])assert.equal(calculate([panels(n)]).total,300);
+ assert.equal(calculate([panels(31)]).total,310);
+ assert.equal(calculate([panels(29,{watts:'351'})]).total,326.25);
+ assert.equal(calculate([panels(1),panels(9)]).minimumAdjustment,200);
+ assert.equal(calculate([panels(20)],{minimumProcessingUsd:0}).total,200);
+ assert.equal(calculate([panels(20)],{minimumProcessingUsd:337.25}).total,337.25);
+ assert.equal(calculate([panels(999)]).total,9990);
+ assert.equal(calculate([panels(1000)]).total,9999.5);
+ assert.equal(calculate([panels(500),panels(500)]).total,9999.5);
+ assert.equal(calculate([panels(1100)]).discount,50.5);
+ assert.equal(calculate([panels(10000)]).discount,4501);
+ const mixed=[panels(500),panels(500,{watts:'351'})];
+ assert.equal(calculate(mixed).total,10624.47);
+ assert.equal(calculate(mixed.toReversed()).total,10624.47);
+ assert.equal(calculate([panels(1),panels(500,{scale:'trailer'})]).total,null);
+ assert.equal(calculate([panels(1),panels(500,{scale:'trailer'})]).minimumAdjustment,0);
+ const trailerLine=panels(1000,{scale:'trailer',construction:'glass-backsheet'});
+ const trailerResult=calculate([trailerLine]);
+ const splitTrailer=calculate([{...trailerLine,quantity:'501'},{...trailerLine,quantity:'499'}]);
+ assert.equal(trailerResult.total,splitTrailer.total);
+ assert.equal(splitTrailer.prices.reduce((sum,line)=>sum+Math.round(line.total*100),0)-Math.round(splitTrailer.discount*100),Math.round(splitTrailer.total*100));
+ const snapshot={version:'test',createdAt:'2026-11-24T00:00:00Z',rules:batchRules,transport};
+ const estimate=(quantity,scale)=>estimateProcessing({quantity,scale,watts:350,condition:'complete'},{...snapshot,batchPricing:policy});
+ assert.equal(estimate(20,'truck').total,300);
+ assert.equal(estimate(1000,'truck').total,9999.5);
+ assert.equal(estimate(400,'trailer').total,null);
+ assert.equal(quotationLineViews([panels(29)],snapshot).subtotal,435);
+ assert.equal(quotationLineViews([panels(29)],{...snapshot,batchPricing:policy}).subtotal,300);
+ assert.match(generateQuote([panels(20)],new Date(),{...snapshot,batchPricing:policy}).text,/Minimum processing fee adjustment: \$100\.00/);
+ assert.equal(validRules({...batchRules,minimumProcessingUsd:300.25}),true);
+ assert.equal(validRules({...batchRules,minimumProcessingUsd:300.251}),false);
+ assert.equal(validRules({...batchRules,minimumProcessingUsd:-1}),false);
  console.log('Passed: wattage boundaries, configurable rates, additive conditions, mixed totals, unknown weight, actual/estimated weights, version snapshots, 7-day validity and escaping.');
 }finally{fs.rmSync(dir,{recursive:true,force:true})}

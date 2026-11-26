@@ -60,6 +60,12 @@ export const websiteDataDefaults: WebsiteData = {
 
 export const websiteAssumptionRows:Record<string,(number|string)[]>=Object.fromEntries(Object.entries(websiteDataDefaults).map(([key,row])=>[key,[row.value,row.unit,row.source,row.section,row.label]]));
 
+export const japanFeeBenchmarkRows: Record<string, (number | string)[]> = {
+  "stakes.jp.disposal_median": [2100, "JPY/kW", "https://www.env.go.jp/content/000342216.pdf", "Stakes", "Intermediate treatment + final disposal, median"],
+  "stakes.jp.recycling_low": [8000, "JPY/kW", "https://www.env.go.jp/content/000378443.pdf", "Stakes", "Recycling treatment survey, low"],
+  "stakes.jp.recycling_high": [12000, "JPY/kW", "https://www.env.go.jp/content/000378443.pdf", "Stakes", "Recycling treatment survey, high"],
+};
+
 const legacyStaffKeys:Record<string,[string,string]>={
   "methods.shredding.total_staff_per_shift":["methods.shredding.direct_staff_per_shift","methods.shredding.indirect_staff_per_shift"],
   "methods.thermal.total_staff_per_shift":["methods.thermal.direct_staff_per_shift","methods.thermal.indirect_staff_per_shift"],
@@ -70,7 +76,8 @@ const legacyWebsiteKeys:Record<string,string>={
 };
 
 export function normalizedWebsiteAssumptionRows(rows:Record<string,(number|string)[]>={}):Record<string,(number|string)[]> {
-  return Object.fromEntries(Object.entries(websiteAssumptionRows).map(([key,fallback])=>{
+  const schema = { ...websiteAssumptionRows, ...Object.fromEntries(Object.entries(japanFeeBenchmarkRows).filter(([key]) => key in rows)) };
+  return Object.fromEntries(Object.entries(schema).map(([key,fallback])=>{
     const current=rows[key]??rows[legacyWebsiteKeys[key]];
     if(current) {
       const row=[...current];
@@ -85,7 +92,7 @@ export function normalizedWebsiteAssumptionRows(rows:Record<string,(number|strin
 
 export function websiteDataFromAssumptions(assumptions:Record<string,Record<string,(number|string)[]>>):WebsiteData {
   const rows=normalizedWebsiteAssumptionRows(assumptions['12']);
-  return Object.fromEntries(Object.entries(websiteDataDefaults).map(([key])=>{const row=rows[key];return [key,{value:row[0],unit:String(row[1]),source:String(row[2]),section:String(row[3]),label:String(row[4])}]}));
+  return Object.fromEntries(Object.entries(rows).map(([key,row])=>[key,{value:row[0],unit:String(row[1]),source:String(row[2]),section:String(row[3]),label:String(row[4])}]));
 }
 
 export function websiteNumber(data: WebsiteData, key: keyof typeof websiteDataDefaults | string): number {

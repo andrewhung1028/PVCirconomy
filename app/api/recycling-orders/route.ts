@@ -1,4 +1,3 @@
-import {batchTotals} from '../../../lib/batch-quote';
 import { validPickup, capacityFits, pickupCharges } from "../../../lib/pickup";
 import { cargoTotals } from "../../../lib/pickup-cargo";
 import { createHash } from "node:crypto";
@@ -132,11 +131,8 @@ export async function POST(request: Request) {
       calculateFreight(0, bookings, snapshot.settings) !== null
     )
       return reply({ error: "freight_quote_required" }, 400);
-    // Recompute new quotations from their immutable pricing snapshot. Legacy quotations
-    // retain their stored processing total, as do existing idempotent orders above.
-    const processingTotal = quote.pricing.transport?.residentialMaxPanels === undefined
-      ? quote.processingTotal
-      : batchTotals(quote.lines, quote.pricing.rules, quote.pricing.transport).total;
+    // The issued processing amount is authoritative for this quotation.
+    const processingTotal = quote.processingTotal;
     const id = crypto.randomUUID();
     const config = snapshot.settings;
     const result = await sql.transaction([

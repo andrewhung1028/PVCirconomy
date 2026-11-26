@@ -6,7 +6,7 @@ import {
   type QuotationContactView,
   type QuotationDocumentLike,
 } from "../../lib/quotation-document";
-import type { PricingSnapshot } from "../../lib/pricing-rules";
+import { pricingProfiles, type PricingSnapshot } from "../../lib/pricing-rules";
 
 type Props = {
   document: QuotationDocumentLike;
@@ -16,12 +16,13 @@ type Props = {
   contact?: QuotationContactView | null;
 };
 
-const money = (value: number | null) =>
+const money = (value: number | null, pricing: PricingSnapshot) =>
   value === null
     ? "Pending review"
-    : new Intl.NumberFormat("en-US", {
+    : new Intl.NumberFormat((pricing.profile??pricingProfiles.US).locale, {
         style: "currency",
-        currency: "USD",
+        currency: (pricing.profile??pricingProfiles.US).currency,
+        maximumFractionDigits: (pricing.profile??pricingProfiles.US).currency==='JPY'?0:2,
       }).format(value);
 
 export function QuotationDocument({
@@ -44,7 +45,7 @@ export function QuotationDocument({
           <div><dt>Quotation</dt><dd>{document.id}</dd></div>
           <div><dt>Issued</dt><dd>{formatDocumentDate(document.issued)}</dd></div>
           <div><dt>Valid until</dt><dd>{formatDocumentDate(document.expires)}</dd></div>
-          <div><dt>Currency</dt><dd>USD</dd></div>
+          <div><dt>Currency</dt><dd>{(pricing.profile??pricingProfiles.US).currency}</dd></div>
         </dl>
       </header>
       {customer && (
@@ -67,8 +68,10 @@ export function QuotationDocument({
             </tr>
           ))}</tbody>
           <tfoot>
-            {data.pending > 0 && <tr><th colSpan={4}>Priced items subtotal</th><td>{money(data.subtotal)}</td></tr>}
-            <tr><th colSpan={4}>{data.pending > 0 ? "Processing total" : "Total processing charges"}</th><td>{processingTotal === null ? "Pending review" : money(processingTotal)}</td></tr>
+            {data.discount > 0 && <tr><th colSpan={4}>Batch quantity discount</th><td>−{money(data.discount,pricing)}</td></tr>}
+            {data.minimumAdjustment > 0 && <tr><th colSpan={4}>Minimum processing fee adjustment</th><td>{money(data.minimumAdjustment,pricing)}</td></tr>}
+            {data.pending > 0 && <tr><th colSpan={4}>Priced items subtotal</th><td>{money(data.subtotal,pricing)}</td></tr>}
+            <tr><th colSpan={4}>{data.pending > 0 ? "Processing total" : "Total processing charges"}</th><td>{processingTotal === null ? "Pending review" : money(processingTotal,pricing)}</td></tr>
           </tfoot>
         </table>
       </div>

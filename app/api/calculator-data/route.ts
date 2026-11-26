@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
-import { loadMasterData } from '@/lib/business-case/master-data';
+import { loadJapanBusinessCase, loadMasterData } from '@/lib/business-case/master-data';
 import { isSupportedCountry } from '@/lib/business-case/supported-countries';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const d = await loadMasterData();
-    const regions = d.regions
+    const [d, japan] = await Promise.all([
+      loadMasterData(),
+      loadJapanBusinessCase().catch(error => {
+        console.error('Japan calculator data unavailable:', error);
+        return null;
+      }),
+    ]);
+    const regions = [...d.regions.filter(region => region.countryCode !== 'JP'), ...(japan?.data.regions ?? [])]
       .filter((x) => x.active && isSupportedCountry(x.countryCode))
       .sort((a, b) => a.sortOrder - b.sortOrder);
     const solutions = d.solutions
@@ -24,7 +30,7 @@ export async function GET() {
       'OPERATING DAYS': 'OPERATING_DAYS_MONTH',
       'OPERATING HOURS': 'OPERATING_HOURS_DAY',
     };
-    const opex = d.opex
+    const opex = [...d.opex.filter(row => row.countryCode !== 'JP'), ...(japan?.data.opex ?? [])]
       .filter((row) => row.active && isSupportedCountry(row.countryCode))
       .map((row) => {
         const raw = String(row.parameter || '').trim().toUpperCase();
@@ -41,6 +47,11 @@ export async function GET() {
       regions,
       solutions,
       opex,
+      japan: japan && {
+        source: japan.data.source,
+        defaultPanels: japan.defaultPanels,
+        solutions: japan.data.solutions,
+      },
     });
   } catch (error: any) {
     console.error('Calculator data load failed:', error);

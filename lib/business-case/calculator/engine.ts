@@ -1,4 +1,4 @@
-import {checkRegionUnit, checkMaterialUnit, REGION_UNIT_SUFFIXES, unitSuffix} from '../units';
+import {annualFacilityCost, checkRegionUnit, checkMaterialUnit, KG_PER_LB, REGION_UNIT_SUFFIXES, SHORT_TON_PER_METRIC_TON, unitSuffix} from '../units';
 import type {
   CalcInput,
   MasterData,
@@ -10,9 +10,7 @@ import type {
    CONSTANTS
 ========================================================= */
 
-const KG_PER_LB = 0.45359237;
 const LB_PER_METRIC_TON = 2204.6226218;
-const SHORT_TON_PER_METRIC_TON = 1.10231131;
 
 /* =========================================================
    HELPERS
@@ -127,19 +125,23 @@ export function calculateBusinessCase(
   ======================================================= */
 
   // Panel weight: explicit input, else the master's optional PANEL_WEIGHT_LB OPEX row (v3+), else the v1 default.
-  const masterWeightRow = op.find((x) => String(x.parameter ?? '').trim().toUpperCase() === 'PANEL_WEIGHT_LB');
-  const masterWeight = masterWeightRow && Number.isFinite(Number(masterWeightRow.value)) && Number(masterWeightRow.value) > 0 ? Number(masterWeightRow.value) : undefined;
-  const panelWeightLb =
-    input.panelWeightLb || masterWeight || 44.09;
+  const masterWeightKgRow = op.find((x) => String(x.parameter ?? '').trim().toUpperCase() === 'PANEL_WEIGHT_KG');
+  const masterWeightLbRow = op.find((x) => String(x.parameter ?? '').trim().toUpperCase() === 'PANEL_WEIGHT_LB');
+  const validWeight = (row: any) => row && Number.isFinite(Number(row.value)) && Number(row.value) > 0 ? Number(row.value) : undefined;
+  const nativeWeightKg = input.panelWeightKg || validWeight(masterWeightKgRow);
+  const nativeWeightLb = input.panelWeightLb || validWeight(masterWeightLbRow) || 44.09;
+  const panelWeightKg = nativeWeightKg || nativeWeightLb * KG_PER_LB;
+  const panelWeightLb = nativeWeightKg ? nativeWeightKg / KG_PER_LB : nativeWeightLb;
 
   const annualPanels =
     input.panelsPerMonth * 12;
 
-  const inputMetricTons =
-    annualPanels *
-    panelWeightLb *
-    KG_PER_LB /
-    1000;
+  // Preserve the historical operation order for lb-based markets so the US
+  // parity fixture remains bit-for-bit identical. Metric-native markets never
+  // pass through lb.
+  const inputMetricTons = nativeWeightKg
+    ? annualPanels * panelWeightKg / 1000
+    : annualPanels * panelWeightLb * KG_PER_LB / 1000;
 
   /* =======================================================
      PROCESSING / TIPPING REVENUE
@@ -150,7 +152,7 @@ export function calculateBusinessCase(
 
   const feeWeight =
     feeUnit === '/kg'
-      ? panelWeightLb * KG_PER_LB
+      ? panelWeightKg
       : panelWeightLb;
 
   const processingRevenue =
@@ -492,13 +494,13 @@ export function calculateBusinessCase(
        FACILITY
     ===================================================== */
 
-    const facility =
-      solution.spaceSqFt *
-      equipmentLines *
-      (
-        region.baseRent +
-        region.cam
-      );
+    const facility = annualFacilityCost(
+      solution.spaceSqFt,
+      equipmentLines,
+      region.baseRent,
+      region.cam,
+      region.rentUnit,
+    );
 
     /* =====================================================
        ELECTRICITY
@@ -843,6 +845,8 @@ export function calculateBusinessCase(
       ...input,
 
       panelWeightLb,
+
+      ...(nativeWeightKg ? { panelWeightKg } : {}),
 
       annualPanels,
 

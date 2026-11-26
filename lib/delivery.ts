@@ -14,7 +14,20 @@ export function validDeliverySettings(v:unknown):v is DeliverySettings{if(!v||ty
 export function openDate(date:string,s:DeliverySettings,now=new Date()){if(!validDate(date))return false;const today=dayInZone(s.timezone,now);return date>=addDays(today,s.leadDays)&&date<=addDays(today,s.horizonDays)&&s.openDays.includes(new Date(date+'T12:00:00Z').getUTCDay())&&!s.blockedDates.includes(date)}
 export function validBookings(v:unknown,s:DeliverySettings):v is Booking[]{return Array.isArray(v)&&v.length>=1&&v.length<=30&&v.every(b=>b&&typeof b.date==='string'&&openDate(b.date,s)&&['am','pm'].includes(b.period)&&['truck','trailer'].includes(b.vehicle)&&Number.isInteger(b.count)&&b.count>=1&&b.count<=100)}
 export function canFit(trucks:number,trailers:number,s:DeliverySettings){return trucks*s.trailerCapacity+trailers*s.truckCapacity<=s.truckCapacity*s.trailerCapacity}
-export function calculateFreight(miles:number,bookings:Booking[],s:DeliverySettings){if(!Number.isFinite(miles)||miles<0)return null;let total=0;for(const b of bookings){const r=s.rates[b.vehicle];if(r.base===null||r.perMile===null||r.minimum===null)return null;total+=Math.max(r.minimum,r.base+r.perMile*miles)*b.count}return Math.round(total*100)/100}
+export function freightChargeForVehicle(miles: number, rate: FreightRate) {
+  if (!Number.isFinite(miles) || miles < 0 || rate.base === null || rate.perMile === null || rate.minimum === null) return null;
+  return Math.max(rate.minimum, rate.base + rate.perMile * miles);
+}
+export function calculateFreight(miles: number, bookings: Booking[], settings: DeliverySettings) {
+  if (!Number.isFinite(miles) || miles < 0) return null;
+  let total = 0;
+  for (const booking of bookings) {
+    const charge = freightChargeForVehicle(miles, settings.rates[booking.vehicle]);
+    if (charge === null) return null;
+    total += charge * booking.count;
+  }
+  return Math.round(total * 100) / 100;
+}
 export type OriginAddress={street:string;city:string;state:string;zip:string};
 const states=new Set('AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'.split(' '));
 export function validOrigin(v:unknown):v is OriginAddress{const a=v as OriginAddress;return !!a&&typeof a.street==='string'&&a.street.trim().length>=3&&a.street.length<=180&&typeof a.city==='string'&&a.city.trim().length>=2&&a.city.length<=100&&states.has(a.state)&&typeof a.zip==='string'&&/^\d{5}$/.test(a.zip)}

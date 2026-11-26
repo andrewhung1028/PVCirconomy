@@ -1,16 +1,28 @@
 import type {TransportLimits} from './pickup';
-export type PricingRules = {baseMaxWatts:number;stepWatts:number;panelBase:number;panelIncrement:number;weightBase:number;weightIncrement:number;discountStartExponent:number;discountPercentPerExponent:number;discountMaxPercent:number;brokenPercent:number;missingBoxPercent:number;missingFramePercent:number;doubleGlassGramsPerWatt:number;backsheetGramsPerWatt:number;doubleGlassKgPerSqm:number;backsheetKgPerSqm:number;unknownGramsPerWatt:number|null;unknownKgPerSqm:number};
-export type PricingSnapshot = {version:string;createdAt:string;rules:PricingRules;transport?:TransportLimits;transportVersion?:string};
+export type PricingRules = {baseMaxWatts:number;stepWatts:number;panelBase:number;panelIncrement:number;weightBase:number;weightIncrement:number;discountStartExponent:number;discountPercentPerExponent:number;discountMaxPercent:number;brokenPercent:number;missingBoxPercent:number;missingFramePercent:number;doubleGlassGramsPerWatt:number;backsheetGramsPerWatt:number;doubleGlassKgPerSqm:number;backsheetKgPerSqm:number;unknownGramsPerWatt:number|null;unknownKgPerSqm:number;minimumProcessingUsd?:number};
+export type PricingMarket='US'|'JP';
+export type PricingProfile={market:PricingMarket;currency:'USD'|'JPY';locale:'en-US'|'ja-JP';weightUnit:'lb'|'kg'};
+export const pricingProfiles:Record<PricingMarket,PricingProfile>={US:{market:'US',currency:'USD',locale:'en-US',weightUnit:'lb'},JP:{market:'JP',currency:'JPY',locale:'ja-JP',weightUnit:'kg'}};
+export const pricingMarket=(value:unknown):PricingMarket=>value==='JP'?'JP':'US';
+export type BatchPricingPolicy = { minimumProcessingUsd: number };
+export const defaultMinimumProcessingUsd = 300;
+export const maximumMinimumProcessingUsd = 100000;
+export type PricingSnapshot = {version:string;createdAt:string;rules:PricingRules;profile?:PricingProfile;transport?:TransportLimits;transportVersion?:string;batchPricing?:BatchPricingPolicy};
 export const initialRules:PricingRules={baseMaxWatts:300,stepWatts:50,panelBase:10,panelIncrement:1.25,weightBase:.18,weightIncrement:.025,discountStartExponent:2,discountPercentPerExponent:0,discountMaxPercent:100,brokenPercent:10,missingBoxPercent:5,missingFramePercent:25,doubleGlassGramsPerWatt:53.4,backsheetGramsPerWatt:50.3,doubleGlassKgPerSqm:12.25,backsheetKgPerSqm:10.76,unknownGramsPerWatt:null,unknownKgPerSqm:11.5};
+// System bootstrap only. JP administrators must review and publish a market
+// version before the Japanese quotation surface is enabled.
+export const initialJapanRules:PricingRules={...initialRules,panelBase:1580,panelIncrement:197.5125,weightBase:62.699,weightIncrement:8.709};
 export function validRules(value:unknown):value is PricingRules{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const r=value as Record<string,unknown>;const keys=Object.keys(initialRules);
- if(Object.keys(r).length!==keys.length||keys.some(k=>k==='unknownGramsPerWatt'&&r[k]===null?false:typeof r[k]!=='number'||!Number.isFinite(r[k])||Number(r[k])<0))return false;
+ const minimum=r.minimumProcessingUsd;
+ if('minimumProcessingUsd' in r&&(typeof minimum!=='number'||!Number.isFinite(minimum)||minimum<0||minimum>maximumMinimumProcessingUsd||Math.abs(minimum*100-Math.round(minimum*100))>1e-7))return false;
+ if(Object.keys(r).filter(key=>key!=='minimumProcessingUsd').length!==keys.length||keys.some(k=>k==='unknownGramsPerWatt'&&r[k]===null?false:typeof r[k]!=='number'||!Number.isFinite(r[k])||Number(r[k])<0))return false;
  return (r.unknownGramsPerWatt===null||(Number(r.unknownGramsPerWatt)>0&&Number(r.unknownGramsPerWatt)<=1000))&&Number.isInteger(r.baseMaxWatts)&&Number(r.baseMaxWatts)>=1&&Number(r.baseMaxWatts)<=2000&&Number.isInteger(r.stepWatts)&&Number(r.stepWatts)>=1&&Number(r.stepWatts)<=2000&&Number.isInteger(r.discountStartExponent)&&Number(r.discountStartExponent)>=1&&Number(r.discountStartExponent)<=6&&Number(r.discountPercentPerExponent)<=100&&Number(r.discountMaxPercent)<=100&&Number(r.panelBase)<=100000&&Number(r.panelIncrement)<=100000&&Number(r.weightBase)<=100&&Number(r.weightIncrement)<=100&&['brokenPercent','missingBoxPercent','missingFramePercent'].every(k=>Number(r[k])<=1000)&&['doubleGlassGramsPerWatt','backsheetGramsPerWatt','doubleGlassKgPerSqm','backsheetKgPerSqm','unknownKgPerSqm'].every(k=>Number(r[k])>0&&Number(r[k])<=1000)&&keys.every(k=>r[k]===null||Math.abs(Number(r[k])*1e6-Math.round(Number(r[k])*1e6))<1e-5);
 }
 export type ConditionFlags={broken?:boolean;missingBox?:boolean;missingFrame?:boolean};
 export function flagsFor(condition:string):ConditionFlags{return {broken:condition==='broken',missingBox:condition==='missing-box'||condition==='missing-both',missingFrame:condition==='missing-frame'||condition==='missing-both'}}
-export function tierRate(watts:number,unit:'panel'|'lb',flags:ConditionFlags,r:PricingRules){
+export function tierRate(watts:number,unit:'panel'|'lb'|'kg',flags:ConditionFlags,r:PricingRules){
  if(!Number.isInteger(watts)||watts<1||watts>2000||!validRules(r))return null;
  const tier=Math.max(0,Math.ceil((watts-r.baseMaxWatts)/r.stepWatts));const base=(unit==='panel'?r.panelBase:r.weightBase)+tier*(unit==='panel'?r.panelIncrement:r.weightIncrement);
  const percent=(flags.broken?r.brokenPercent:0)+(flags.missingBox?r.missingBoxPercent:0)+(flags.missingFrame?r.missingFramePercent:0);
@@ -24,4 +36,4 @@ export function quantityDiscount(quantity:number,r:PricingRules){
 // Upgrade only newly introduced coefficients. Existing price fields must be present and valid.
 export const defaultWeightRules={doubleGlassGramsPerWatt:53.4,backsheetGramsPerWatt:50.3,doubleGlassKgPerSqm:12.25,backsheetKgPerSqm:10.76,unknownGramsPerWatt:null,unknownKgPerSqm:11.5};
 export const defaultDiscountRules={discountStartExponent:2,discountPercentPerExponent:0,discountMaxPercent:100};
-export function normalizeRules(value:unknown):PricingRules|null{if(validRules(value))return value;if(!value||typeof value!=='object'||Array.isArray(value))return null;const r=value as Record<string,unknown>;const optional={...defaultWeightRules,...defaultDiscountRules};const baseKeys=Object.keys(initialRules).filter(k=>!(k in optional));if(!baseKeys.every(k=>k in r)||!Object.keys(r).every(k=>k in initialRules))return null;const upgraded={...optional,...r};return validRules(upgraded)?upgraded:null}
+export function normalizeRules(value:unknown):PricingRules|null{if(validRules(value))return value;if(!value||typeof value!=='object'||Array.isArray(value))return null;const r=value as Record<string,unknown>;const optional={...defaultWeightRules,...defaultDiscountRules};const baseKeys=Object.keys(initialRules).filter(k=>!(k in optional));if(!baseKeys.every(k=>k in r)||!Object.keys(r).every(k=>k in initialRules||k==='minimumProcessingUsd'))return null;const upgraded={...optional,...r};return validRules(upgraded)?upgraded:null}

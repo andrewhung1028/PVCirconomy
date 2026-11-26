@@ -20,10 +20,7 @@
 & {
   background: #ffffff;
   color: #111111;
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: inherit;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -95,8 +92,8 @@ a {
   border: 1px solid #ffffff;
   border-radius: 30px;
   color: #ffffff;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transition: background 0.2s ease;
@@ -205,14 +202,14 @@ a {
 .solutionLabel {
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .hero .eyebrow {
   margin: 0 0 30px;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -225,15 +222,11 @@ a {
 
   color: #ffffff;
 
-  font-size: clamp(
-    76px,
-    7.5vw,
-    118px
-  );
+  font-size: var(--pv-type-display);
 
   line-height: 0.92;
 
-  font-weight: 650;
+  font-weight: 800;
 
   letter-spacing: -0.06em;
 }
@@ -250,7 +243,7 @@ a {
     0.82
   );
 
-  font-size: 18px;
+  font-size: var(--pv-type-group);
   line-height: 1.55;
 }
 
@@ -273,8 +266,8 @@ a {
 .sectionEyebrow {
   margin: 0 0 26px;
 
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -290,15 +283,11 @@ a {
 .followIntro h2 {
   margin: 0;
 
-  font-size: clamp(
-    48px,
-    5vw,
-    76px
-  );
+  font-size: var(--pv-type-section);
 
   line-height: 0.98;
 
-  font-weight: 450;
+  font-weight: 800;
 
   letter-spacing: -0.055em;
 }
@@ -310,7 +299,7 @@ a {
 
   color: #666666;
 
-  font-size: 17px;
+  font-size: var(--pv-type-body);
   line-height: 1.55;
 }
 
@@ -377,14 +366,14 @@ a {
 
   color: #111111;
 
-  font-size: 12px;
+  font-size: var(--pv-type-caption);
 }
 
 .fieldLabel small {
   color: #777777;
 
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
 
   letter-spacing: 0;
   text-transform: none;
@@ -408,7 +397,7 @@ a {
   background: transparent;
   color: #111111;
 
-  font-size: 21px;
+  font-size: var(--pv-type-group);
 
   appearance: auto;
 }
@@ -434,8 +423,8 @@ a {
   background: #111111;
   color: #ffffff;
 
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
 
   letter-spacing: 0.06em;
 
@@ -467,8 +456,8 @@ a {
 
 .scheduleLabel {
   margin: 0 0 18px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -481,14 +470,14 @@ a {
 }
 
 .scheduleMain strong {
-  font-size: 24px;
+  font-size: var(--pv-type-subsection);
   line-height: 1.2;
 }
 
 .scheduleMain span {
   color: #666666;
 
-  font-size: 14px;
+  font-size: var(--pv-type-interface);
   line-height: 1.4;
 }
 
@@ -517,7 +506,7 @@ a {
 
   color: #999999;
 
-  font-size: 10px;
+  font-size: var(--pv-type-caption);
 }
 
 
@@ -532,14 +521,14 @@ a {
 
 .scheduleInsight strong {
   display: block;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: var(--pv-type-group);
+  font-weight: 800;
 }
 
 .scheduleInsight p {
   margin: 8px 0 0;
   color: #666666;
-  font-size: 14px;
+  font-size: var(--pv-type-body);
   line-height: 1.55;
 }
 
@@ -548,7 +537,7 @@ a {
 ========================================================= */
 
 .businessSection {
-  background: #f1f1f1;
+  background: var(--pv-gray);
 }
 
 .businessIntro {
@@ -592,8 +581,8 @@ a {
 .businessTable th {
   color: #666666;
 
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
 
   letter-spacing: 0.06em;
 
@@ -601,7 +590,7 @@ a {
 }
 
 .businessTable td {
-  font-size: 17px;
+  font-size: var(--pv-type-interface);
 }
 
 .businessTable tbody tr:first-child td {
@@ -627,13 +616,13 @@ a {
 .tableExpandIcon {
   width: 12px;
 
-  font-size: 19px;
-  font-weight: 300;
+  font-size: var(--pv-type-group);
+  font-weight: 400;
 }
 
 .strongRow td,
 .ebitdaRow td {
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .ebitdaRow td {
@@ -650,7 +639,7 @@ a {
 
   color: #666666;
 
-  font-size: 14px;
+  font-size: var(--pv-type-interface);
 }
 
 .detailRow td:first-child {
@@ -664,7 +653,7 @@ a {
 
 .positive {
   color: #178943 !important;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .negative {
@@ -699,9 +688,10 @@ a {
 }
 
 .comparisonKpi {
+  container-type: inline-size;
   min-height: 190px;
 
-  padding: 30px;
+  padding: 30px clamp(16px, 2vw, 30px);
 
   display: flex;
   flex-direction: column;
@@ -712,7 +702,7 @@ a {
 .comparisonKpi span {
   color: #aaaaaa;
 
-  font-size: 13px;
+  font-size: var(--pv-type-interface);
 }
 
 .comparisonKpi strong {
@@ -720,7 +710,7 @@ a {
 
   color: #ffffff;
 
-  font-size: 32px;
+  font-size: var(--pv-type-subsection);
   line-height: 1;
 
   letter-spacing: -0.035em;
@@ -733,7 +723,7 @@ a {
 
   color: #888888;
 
-  font-size: 11px;
+  font-size: var(--pv-type-caption);
 }
 
 
@@ -782,7 +772,7 @@ a {
 .solutionLabel {
   margin: 0 0 32px;
 
-  font-size: 10px;
+  font-size: var(--pv-type-caption);
 }
 
 .solutionCard h3 {
@@ -790,15 +780,11 @@ a {
 
   max-width: 570px;
 
-  font-size: clamp(
-    38px,
-    3.5vw,
-    58px
-  );
+  font-size: var(--pv-type-section);
 
   line-height: 0.98;
 
-  font-weight: 400;
+  font-weight: 800;
 
   letter-spacing: -0.05em;
 }
@@ -828,11 +814,11 @@ a {
 .solutionMetrics span {
   color: #666666;
 
-  font-size: 13px;
+  font-size: var(--pv-type-interface);
 }
 
 .solutionMetrics strong {
-  font-size: 15px;
+  font-size: var(--pv-type-interface);
 
   text-align: right;
 }
@@ -861,8 +847,8 @@ a {
 
   color: #999999;
 
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--pv-type-caption);
+  font-weight: 800;
 
   letter-spacing: 0.14em;
 }
@@ -872,15 +858,11 @@ a {
 
   margin: 0;
 
-  font-size: clamp(
-    36px,
-    4vw,
-    58px
-  );
+  font-size: var(--pv-type-section);
 
   line-height: 1;
 
-  font-weight: 400;
+  font-weight: 800;
 
   letter-spacing: -0.045em;
 }
@@ -892,7 +874,7 @@ a {
 
   color: #bbbbbb;
 
-  font-size: 15px;
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
@@ -916,8 +898,8 @@ a {
 }
 
 .operationSupport span {
-  font-size: 9px;
-  font-weight: 700;
+  font-size: var(--pv-type-caption);
+  font-weight: 800;
 
   letter-spacing: 0.13em;
 }
@@ -925,7 +907,7 @@ a {
 .operationSupport h3 {
   margin: 12px 0 0;
 
-  font-size: 30px;
+  font-size: var(--pv-type-subsection);
 }
 
 .operationSupport p {
@@ -933,7 +915,7 @@ a {
 
   color: #bbbbbb;
 
-  font-size: 14px;
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
@@ -943,7 +925,7 @@ a {
 ========================================================= */
 
 .solutionSection {
-  background: #eeeeee;
+  background: var(--pv-gray);
 }
 
 .brochureActions {
@@ -967,16 +949,16 @@ a {
   background: #111111;
   color: #ffffff;
 
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
 
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .buttonText {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
 
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1023,7 +1005,7 @@ a {
 
   color: #aaaaaa;
 
-  font-size: 16px;
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
@@ -1047,7 +1029,7 @@ a {
 
   color: #bbbbbb;
 
-  font-size: 11px;
+  font-size: var(--pv-type-caption);
 }
 
 .followForm input,
@@ -1067,7 +1049,7 @@ a {
   background: #1d1d1d;
   color: #ffffff;
 
-  font-size: 16px;
+  font-size: var(--pv-type-body);
 }
 
 .followFull {
@@ -1081,7 +1063,7 @@ a {
 
   color: #888888;
 
-  font-size: 11px;
+  font-size: var(--pv-type-caption);
   line-height: 1.55;
 }
 
@@ -1099,8 +1081,8 @@ a {
   background: #ffffff;
   color: #111111;
 
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
 
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1128,7 +1110,7 @@ a {
   background: #43b900;
   color: #ffffff;
 
-  font-size: 13px;
+  font-size: var(--pv-type-interface);
 }
 
 
@@ -1148,7 +1130,7 @@ footer {
   align-items: center;
   justify-content: space-between;
 
-  font-size: 10px;
+  font-size: var(--pv-type-caption);
 }
 
 .footerInner div {
@@ -1161,7 +1143,7 @@ footer {
    TABLET
 ========================================================= */
 
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
 
   .pageShell {
     width: calc(100% - 72px);
@@ -1173,11 +1155,7 @@ footer {
   }
 
   .hero h1 {
-    font-size: clamp(
-      64px,
-      8vw,
-      94px
-    );
+    font-size: var(--pv-type-display);
   }
 
   .operationBottomRow {
@@ -1251,11 +1229,7 @@ footer {
   }
 
   .hero h1 {
-    font-size: clamp(
-      50px,
-      14vw,
-      72px
-    );
+    font-size: var(--pv-type-display);
 
     line-height: 0.94;
   }
@@ -1265,7 +1239,7 @@ footer {
 
     margin-top: 32px;
 
-    font-size: 15px;
+    font-size: var(--pv-type-interface);
   }
 
   .section {
@@ -1280,7 +1254,7 @@ footer {
   .businessIntro h2,
   .comparisonIntro h2,
   .followIntro h2 {
-    font-size: 46px;
+    font-size: var(--pv-type-panel);
   }
 
   .operationTopRow,
@@ -1341,7 +1315,7 @@ footer {
   }
 
   .solutionCard h3 {
-    font-size: 40px;
+    font-size: var(--pv-type-panel);
   }
 
   .beyondGrid {
@@ -1429,8 +1403,8 @@ footer {
   display: block;
   margin-bottom: 22px;
   color: #555555;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--pv-type-caption);
+  font-weight: 800;
   line-height: 1.3;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1440,8 +1414,8 @@ footer {
   max-width: 340px;
   margin: 0 0 18px;
   color: #111111;
-  font-size: clamp(25px, 2.1vw, 31px);
-  font-weight: 600;
+  font-size: var(--pv-type-subsection);
+  font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.035em;
 }
@@ -1450,7 +1424,7 @@ footer {
   max-width: 360px;
   margin: 0;
   color: #555555;
-  font-size: 15px;
+  font-size: var(--pv-type-body);
   line-height: 1.5;
 }
 
@@ -1486,9 +1460,9 @@ footer {
 
   color: #111111;
 
-  font-size: 10px;
+  font-size: var(--pv-type-caption);
   line-height: 1.2;
-  font-weight: 700;
+  font-weight: 800;
 
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1499,9 +1473,9 @@ footer {
 .operationSupport h3 {
   color: #111111;
 
-  font-size: 27px;
+  font-size: var(--pv-type-subsection);
   line-height: 1;
-  font-weight: 500;
+  font-weight: 800;
 
   letter-spacing: -0.035em;
 
@@ -1513,7 +1487,7 @@ footer {
 .operationSupport > p {
   color: #666666;
 
-  font-size: 14px;
+  font-size: var(--pv-type-body);
   line-height: 1.5;
 
   margin: 0;
@@ -1526,7 +1500,7 @@ footer {
    BEYOND PROCESSING — RESPONSIVE
 ========================================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .beyondGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1558,7 +1532,7 @@ footer {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 760px) {
   .beyondGrid {
     grid-template-columns: 1fr;
   }
@@ -1645,8 +1619,9 @@ footer {
 */
 .comparisonKpi strong {
   display: block;
-  font-size: clamp(48px, 4vw, 68px);
-  line-height: 0.95;
+  font-size: var(--pv-type-section);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
   font-weight: 400;
   letter-spacing: -0.045em;
 }
@@ -1725,12 +1700,12 @@ footer {
 
 /* Processing schedule: concise detail below status bar */
 .scheduleMain { justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
-.scheduleMain span { font-size: 16px; font-weight: 700; color: #111; }
+.scheduleMain span { font-size: var(--pv-type-body); font-weight: 800; color: #111; }
 .scheduleProgressWarning { background: #e5b522; }
 .scheduleProgressCritical { background: #d92d20; }
 .scheduleInsight { max-width: 100%; margin-top: 16px; }
-.scheduleInsight p { margin: 0; color: #666; font-size: 14px; line-height: 1.6; }
-.scheduleInsight p strong { display: inline; font-size: inherit; font-weight: 600; color: #222; }
+.scheduleInsight p { margin: 0; color: #666; font-size: var(--pv-type-body); line-height: 1.6; }
+.scheduleInsight p strong { display: inline; font-size: inherit; font-weight: 800; color: #222; }
 
 
 /* BUSINESS CASE — METHODOLOGY LINK */
@@ -1740,8 +1715,8 @@ footer {
   gap: 12px;
   margin-top: 24px;
   color: #111;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--pv-type-interface);
+  font-weight: 800;
   line-height: 1.5;
   letter-spacing: 0.075em;
   text-decoration: none;
@@ -1750,40 +1725,40 @@ footer {
   transition: color 180ms ease;
 }
 .methodologyLink:hover, .methodologyLink:focus-visible { color: #328c00; }
-.methodologyLink span { font-size: 18px; line-height: 1; }
+.methodologyLink span { font-size: var(--pv-type-group); line-height: 1; }
 
 /* STANDALONE METHODOLOGY PAGE */
-.methodologyPage { background: #f6f6f6; min-height: 100vh; color: #141414; }
+.methodologyPage { background: var(--pv-gray); min-height: 100vh; color: #141414; }
 .methodologyShell { width: min(1080px, calc(100% - 64px)); margin: 0 auto; }
 .methodologyTop { background: #111; color: #fff; }
 .methodologyTopInner { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .methodologyBrand { display: inline-flex; align-items: center; text-decoration: none; flex-shrink: 0; }
 .methodologyBrand img { display: block; width: auto; height: 30px; max-width: 180px; object-fit: contain; }
-.methodologyBack { color: #fff; text-decoration: none; font-size: 12px; font-weight: 500; letter-spacing: .05em; }
+.methodologyBack { color: #fff; text-decoration: none; font-size: var(--pv-type-caption); font-weight: 400; letter-spacing: .05em; }
 .methodologyBack:hover { color: #8edc62; }
 .methodologyHero { padding: 108px 0 92px; border-bottom: 1px solid #d1d1d1; }
-.methodologyEyebrow { font-size: 13px; font-weight: 500; letter-spacing: .16em; margin: 0 0 28px; }
-.methodologyHero h1 { font-size: clamp(48px, 6vw, 76px); font-weight: 450; letter-spacing: -.055em; line-height: 1.02; margin: 0 0 28px; }
-.methodologyLead { max-width: 780px; color: #555; font-size: 18px; line-height: 1.4; margin: 0; }
+.methodologyEyebrow { font-size: var(--pv-type-interface); font-weight: 400; letter-spacing: .16em; margin: 0 0 28px; }
+.methodologyHero h1 { font-size: var(--pv-type-display); font-weight: 800; letter-spacing: -.055em; line-height: 1.02; margin: 0 0 28px; }
+.methodologyLead { max-width: 780px; color: #555; font-size: var(--pv-type-group); line-height: 1.4; margin: 0; }
 .methodologySection { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px; padding: 72px 0; border-bottom: 1px solid #d1d1d1; }
-.methodologySectionLabel { margin: 0; font-size: 12px; letter-spacing: .13em; font-weight: 600; text-transform: uppercase; }
-.methodologyContent h2 { margin: 0 0 20px; font-size: clamp(26px, 3vw, 38px); font-weight: 500; letter-spacing: -.04em; line-height: 1.12; }
-.methodologyContent h3 { font-size: 17px; margin: 28px 0 10px; font-weight: 600; }
-.methodologyContent p { font-size: 15px; color: #515151; line-height: 1.4; margin: 0 0 14px; }
-.methodologyFormula { background: #e9e9e9; border-left: 3px solid #43b900; padding: 18px 22px; font-size: 15px; font-weight: 600; line-height: 1.6; margin: 16px 0 22px; overflow-wrap: anywhere; }
+.methodologySectionLabel { margin: 0; font-size: var(--pv-type-caption); letter-spacing: .13em; font-weight: 800; text-transform: uppercase; }
+.methodologyContent h2 { margin: 0 0 20px; font-size: var(--pv-type-panel); font-weight: 800; letter-spacing: -.04em; line-height: 1.12; }
+.methodologyContent h3 { font-size: var(--pv-type-body); margin: 28px 0 10px; font-weight: 800; }
+.methodologyContent p { font-size: var(--pv-type-body); color: #515151; line-height: 1.4; margin: 0 0 14px; }
+.methodologyFormula { background: var(--pv-gray); border-left: 3px solid #43b900; padding: 18px 22px; font-size: var(--pv-type-interface); font-weight: 800; line-height: 1.6; margin: 16px 0 22px; overflow-wrap: anywhere; }
 .methodologyTableWrap { overflow-x: auto; margin: 24px 0; }
-.methodologyTable { border-collapse: collapse; width: 100%; font-size: 14px; }
-.methodologyTable th { font-size: 12px; letter-spacing: .06em; text-align: left; text-transform: uppercase; color: #555; }
+.methodologyTable { border-collapse: collapse; width: 100%; font-size: var(--pv-type-interface); }
+.methodologyTable th { font-size: var(--pv-type-caption); letter-spacing: .06em; text-align: left; text-transform: uppercase; color: #555; }
 .methodologyTable th, .methodologyTable td { border-bottom: 1px solid #d2d2d2; padding: 9px 12px 9px 0; vertical-align: top; line-height: 1.4; }
-.methodologyTable td:first-child { font-weight: 600; min-width: 175px; }
-.methodologyNote { font-size: 13px !important; color: #666 !important; line-height: 1.4 !important; }
+.methodologyTable td:first-child { font-weight: 800; min-width: 175px; }
+.methodologyNote { font-size: var(--pv-type-interface) !important; color: #666 !important; line-height: 1.4 !important; }
 .methodologyFooter { background: #111; color: #fff; padding: 34px 0; }
-.methodologyFooterInner { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: 12px; }
+.methodologyFooterInner { display: flex; align-items: center; justify-content: space-between; gap: 20px; font-size: var(--pv-type-caption); }
 @media (max-width: 760px) {
   .methodologyShell { width: min(100% - 36px, 1080px); }
   .methodologyHero { padding: 74px 0 58px; }
   .methodologySection { grid-template-columns: 1fr; gap: 22px; padding: 52px 0; }
-  .methodologyLead { font-size: 16px; }
+  .methodologyLead { font-size: var(--pv-type-body); }
   .methodologyFooterInner { flex-direction: column; align-items: flex-start; }
 }
 
@@ -1802,16 +1777,16 @@ footer {
 .businessSummarySection .decisionSummary > .sectionEyebrow {
   margin: 0 0 26px;
   color: #fff;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
 }
 .businessSummarySection .decisionSummary h2 {
   max-width: 1080px;
   margin: 0;
-  font-size: clamp(42px, 4.6vw, 68px);
-  font-weight: 450;
+  font-size: var(--pv-type-section);
+  font-weight: 800;
   line-height: 1.04;
   letter-spacing: -0.05em;
 }
@@ -1819,16 +1794,16 @@ footer {
   max-width: 900px;
   margin: 28px 0 0;
   color: #bcbcbc;
-  font-size: 17px;
+  font-size: var(--pv-type-body);
   line-height: 1.45;
 }
 .businessSummarySection .decisionSummary .summaryLead strong,
 .businessSummarySection .decisionSummary .summaryPayback strong {
   color: #fff;
-  font-weight: 650;
+  font-weight: 800;
 }
 .comparisonSection {
-  background: #f1f1f1;
+  background: var(--pv-gray);
   color: #111;
 }
 .comparisonSection .sectionEyebrow.light {
@@ -1858,7 +1833,7 @@ footer {
 }
 .comparisonSection .solutionCompareCard,
 .comparisonSection .solutionCard:not(.solutionPrimary) {
-  background: #e5e5e5;
+  background: var(--pv-gray);
   color: #111;
   border-left-color: #c5c5c5;
 }
@@ -1875,4 +1850,122 @@ footer {
 }
 
 }
-.bc-calculator {padding-top:80px;}
+.bc-calculator {
+  font-family: inherit;
+}
+
+.bc-calculator .bc-shell {
+  --bc-body-size: var(--pv-type-body);
+  --bc-results-surface: var(--pv-gray);
+  --bc-summary-surface: #000;
+  --bc-solution-surface: var(--pv-gray);
+  --bc-follow-surface: #111;
+}
+.bc-calculator .bc-shell :is(.businessSection,.comparisonSection) { background: var(--bc-results-surface); }
+.bc-calculator .bc-shell .businessSummarySection { background: var(--bc-summary-surface); }
+.bc-calculator .bc-shell .solutionSection { background: var(--bc-solution-surface); }
+.bc-calculator .bc-shell .followSection { background: var(--bc-follow-surface); }
+.bc-calculator-ja .bc-shell {
+  --bc-body-size: var(--pv-type-body);
+  line-break: strict;
+}
+.bc-calculator .site { overflow: clip; }
+.bc-calculator .pageShell {
+  width: min(var(--pv-content-max), calc(100% - 2 * var(--pv-safe-inline-roomy)));
+}
+.bc-calculator .hero { height: 100svh; min-height: 100svh; }
+.bc-calculator .site > section:not(.hero) {
+  min-height: 100svh;
+  align-content: center;
+  padding-block: clamp(88px, 10svh, 126px) 64px;
+}
+.bc-calculator .hero h1 {
+  font-size: var(--pv-type-display);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.bc-calculator :is(.sectionIntro,.businessIntro,.comparisonIntro,.followIntro,.decisionSummary) h2 {
+  font-size: var(--pv-type-section);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -.035em;
+}
+.bc-calculator :is(.beyondGrid article,.solutionCard,.operationSupport) h3 {
+  font-size: var(--pv-type-group);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.bc-calculator-ja .bc-shell :is(h1,h2,h3) { letter-spacing: -.01em; }
+.bc-calculator :is(.heroLede,.sectionDescription,.followIntro > p:last-child,.businessSummarySection .decisionSummary > p:not(:first-child),.beyondGrid article > p,.operationSupport p,.scheduleInsight p) {
+  font-size: var(--pv-type-body);
+  line-height: 1.65;
+}
+.bc-calculator :is(.hero .eyebrow,.sectionEyebrow,.scheduleLabel,.fieldLabel,.solutionLabel,.bc-source,.businessSummarySection .decisionSummary > .sectionEyebrow,.followForm label > span) {
+  font-size: var(--pv-type-caption);
+}
+.bc-calculator .bc-source { margin: 18px 0 0; }
+.bc-calculator .businessTable :is(th,td) {
+  font-size: var(--pv-type-caption);
+  padding-block: 14px;
+}
+.bc-calculator :is(.field input,.field select,.followForm input,.followForm select) {
+  height: var(--pv-story-control-height);
+  font-size: var(--pv-type-body);
+}
+.bc-calculator :is(.calculateButton,.followSubmit,.brochureActions a,.methodologyLink) {
+  height: auto;
+  min-height: var(--pv-story-control-height);
+  font-size: var(--pv-type-body);
+}
+.bc-calculator .operationSupport {
+  grid-template-columns: minmax(0,40fr) minmax(0,60fr);
+}
+@media (min-width: 1001px) {
+  .bc-calculator .hero h1 { font-size: var(--pv-type-display); }
+}
+
+.bc-methodology {
+  --bc-methodology-surface: var(--pv-gray);
+}
+.bc-methodology .methodologyPage {
+  background: var(--bc-methodology-surface) !important;
+}
+.bc-methodology .methodologyShell {
+  width: min(var(--pv-content-max), calc(100% - 2 * var(--pv-safe-inline-roomy)));
+}
+.bc-methodology .methodologyHero > .pv-text-button { display: inline-block; margin-bottom: 24px; }
+.bc-methodology .methodologyHero h1,
+.bc-methodology .methodologyContent h2 {
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.bc-methodology .methodologyHero h1 { font-size: var(--pv-type-display); }
+@media (min-width: 1001px) {
+  .bc-methodology .methodologyHero h1 { font-size: var(--pv-type-display); }
+}
+.bc-methodology .methodologyContent h2 { font-size: var(--pv-type-section); }
+.bc-methodology .methodologyContent h3 { font-size: var(--pv-type-group); font-weight: 800; }
+.bc-methodology :is(.methodologyLead,.methodologyContent p) { font-size: var(--pv-type-body); line-height: 1.65; }
+.bc-methodology :is(.methodologyEyebrow,.methodologySectionLabel,.methodologyTable th,.methodologyTable td) { font-size: var(--pv-type-caption); }
+[lang="ja"] .bc-methodology :is(h1,h2,h3) { letter-spacing: -.01em; line-break: strict; }
+
+@media (min-width: 761px) and (max-width: 1000px) {
+  .bc-calculator .operationBottomRow {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .bc-calculator .pageShell { width: calc(100% - 70px); }
+  .bc-methodology .methodologyShell { width: calc(100% - 70px); }
+  .bc-methodology .methodologyHero { padding-top: 110px; }
+  .bc-calculator .operationSupport,
+  .bc-calculator :is(.operationTopRow,.operationBottomRow) {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .bc-calculator :is(.operationTopRow,.operationBottomRow) { gap: 24px; }
+  .bc-calculator .operationTopRow { margin-bottom: 24px; }
+  .bc-calculator-ja .bc-shell { --bc-body-size: var(--pv-type-body); }
+}

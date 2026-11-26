@@ -1,5 +1,12 @@
 'use client';
-import {solutionLabel} from '../../lib/business-case/solution-labels';
+import {solutionLabel as defaultSolutionLabel} from '../../lib/business-case/solution-labels';
+import {formatCurrency} from '../../lib/region-format';
+import {localizedPublicPath, type OurSolutionLocale, type PublicSolutionMarket} from '../../lib/our-solution/market';
+import {businessCaseMarketForCountry, initialBusinessCaseRegion} from '../../lib/business-case/market';
+import type {Region} from '../../lib/business-case/types';
+import japaneseCopy from '../../lib/i18n/business-case-ja.json';
+import chineseCopy from '../../lib/i18n/business-case-zh.json';
+import {PublicHeader} from '../components/public-header';
 
 import {
   FormEvent,
@@ -16,25 +23,72 @@ const CALCULATE_TIMEOUT_MS = 20000;
 ========================================================= */
 
 const money = (n: number, currency: string) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
-    maximumFractionDigits: 0,
-  }).format(Number(n || 0));
+  formatCurrency(n, {currency}, {maximumFractionDigits: 0});
 
 const money2 = (n: number, currency: string) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(n || 0));
+  formatCurrency(n, {currency}, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-const number = (n: number, digits = 0) =>
-  new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: digits,
-  }).format(Number(n || 0));
+const countryNamesJa = new Intl.DisplayNames('ja-JP', {type: 'region'});
+const countryNamesZh = new Intl.DisplayNames('zh-TW', {type: 'region'});
+const labelsZh: Record<string, string> = {
+  CONVENTIONAL: '破碎法', HOT_KNIFE: '熱處理法', GLASS: '玻璃', ALUMINUM: '鋁', COPPER: '銅', EVA: 'EVA',
+  BACKSHEET: '背板', SILICON: '矽', SILVER: '銀', JUNCTION_BOX: '接線盒', RESIDUAL: '殘餘物',
+  LABOR: '人事費', LABOR_BURDEN: '人事附加費', WORKERS_COMP: '職災保險',
+  FACILITY: '場地租金與管理費', ELECTRICITY: '電費', CONSUMABLES: '耗材',
+  MAINTENANCE: '維護費', HANDLING: '叉車及搬運費', PACKAGING: '包裝費',
+  INSURANCE: '保險與合規費', ADMIN: '設施與行政費', TREATMENT: '二次處理費',
+};
+const regionsZh: Record<string, string> = {
+  'US-CA': '加州', 'US-TX': '德州', 'US-NY': '紐約州', 'US-WA': '華盛頓州', 'JP': '日本',
+  'AU-ACT': '首都領地', 'AU-NSW': '新南威爾斯州', 'AU-NT': '北領地', 'AU-QLD': '昆士蘭州',
+  'AU-SA': '南澳州', 'AU-TAS': '塔斯馬尼亞州', 'AU-VIC': '維多利亞州', 'AU-WA': '西澳州',
+};
+const sectionsZh: Record<string, string> = {
+  overview: '概覽', operation: '營運條件', 'business-case': '試算結果', 'business-summary': '摘要',
+  comparison: '比較', support: '業務支援', solution: '解決方案', 'follow-up': '聯絡我們',
+};
+const regionsJa: Record<string, string> = {
+  'US-AL': 'アラバマ州', 'US-AK': 'アラスカ州', 'US-AZ': 'アリゾナ州', 'US-AR': 'アーカンソー州',
+  'US-CA': 'カリフォルニア州', 'US-CO': 'コロラド州', 'US-CT': 'コネチカット州', 'US-DE': 'デラウェア州',
+  'US-FL': 'フロリダ州', 'US-GA': 'ジョージア州', 'US-HI': 'ハワイ州', 'US-ID': 'アイダホ州',
+  'US-IL': 'イリノイ州', 'US-IN': 'インディアナ州', 'US-IA': 'アイオワ州', 'US-KS': 'カンザス州',
+  'US-KY': 'ケンタッキー州', 'US-LA': 'ルイジアナ州', 'US-ME': 'メイン州', 'US-MD': 'メリーランド州',
+  'US-MA': 'マサチューセッツ州', 'US-MI': 'ミシガン州', 'US-MN': 'ミネソタ州', 'US-MS': 'ミシシッピ州',
+  'US-MO': 'ミズーリ州', 'US-MT': 'モンタナ州', 'US-NE': 'ネブラスカ州', 'US-NV': 'ネバダ州',
+  'US-NH': 'ニューハンプシャー州', 'US-NJ': 'ニュージャージー州', 'US-NM': 'ニューメキシコ州', 'US-NY': 'ニューヨーク州',
+  'US-NC': 'ノースカロライナ州', 'US-ND': 'ノースダコタ州', 'US-OH': 'オハイオ州', 'US-OK': 'オクラホマ州',
+  'US-OR': 'オレゴン州', 'US-PA': 'ペンシルベニア州', 'US-RI': 'ロードアイランド州', 'US-SC': 'サウスカロライナ州',
+  'US-SD': 'サウスダコタ州', 'US-TN': 'テネシー州', 'US-TX': 'テキサス州', 'US-UT': 'ユタ州',
+  'US-VT': 'バーモント州', 'US-VA': 'バージニア州', 'US-WA': 'ワシントン州', 'US-WV': 'ウェストバージニア州',
+  'US-WI': 'ウィスコンシン州', 'US-WY': 'ワイオミング州',
+  'CA-AB': 'アルバータ州', 'CA-BC': 'ブリティッシュコロンビア州', 'CA-MB': 'マニトバ州', 'CA-NB': 'ニューブランズウィック州',
+  'CA-NL': 'ニューファンドランド・ラブラドール州', 'CA-NS': 'ノバスコシア州', 'CA-ON': 'オンタリオ州',
+  'CA-PE': 'プリンスエドワードアイランド州', 'CA-QC': 'ケベック州', 'CA-SK': 'サスカチュワン州',
+  'CA-NT': 'ノースウエスト準州', 'CA-NU': 'ヌナブト準州', 'CA-YT': 'ユーコン準州',
+  'AU-ACT': '首都特別地域', 'AU-NSW': 'ニューサウスウェールズ州', 'AU-NT': 'ノーザンテリトリー',
+  'AU-QLD': 'クイーンズランド州', 'AU-SA': '南オーストラリア州', 'AU-TAS': 'タスマニア州',
+  'AU-VIC': 'ビクトリア州', 'AU-WA': '西オーストラリア州',
+};
+const labelsJa: Record<string, string> = {
+  CONVENTIONAL: '破砕法', HOT_KNIFE: '熱処理法',
+  GLASS: 'ガラス', ALUMINUM: 'アルミニウム', COPPER: '銅', EVA: 'EVA',
+  BACKSHEET: 'バックシート', SILICON: 'シリコン', SILVER: '銀', JUNCTION_BOX: 'ジャンクションボックス', RESIDUAL: '残さ',
+  LABOR: '人件費', LABOR_BURDEN: '人件費の付随費用', WORKERS_COMP: '労災補償費',
+  FACILITY: '施設費・賃料・共益費', ELECTRICITY: '電力費', CONSUMABLES: '消耗品費',
+  MAINTENANCE: '保守費', HANDLING: 'フォークリフト・荷役費', PACKAGING: '梱包費',
+  INSURANCE: '保険・法令対応費', ADMIN: '施設の光熱費・管理費', TREATMENT: '二次処理費',
+};
+
+const sections = [
+  ['overview', 'Overview', '概要'],
+  ['operation', 'Operation', '運転条件'],
+  ['business-case', 'Results', '試算結果'],
+  ['business-summary', 'Summary', '概要'],
+  ['comparison', 'Comparison', '比較'],
+  ['support', 'Support', '事業支援'],
+  ['solution', 'Solution', 'ソリューション'],
+  ['follow-up', 'Follow up', 'お問い合わせ'],
+] as const;
 
 /* =========================================================
    HELPERS
@@ -146,14 +200,35 @@ function opexValue(x: any) {
    PAGE
 ========================================================= */
 
-export default function Page({sourceLabel}: {sourceLabel:string}) {
+export default function Page({sourceLabel, locale = 'en-US', initialRegion, requestedMarket, initialMonthlyVolume}: {
+  sourceLabel: string;
+  locale?: OurSolutionLocale;
+  initialRegion?: string;
+  initialMonthlyVolume?: string;
+  requestedMarket?: PublicSolutionMarket;
+}) {
+  const japanese = locale === 'ja-JP';
+  const chinese = locale === 'zh-TW';
+  const localized = chinese || japanese;
+  const copy: Record<string, string> = chinese ? chineseCopy : japanese ? japaneseCopy : {};
+  const t = (english: string) => copy[english] ?? english;
+  const text = (en: string, ja: string, zh: string) => chinese ? zh : japanese ? ja : en;
+  const number = (n: number, digits = 0) => new Intl.NumberFormat(locale, {
+    maximumFractionDigits: digits, minimumFractionDigits: digits,
+  }).format(Number(n || 0));
+  const localizedLabel = (code: string, fallback: string) => (chinese ? labelsZh : japanese ? labelsJa : {})[code] ?? fallback;
+  const solutionLabel = (code: string, name: string) => localizedLabel(code, defaultSolutionLabel(code, name));
+  const countryLabel = (name: string, code?: string) => localized && code ? (chinese ? countryNamesZh : countryNamesJa).of(code) ?? name : name;
   const [currentSource,setCurrentSource]=useState(sourceLabel);
   const [data, setData] = useState<any>(null);
 
-  const [region, setRegion] = useState('US-CA');
+  const [region, setRegion] = useState('');
   const [country, setCountry] = useState('');
-  const [panels, setPanels] = useState(5000);
+  const monthlyVolume = initialMonthlyVolume && /^\d+$/.test(initialMonthlyVolume) ? Number(initialMonthlyVolume) : NaN;
+  const transferredPanels = Number.isSafeInteger(monthlyVolume) && monthlyVolume > 0 ? monthlyVolume : undefined;
+  const [panels, setPanels] = useState(transferredPanels ?? 5000);
   const [fee, setFee] = useState(0.2);
+  const [activeSection, setActiveSection] = useState('overview');
 
   const primary = 'PVCIRCULATOR';
 
@@ -190,6 +265,18 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
   }
 
   useEffect(() => () => calcAbort.current?.abort(), []);
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActiveSection(visible.target.id);
+    }, { rootMargin: '-30% 0px -50% 0px' });
+    for (const [id] of sections) {
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    }
+    return () => observer.disconnect();
+  }, [Boolean(result)]);
 
   /* =======================================================
      LOAD MASTER DATA
@@ -197,19 +284,19 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
   useEffect(() => {
     fetch('/api/calculator-data/')
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw Error('Calculator data unavailable');
+        return r.json();
+      })
       .then((d) => {
         setData(d);
         if(d.source)setCurrentSource(d.source);
 
-        if (
-          d.regions?.[0] &&
-          !d.regions.some(
-            (x: any) => x.code === 'US-CA'
-          )
-        ) {
-          setRegion(d.regions[0].code);
-        }
+        const regions: Region[] = d.regions ?? [];
+        const selected = initialBusinessCaseRegion(regions, requestedMarket, initialRegion);
+        setRegion(selected?.code ?? '');
+        setCountry(selected?.country ?? '');
+        if (transferredPanels === undefined && selected?.code === 'JP' && d.japan) setPanels(d.japan.defaultPanels);
 
         const compareSolutions =
           d.solutions?.filter(
@@ -235,7 +322,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
           'Unable to load calculator data.'
         );
       });
-  }, []);
+  }, [initialRegion, requestedMarket, transferredPanels]);
 
   /* =======================================================
      MASTER DATA LOOKUPS
@@ -249,6 +336,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
       ),
     [data, region]
   );
+  const regionalSolutions = region === 'JP' ? data?.japan?.solutions : data?.solutions;
 
   const countries = useMemo<string[]>(() => {
     const regions = (data?.regions || []).filter(
@@ -267,12 +355,6 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
     [data, country]
   );
 
-  useEffect(() => {
-    if (!data?.regions?.length) return;
-    const selected = data.regions.find((x: any) => x.code === region);
-    if (selected && !country) setCountry(selected.country);
-  }, [data, region, country]);
-
   function changeCountry(nextCountry: string) {
     setCountry(nextCountry);
     const nextRegion = (data?.regions || []).find((x: any) =>
@@ -280,6 +362,10 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
     );
     setRegion(nextRegion?.code || '');
     if (nextRegion?.defaultFee != null) setFee(Number(nextRegion.defaultFee));
+    if (transferredPanels === undefined) {
+      if (nextRegion?.code === 'JP') setPanels(data.japan.defaultPanels);
+      else if (region === 'JP') setPanels(5000);
+    }
     invalidateCalc();
   }
 
@@ -292,11 +378,11 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
   const pvSolution = useMemo(
     () =>
-      data?.solutions?.find(
+      regionalSolutions?.find(
         (x: any) =>
           x.code === primary
       ),
-    [data]
+    [regionalSolutions]
   );
 
   useEffect(() => {
@@ -409,8 +495,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
       if (!r.ok) {
         setMsg(
-          j.error ||
-            'Calculation failed'
+          localized ? 'Calculation failed' : j.error || 'Calculation failed'
         );
         return;
       }
@@ -488,12 +573,11 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
       setMsg(
         r.ok
           ? j.emailStatus === 'accepted'
-            ? `Business case saved: ${j.calculationId}. Email submitted for delivery; please check your inbox and spam folder.`
+            ? chinese ? `試算已儲存（編號：${j.calculationId}）。請查閱信箱與垃圾郵件。` : japanese ? `試算結果を保存しました（受付番号：${j.calculationId}）。メールの受信箱と迷惑メールフォルダーをご確認ください。` : `Business case saved: ${j.calculationId}. Email submitted for delivery; please check your inbox and spam folder.`
             : j.emailStatus === 'failed'
-              ? `Business case saved: ${j.calculationId}, but email could not be sent. Please contact us with this reference.`
-              : `Business case saved: ${j.calculationId}. Automatic email is not configured yet; please contact us with this reference.`
-          : j.error ||
-              'Save failed'
+              ? chinese ? `試算已儲存，但郵件未送出。聯絡時請提供編號 ${j.calculationId}。` : japanese ? `試算結果を保存しましたが、メールを送信できませんでした。受付番号 ${j.calculationId} を添えてお問い合わせください。` : `Business case saved: ${j.calculationId}, but email could not be sent. Please contact us with this reference.`
+              : chinese ? `試算已儲存。自動郵件尚未設定，聯絡時請提供編號 ${j.calculationId}。` : japanese ? `試算結果を保存しました。自動メールは未設定です。受付番号 ${j.calculationId} を添えてお問い合わせください。` : `Business case saved: ${j.calculationId}. Automatic email is not configured yet; please contact us with this reference.`
+          : localized ? 'Save failed' : j.error || 'Save failed'
       );
     } catch {
       setMsg(
@@ -559,6 +643,8 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
       ?.ebitdaAdvantage ??
     (pvResult?.annualEbitda || 0) -
       (compareResult?.annualEbitda || 0);
+  const exactEbitdaAdvantage = money(ebitdaAdvantage, currency);
+  const showEbitdaInManYen = japanese && currency === 'JPY' && Math.abs(ebitdaAdvantage) >= 10_000;
 
   const opexReduction =
     result?.comparison
@@ -682,16 +768,37 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
      RENDER
   ======================================================= */
 
+  const selectedSource = region === 'JP' ? data?.japan?.source ?? currentSource : currentSource === data?.japan?.source ? data.source : currentSource;
+  const sourceVersion = selectedSource.match(/^Published master v(\d+)$/)?.[1];
+  const source = chinese
+    ? sourceVersion ? `已發布的主資料 v${sourceVersion}` : selectedSource === 'Built-in fallback' ? '內建基準資料' : selectedSource === 'Japan Our Solution parameters' ? '日本解決方案參數' : selectedSource
+    : japanese
+    ? sourceVersion ? `公開済みマスターデータ v${sourceVersion}` : selectedSource === 'Built-in fallback' ? '内蔵の基準データ' : selectedSource === 'Japan Our Solution parameters' ? '日本向けソリューションの設定値' : selectedSource
+    : selectedSource;
+  const selectedMarket = (reg && businessCaseMarketForCountry(reg.countryCode))
+    ?? requestedMarket ?? businessCaseMarketForCountry(initialRegion?.split('-')[0] ?? '')
+    ?? (japanese ? 'JP' : 'US');
+  const languageQuery = `?market=${selectedMarket}${reg ? `&region=${encodeURIComponent(region)}` : ''}`;
+  const marketUnavailable = Boolean(requestedMarket && data && !data.regions?.some(
+    (item: Region) => businessCaseMarketForCountry(item.countryCode) === requestedMarket,
+  ));
+  const lightNavigation = !['overview', 'business-summary', 'follow-up'].includes(activeSection);
+  const methodologyHref = `${localizedPublicPath(locale, '/business-case/methodology/')}?region=${encodeURIComponent(region)}`;
+
   return (
-    <main className="site">
-
-      {/* HEADER */}
-
-      <p className="pageShell" role="status">{currentSource}</p>
+    <div className={`pv-review bc-shell${lightNavigation ? ' pv-light-nav' : ''}`} data-section={activeSection}>
+      <a className="pv-skip" href="#operation">{text('Skip to operating inputs', '運転条件の入力へスキップ', '跳至營運條件')}</a>
+      <PublicHeader locale={locale} solid={lightNavigation} solutionMarket={selectedMarket} marketPath="/business-case/" languagePath="/business-case/" languageQuery={languageQuery} assistantTechnologyAnchor="#solution" />
+      <nav className="pv-dots" aria-label={text('Business Case sections', '事業収支シミュレーターのセクション', '營運試算章節')}>
+        {sections.filter(([id]) => result || ['overview', 'operation', 'follow-up'].includes(id)).map(([id, en, ja]) => (
+          <a key={id} href={`#${id}`} aria-current={activeSection === id ? 'step' : undefined}><i /><span>{chinese ? sectionsZh[id] : japanese ? ja : en}</span></a>
+        ))}
+      </nav>
+      <main className="site">
 
       {/* HERO */}
 
-      <section className="hero">
+      <section id="overview" className="hero">
 
         <video
           className="heroVideo"
@@ -709,18 +816,17 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
         <div className="pageShell heroContent">
 
           <p className="eyebrow">
-            PV CIRCULATOR® / BUSINESS CASE
+            {t("PV CIRCULATOR® / BUSINESS CASE")}
           </p>
 
           <h1>
-            What if you treat PV
+            {text('What if you treat PV', '太陽光パネルを', '自行回收太陽能板，')}
             <br />
-            in-house?
+            {text('in-house?', '自社で処理したら？', '營運成本是多少？')}
           </h1>
 
           <p className="heroLede">
-            Enter your monthly panel volume. In 60 seconds, see your annual EBITDA,
-            payback period and the value you’re leaving in conventional recycling.
+            {t("Enter your monthly panel volume. In 60 seconds, see your annual EBITDA, payback period and the value you’re leaving in conventional recycling.")}
           </p>
 
         </div>
@@ -729,46 +835,53 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
       {/* YOUR OPERATION */}
 
-      <section className="section operationSection">
+      <section id="operation" className="section operationSection">
         <div className="pageShell">
 
           <div className="sectionIntro">
 
             <p className="sectionEyebrow">
-              YOUR OPERATION
+              {t("YOUR OPERATION")}
             </p>
 
             <h2>
-              Start with your operation.
+              {t("Start with your operation.")}
             </h2>
+            <p className="bc-source" role="status">{source}</p>
+            {marketUnavailable && <p className="bc-source" role="status">{text(
+              'Calculator data for this market is currently unavailable. Choose another country to continue.',
+              'この市場の試算データは現在ご利用いただけません。別の国を選択してください。',
+              '目前無法載入此市場的試算資料。請選擇其他國家繼續。',
+            )}</p>}
 
           </div>
 
           <div className="operationTopRow">
             <label className="field">
-              <span className="fieldLabel">Country</span>
+              <span className="fieldLabel">{t("Country")}</span>
               <select value={country} onChange={(e) => changeCountry(e.target.value)}>
+                {!country && <option value="" disabled>{text("Choose a country", "国を選択", "選擇國家")}</option>}
                 {countries.map((name: string) => (
-                  <option key={name} value={name}>{name}</option>
+                  <option key={name} value={name}>{countryLabel(name, data?.regions?.find((item: Region) => item.country === name)?.countryCode)}</option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span className="fieldLabel">Operating region</span>
-              <select disabled={countryRegions.length === 1 && countryRegions[0].region === country} value={region} onChange={(e) => changeRegion(e.target.value)}>
+              <span className="fieldLabel">{t("Operating region")}</span>
+              <select disabled={!country || countryRegions.length === 1 && countryRegions[0].region === country} value={region} onChange={(e) => changeRegion(e.target.value)}>
                 {countryRegions.map((x: any) => (
-                  <option key={x.code} value={x.code}>{x.region}</option>
+                  <option key={x.code} value={x.code}>{localized ? (chinese ? regionsZh : regionsJa)[x.code] ?? (x.region === x.country ? countryLabel(x.country, x.countryCode) : x.region) : x.region}</option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span className="fieldLabel">Panels / month</span>
+              <span className="fieldLabel">{t("Panels / month")}</span>
               <input
                 type="number"
                 min="0"
-                step="1000"
+                step={transferredPanels !== undefined ? '1' : region === 'JP' ? '0.01' : '1000'}
                 value={panels}
-                aria-label="Panels per month"
+                aria-label={t("Panels per month")}
                 onChange={(e) => {
                   const next = e.target.valueAsNumber;
                   if (Number.isFinite(next)) {
@@ -782,24 +895,24 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
           <div className="operationBottomRow">
             <label className="field">
-              <span className="fieldLabel">Processing / tipping fee
+              <span className="fieldLabel">{t("Processing / tipping fee")}
                 {reg?.feeUnit && <small>{reg.feeUnit}</small>}
               </span>
               <input type="number" min="0" step="any" value={fee}
                 onChange={(e) => { setFee(Number(e.target.value)); invalidateCalc(); }} />
             </label>
             <label className="field">
-              <span className="fieldLabel">Compare PV Circulator with</span>
+              <span className="fieldLabel">{t("Compare PV Circulator with")}</span>
               <select value={compare} onChange={(e) => { setCompare(e.target.value); invalidateCalc(); }}>
-                {data?.solutions?.filter((x: any) =>
+                {regionalSolutions?.filter((x: any) =>
                   x.code !== 'PVCIRCULATOR' && x.active !== false
                 ).map((x: any) => (
                   <option key={x.code} value={x.code}>{solutionLabel(x.code, x.name)}</option>
                 ))}
               </select>
             </label>
-            <button className="calculateButton" onClick={calc} disabled={busy || !region}>
-              <span>{busy ? 'CALCULATING…' : 'CALCULATE BUSINESS CASE'}</span>
+            <button className="calculateButton" onClick={calc} disabled={busy || !reg}>
+              <span>{busy ? t("CALCULATING…") : t("CALCULATE BUSINESS CASE")}</span>
               {!busy && <span>→</span>}
             </button>
           </div>
@@ -807,25 +920,25 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
           {/* SCHEDULE */}
 
           <div className="schedule">
-            <p className="scheduleLabel">REQUIRED PROCESSING SCHEDULE</p>
+            <p className="scheduleLabel">{t("REQUIRED PROCESSING SCHEDULE")}</p>
 
             <div className="scheduleMain">
               <strong>
                 {!scheduleReady
-                  ? 'Operating schedule unavailable'
+                  ? t("Operating schedule unavailable")
                   : equipmentCapacityExceeded
-                    ? 'Additional equipment required'
+                    ? t("Additional equipment required")
                     : scheduleExceeded
-                      ? 'Exceeds standard shift capacity'
-                      : 'Within standard shift capacity'}
+                      ? t("Exceeds standard shift capacity")
+                      : t("Within standard shift capacity")}
               </strong>
               {scheduleReady && (
-                <span>{number(requiredHoursPerDay, 1)} processing hours/day</span>
+                <span>{number(requiredHoursPerDay, 1)} {' '}{t("processing hours/day")}</span>
               )}
             </div>
 
             <div className="scheduleTrack" role="progressbar"
-              aria-label="Single-shift capacity utilization"
+              aria-label={t("Single-shift capacity utilization")}
               aria-valuenow={scheduleReady ? Math.round(capacityUtilization * 100) : 0}
               aria-valuemin={0} aria-valuemax={100}>
               <div
@@ -836,7 +949,15 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
             <div className="scheduleInsight">
               {scheduleReady ? (
-                <p>
+                chinese ? <p>依所選營運地區，每月運轉 <strong>{number(operatingDays!, 2)} 天</strong>，每條線每小時可處理 <strong>{number(pvCapacity)} 片</strong>。標準班次每日 {number(standardHours!, 1)} 小時。
+                  每月處理 {number(panels)} 片時，每日需要 {number(requiredHoursPerDay, 1)} 小時。{equipmentCapacityExceeded ? '超過單條線每日 24 小時上限，需增加設備。' : scheduleExceeded ? '請延長運轉時間或增加班次。' : '可於標準班次內完成。'}
+                </p> : japanese ? <p>
+                  選択した国の稼働日数は月間 <strong>{number(operatingDays!, 2)} 日</strong>、1ラインの処理能力は <strong>毎時 {number(pvCapacity)} 枚</strong> です。標準シフトは1日 {number(standardHours!, 1)} 時間です。
+                  月間 {number(panels)} 枚の処理には、1日 {number(requiredHoursPerDay, 1)} 時間が必要です。
+                  {equipmentCapacityExceeded
+                    ? '1日の上限である24時間を超えるため、設備を追加する必要があります。'
+                    : scheduleExceeded ? '稼働時間を延ばすか、シフトを追加してください。' : '標準シフト内で処理できます。'}
+                </p> : <p>
                   Based on <strong>{number(operatingDays!, 2)} operating days/month</strong> in the selected country
                   and <strong>{number(pvCapacity)} panels/hour</strong> per line.
                   {' '}A standard shift is {number(standardHours!, 1)} hours/day.
@@ -847,7 +968,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                       : `At ${number(panels)} panels/month, ${number(requiredHoursPerDay, 1)} hours/day are required, within the standard shift.`}
                 </p>
               ) : (
-                <p>Operating days or hours are missing from the selected country's SharePoint OPEX parameters. Verify OPERATING_DAYS_MONTH and OPERATING_HOURS_DAY.</p>
+                <p>{t("Operating days or hours are missing from the selected country's SharePoint OPEX parameters. Verify OPERATING_DAYS_MONTH and OPERATING_HOURS_DAY.")}</p>
               )}
             </div>
           </div>
@@ -873,30 +994,27 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                 <div className="businessIntro">
 
                   <p className="sectionEyebrow">
-                    BUSINESS CASE
+                    {t("BUSINESS CASE")}
                   </p>
 
                   <h2>
-                    See where the economics
+                    {text('See where the economics', '試算結果の', '看懂營運收支')}
                     <br />
-                    come from.
+                    {text('come from.', '内訳を確認する。', '如何計算。')}
                   </h2>
 
                   <p className="sectionDescription">
-                    Annualized results using
-                    the same panel volume and
-                    processing fee for both
-                    approaches.
+                    {t("Annualized results using the same panel volume and recycling fee for both approaches.")}
                   </p>
 
                   <a
                     className="methodologyLink"
-                    href="/business-case/methodology/"
+                    href={methodologyHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Read the Business Case calculation methodology (opens in a new tab)"
+                    aria-label={t("Read the Business Case calculation methodology (opens in a new tab)")}
                   >
-                    HOW WE CALCULATE THE BUSINESS CASE <span aria-hidden="true">↗</span>
+                    {t("HOW WE CALCULATE THE BUSINESS CASE")}{' '} <span aria-hidden="true">↗</span>
                   </a>
 
                 </div>
@@ -909,7 +1027,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                       <tr>
 
                         <th>
-                          Annual Business Case
+                          {t("Annual Business Case")}
                         </th>
 
                         <th>
@@ -921,7 +1039,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                         </th>
 
                         <th>
-                          PV Advantage
+                          {t("PV Advantage")}
                         </th>
 
                       </tr>
@@ -931,7 +1049,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <tr>
                         <td>
-                          Processing revenue
+                          {t("Processing revenue")}
                         </td>
 
                         <td>
@@ -975,7 +1093,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                                 : '+'}
                             </span>
 
-                            Material revenue
+                            {t("Material revenue")}
                           </button>
                         </td>
 
@@ -1052,7 +1170,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                                 key={String(code)}
                               >
                                 <td className="materialDetailName">
-                                  {label}
+                                  {localizedLabel(String(code), label)}
                                 </td>
 
                                 <td>
@@ -1092,7 +1210,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <tr className="strongRow">
                         <td>
-                          Total revenue
+                          {t("Total revenue")}
                         </td>
 
                         <td>
@@ -1141,7 +1259,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                                 : '+'}
                             </span>
 
-                            OPEX
+                            {t("OPEX")}
                           </button>
                         </td>
 
@@ -1220,7 +1338,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                                 key={String(code)}
                               >
                                 <td className="opexDetailName">
-                                  {label}
+                                  {localizedLabel(String(code), label)}
                                 </td>
 
                                 <td className="negative">
@@ -1262,8 +1380,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <tr className="ebitdaRow">
                         <td>
-                          EBITDA / annual
-                          contribution
+                          {t("EBITDA / annual contribution")}
                         </td>
 
                         <td>
@@ -1303,24 +1420,28 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
             </section>
 
             {/* BUSINESS CASE SUMMARY — STANDALONE SECTION */}
-            <section className="section businessSummarySection">
+            <section id="business-summary" className="section businessSummarySection">
               <div className="pageShell">
                 <div className="decisionSummary">
-                  <p className="sectionEyebrow light">BUSINESS CASE SUMMARY</p>
+                  <p className="sectionEyebrow light">{t("BUSINESS CASE SUMMARY")}</p>
                   <h2>
-                    {money(pvResult.annualEbitda, currency)} in annual EBITDA.
+                    {chinese ? `年度 EBITDA：${money(pvResult.annualEbitda, currency)}` : japanese ? `年間 EBITDA：${money(pvResult.annualEbitda, currency)}` : `${money(pvResult.annualEbitda, currency)} in annual EBITDA.`}
                     <br />
-                    See what your recycling operation could achieve.
+                    {t("See what your recycling operation could achieve.")}
                   </h2>
-                  <p className="summaryLead">
+                  <p className="summaryLead">{chinese ? <>
+                    每月處理 {number(panels)} 片時，PV Circulator 與{solutionLabel(compareResult.code, compareResult.name)}的<strong>年度 EBITDA 差額為 {money(ebitdaAdvantage, currency)}</strong>。
+                  </> : japanese ? <>
+                    月間 {number(panels)} 枚を処理した場合、{solutionLabel(compareResult.code, compareResult.name)}に対する PV Circulator の<strong>年間 EBITDA 差額は {money(ebitdaAdvantage, currency)}</strong>です。
+                  </> : <>
                     At {number(panels)} panels/month, PV Circulator delivers an estimated{' '}
                     <strong>{money(ebitdaAdvantage, currency)} more annual EBITDA</strong>{' '}
                     than {solutionLabel(compareResult.code, compareResult.name)}—turning cleaner recovery into stronger economics.
-                  </p>
+                  </>}</p>
                   {pvResult.simplePaybackYears > 0 && (
                     <p className="summaryPayback">
-                      Estimated standalone simple payback:{' '}
-                      <strong>{number(pvResult.simplePaybackYears, 1)} years</strong>.
+                      {t("Estimated standalone simple payback:")}{' '}
+                      <strong>{number(pvResult.simplePaybackYears, 1)}{localized ? ' 年' : ' years'}</strong>{localized ? '。' : '.'}
                     </p>
                   )}
                 </div>
@@ -1329,24 +1450,21 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
             {/* COMPARISON */}
 
-            <section className="section comparisonSection">
+            <section id="comparison" className="section comparisonSection">
               <div className="pageShell">
 
                 <div className="comparisonIntro">
 
                   <p className="sectionEyebrow light">
-                    COMPARISON
+                    {t("COMPARISON")}
                   </p>
 
                   <h2>
-                    PV Circulator vs.{' '}{solutionLabel(compareResult.code, compareResult.name)}.
+                    {text('PV Circulator vs. ', 'PV Circulator と', 'PV Circulator 與')}{solutionLabel(compareResult.code, compareResult.name)}{text('.', 'の比較', '的比較')}
                   </h2>
 
                   <p className="sectionDescription lightText">
-                    Compare annual economics,
-                    operating cost and recovered
-                    material value on the same
-                    processing basis.
+                    {t("Compare annual economics, operating cost and recovered material value on the same processing basis.")}
                   </p>
 
                 </div>
@@ -1355,24 +1473,21 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                   <div className="comparisonKpi">
                     <span>
-                      Annual EBITDA Advantage
+                      {t("Annual EBITDA Advantage")}
                     </span>
 
                     <strong>
-                      {money(
-                        ebitdaAdvantage,
-                        currency
-                      )}
+                      {showEbitdaInManYen ? `約 ${number(ebitdaAdvantage / 10_000)}万円` : exactEbitdaAdvantage}
                     </strong>
 
                     <small>
-                      additional annual EBITDA
+                      {showEbitdaInManYen ? `円単位：${exactEbitdaAdvantage}` : t("additional annual EBITDA")}
                     </small>
                   </div>
 
                   <div className="comparisonKpi">
                     <span>
-                      Operating Cost Reduction
+                      {t("Operating Cost Reduction")}
                     </span>
 
                     <strong>
@@ -1385,13 +1500,13 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     </strong>
 
                     <small>
-                      vs. {solutionLabel(compareResult.code, compareResult.name)}
+                      {t("vs.")}{' '} {solutionLabel(compareResult.code, compareResult.name)}
                     </small>
                   </div>
 
                   <div className="comparisonKpi">
                     <span>
-                      Additional Material Value
+                      {t("Additional Material Value")}
                     </span>
 
                     <strong>
@@ -1402,13 +1517,13 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     </strong>
 
                     <small>
-                      per processed panel
+                      {t("per processed panel")}
                     </small>
                   </div>
 
                   <div className="comparisonKpi">
                     <span>
-                      Residual Reduction
+                      {t("Residual Reduction")}
                     </span>
 
                     <strong>
@@ -1421,7 +1536,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     </strong>
 
                     <small>
-                      requiring secondary treatment
+                      {t("requiring secondary treatment")}
                     </small>
                   </div>
 
@@ -1440,9 +1555,9 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                       </p>
 
                       <h3>
-                        Layer-by-layer separation.
+                      {text('Layer-by-layer separation.', '層ごとに分離する。', '逐層分離。')}
                         <br />
-                        Preserve more value.
+                      {text('Preserve more value.', '回収価値を高める。', '保留更多材料價值。')}
                       </h3>
 
                     </div>
@@ -1451,7 +1566,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <div>
                         <span>
-                          Material recovery rate
+                          {t("Material recovery rate")}
                         </span>
 
                         <strong>
@@ -1468,7 +1583,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <div>
                         <span>
-                          Residual / mixed fraction
+                          {t("Residual / mixed fraction")}
                         </span>
 
                         <strong>
@@ -1476,13 +1591,13 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                             pvResult.residualMetricTons,
                             1
                           )}{' '}
-                          t / yr
+                          {t("t / yr")}
                         </strong>
                       </div>
 
                       <div>
                         <span>
-                          OPEX / panel
+                          {t("OPEX / panel")}
                         </span>
 
                         <strong>
@@ -1495,7 +1610,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <div>
                         <span>
-                          Annual EBITDA
+                          {t("Annual EBITDA")}
                         </span>
 
                         <strong>
@@ -1521,9 +1636,9 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                       </p>
 
                       <h3>
-                        Compare the same volume.
+                      {text('Compare the same volume.', '同じ処理枚数で、', '以相同的處理量，')}
                         <br />
-                        See the economic difference.
+                      {text('See the economic difference.', '収支の違いを確認する。', '比較營運收支。')}
                       </h3>
 
                     </div>
@@ -1532,7 +1647,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <div>
                         <span>
-                          Material recovery rate
+                          {t("Material recovery rate")}
                         </span>
 
                         <strong>
@@ -1549,7 +1664,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <div>
                         <span>
-                          Residual / mixed fraction
+                          {t("Residual / mixed fraction")}
                         </span>
 
                         <strong>
@@ -1557,13 +1672,13 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                             compareResult.residualMetricTons,
                             1
                           )}{' '}
-                          t / yr
+                          {t("t / yr")}
                         </strong>
                       </div>
 
                       <div>
                         <span>
-                          OPEX / panel
+                          {t("OPEX / panel")}
                         </span>
 
                         <strong>
@@ -1576,7 +1691,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
                       <div>
                         <span>
-                          Annual EBITDA
+                          {t("Annual EBITDA")}
                         </span>
 
                         <strong>
@@ -1599,88 +1714,74 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
             {/* BEYOND PROCESSING */}
 
-            <section className="section beyondSection">
+            <section id="support" className="section beyondSection">
               <div className="pageShell">
 
                 <div className="sectionIntro">
-                  <p className="sectionEyebrow">BEYOND PROCESSING</p>
-                  <h2>More than recycling equipment.<br />Build a business that works.</h2>
+                  <p className="sectionEyebrow">{t("BEYOND PROCESSING")}</p>
+                  <h2>{text('More than recycling equipment.', 'リサイクル設備の導入から、', '從導入回收設備，')}<br />{text('Build a business that works.', '採算の取れる事業づくりまで。', '到建立可獲利的營運模式。')}</h2>
                   <p className="sectionDescription">
-                    From feedstock development and flexible deployment to material offtake,
-                    upcycling and traceability, PV Circonomy helps recyclers build
-                    an economically viable PV recycling business.
+                    {t("From feedstock development and flexible deployment to material offtake, upcycling and traceability, PV Circonomy helps recyclers build an economically viable PV recycling business.")}
                   </p>
                 </div>
 
                 <div className="beyondGrid">
                   <article>
-                    <span>FEEDSTOCK</span>
-                    <h3>Secure your feedstock.</h3>
+                    <span>{t("FEEDSTOCK")}</span>
+                    <h3>{t("Secure your feedstock.")}</h3>
                     <p>
-                      Access PV recycling opportunities through PV Circonomy&apos;s industry
-                      network and strategic partnerships to support a reliable
-                      processing pipeline.
+                      {t("Access PV recycling opportunities through PV Circonomy's industry network and strategic partnerships to support a reliable processing pipeline.")}
                     </p>
                   </article>
 
                   <article>
-                    <span>DEPLOYABILITY</span>
-                    <h3>Deploy where it matters.</h3>
+                    <span>{t("DEPLOYABILITY")}</span>
+                    <h3>{t("Deploy where it matters.")}</h3>
                     <p>
-                      Modular systems support on-site and near-site recycling,
-                      reducing transport costs.
+                      {t("Modular systems support on-site and near-site recycling, reducing transport costs.")}
                     </p>
                   </article>
 
                   <article>
-                    <span>MATERIAL VALUE</span>
-                    <h3>Recover more. Earn more.</h3>
+                    <span>{t("MATERIAL VALUE")}</span>
+                    <h3>{t("Recover more. Earn more.")}</h3>
                     <p>
-                      Preserve material quality through layer-by-layer separation,
-                      enabling higher recovery rates and greater revenue potential
-                      from recovered materials.
+                      {t("Preserve material quality through layer-by-layer separation, enabling higher recovery rates and greater revenue potential from recovered materials.")}
                     </p>
                   </article>
 
                   <article>
-                    <span>OFFTAKE</span>
-                    <h3>Move recovered materials.</h3>
+                    <span>{t("OFFTAKE")}</span>
+                    <h3>{t("Move recovered materials.")}</h3>
                     <p>
-                      Downstream support helps create practical outlets for
-                      recovered material streams.
+                      {t("Downstream support helps create practical outlets for recovered material streams.")}
                     </p>
                   </article>
 
                   <article>
-                    <span>MATERIAL UPCYCLING</span>
-                    <h3>From materials to products.</h3>
+                    <span>{t("MATERIAL UPCYCLING")}</span>
+                    <h3>{t("From materials to products.")}</h3>
                     <p>
-                      Unlock new revenue opportunities with PV Circonomy&apos;s material
-                      upcycling solutions—transforming recovered resources
-                      into marketable, value-added products.
+                      {t("Unlock new revenue opportunities with PV Circonomy's material upcycling solutions—transforming recovered resources into marketable, value-added products.")}
                     </p>
                   </article>
 
                   <article>
-                    <span>TRACEABILITY</span>
-                    <h3>Make your value measurable.</h3>
+                    <span>{t("TRACEABILITY")}</span>
+                    <h3>{t("Make your value measurable.")}</h3>
                     <p>
-                      Digital traceability documents material recovery,
-                      supports lifecycle reporting, and helps demonstrate
-                      the environmental value of your recycling operation.
+                      {t("Digital traceability documents material recovery, supports lifecycle reporting, and helps demonstrate the environmental value of your recycling operation.")}
                     </p>
                   </article>
                 </div>
 
                 <div className="operationSupport">
                   <div>
-                    <span>FROM EQUIPMENT TO BUSINESS</span>
-                    <h3>Your recycling business.<br />Our expertise behind it.</h3>
+                    <span>{t("FROM EQUIPMENT TO BUSINESS")}</span>
+                    <h3>{text('Your recycling business.', 'リサイクル事業を、', '推進您的回收業務。')}<br />{text('Our expertise behind it.', '専門知識で支援します。', '我們提供專業支援。')}</h3>
                   </div>
                   <p>
-                    From equipment deployment and operator training to feedstock
-                    development, material offtake, upcycling, and traceability,
-                    PV Circonomy helps you build an economically viable PV recycling operation.
+                    {t("From equipment deployment and operator training to feedstock development, material offtake, upcycling, and traceability, PV Circonomy helps you build an economically viable PV recycling operation.")}
                   </p>
                 </div>
               </div>
@@ -1688,24 +1789,21 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
 
             {/* SOLUTION */}
 
-            <section className="section solutionSection">
+            <section id="solution" className="section solutionSection">
               <div className="pageShell">
 
                 <div className="sectionIntro">
 
                   <p className="sectionEyebrow">
-                    SOLUTION
+                    {t("SOLUTION")}
                   </p>
 
                   <h2>
-                    Explore the PV Circulator®
-                    solution.
+                    {t("Explore the PV Circulator® solution.")}
                   </h2>
 
                   <p className="sectionDescription">
-                    Review the full PV Circulator
-                    solution, system configuration
-                    and lifecycle support.
+                    {t("Review the full PV Circulator solution, system configuration and lifecycle support.")}
                   </p>
 
                 </div>
@@ -1718,7 +1816,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    OPEN FULL-SCREEN BROCHURE
+                    {t("OPEN FULL-SCREEN BROCHURE")}
                     <span>→</span>
                   </a>
 
@@ -1727,7 +1825,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     href="/2026_PV_Circulator_Solution_Brochure.pdf"
                     download
                   >
-                    SAVE PDF
+                    {t("SAVE PDF")}
                   </a>
 
                 </div>
@@ -1735,7 +1833,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                 <div className="brochureFrame">
                   <iframe
                     src="/2026_PV_Circulator_Solution_Brochure.pdf"
-                    title="2026 PV Circulator Solution Brochure"
+                    title={t("2026 PV Circulator Solution Brochure")}
                   />
                 </div>
 
@@ -1753,19 +1851,15 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                 <div className="followIntro">
 
                   <p className="sectionEyebrow light">
-                    FOLLOW UP
+                    {t("FOLLOW UP")}
                   </p>
 
                   <h2>
-                    Take the next step.
+                    {t("Take the next step.")}
                   </h2>
 
                   <p>
-                    Receive your business case
-                    and brochure, or connect with
-                    our team to discuss equipment,
-                    recycling services or your
-                    project.
+                    {t("Receive your business case and brochure, or connect with our team to discuss equipment, recycling services or your project.")}
                   </p>
 
                 </div>
@@ -1778,17 +1872,17 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                   <div className="followGrid">
 
                     <label>
-                      <span>Name</span>
+                      <span>{t("Name")}</span>
                       <input
                         name="name"
-                        placeholder="Your name"
+                        placeholder={t("Your name")}
                         required
                       />
                     </label>
 
                     <label>
                       <span>
-                        Business email
+                        {t("Business email")}
                       </span>
                       <input
                         name="email"
@@ -1799,20 +1893,20 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                     </label>
 
                     <label>
-                      <span>Company</span>
+                      <span>{t("Company")}</span>
                       <input
                         name="company"
-                        placeholder="Company"
+                        placeholder={t("Company")}
                       />
                     </label>
 
                     <label>
                       <span>
-                        Country / region
+                        {t("Country / region")}
                       </span>
                       <input
                         name="country"
-                        placeholder="Country / region"
+                        placeholder={t("Country / region")}
                       />
                     </label>
 
@@ -1821,7 +1915,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                   <label className="followFull">
 
                     <span>
-                      What would you like to explore?
+                      {t("What would you like to explore?")}
                     </span>
 
                     <select
@@ -1829,46 +1923,39 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
                       defaultValue="Email Summary"
                     >
                       <option value="Email Summary">
-                        Receive My Business Case
+                        {t("Receive My Business Case")}
                       </option>
 
                       <option value="Download PDF">
-                        Receive Business Case + Brochure
+                        {t("Receive Business Case + Brochure")}
                       </option>
 
                       <option value="Request Meeting">
-                        Schedule a Meeting
+                        {t("Schedule a Meeting")}
                       </option>
 
                       <option value="Request Quote">
-                        Request a Quotation
+                        {t("Request a Quotation")}
                       </option>
 
                       <option value="Purchase Interest">
-                        Discuss Purchase
+                        {t("Discuss Purchase")}
                       </option>
                     </select>
 
                   </label>
 
                   <p className="formDisclaimer">
-                    By submitting, you agree that
-                    PV Circonomy may use the information
-                    provided to send this
-                    business-case result and follow
-                    up regarding PV recycling
-                    solutions. Calculations are
-                    illustrative and are not a
-                    quotation or guarantee.
+                    {t("By submitting, you agree that PV Circonomy may use the information provided to send this business-case result and follow up regarding PV recycling solutions. Calculations are illustrative and are not a quotation or guarantee.")}
                   </p>
 
-                  {!result && <p className="formDisclaimer">Calculate your business case above to enable submission.</p>}
+                  {!result && <p className="formDisclaimer">{t("Calculate your business case above to enable submission.")}</p>}
                   <button
                     className="followSubmit"
                     type="submit"
                     disabled={!result}
                   >
-                    SUBMIT &amp; SEND MY BUSINESS CASE
+                    {t("SUBMIT & SEND MY BUSINESS CASE")}
                     <span>→</span>
                   </button>
 
@@ -1886,7 +1973,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
             setMsg('')
           }
         >
-          {msg}
+          {t(msg)}
         </button>
       )}
 
@@ -1899,7 +1986,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
             <span>PV Circonomy</span>
             <span>PV Circulator®</span>
             <span>
-              Business Case Calculator
+              {t("Business Case Calculator")}
             </span>
           </div>
 
@@ -1910,6 +1997,7 @@ export default function Page({sourceLabel}: {sourceLabel:string}) {
         </div>
       </footer>
 
-    </main>
+      </main>
+    </div>
   );
 }

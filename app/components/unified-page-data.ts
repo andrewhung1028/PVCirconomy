@@ -57,6 +57,7 @@ export const circulatorPage: UnifiedPublicPageProps = {
 
 export const upcyclingPage: UnifiedPublicPageProps = {
   pageLabel: "Material Upcycling",
+  languagePath: "/material-upcycling/",
   hero: {
     title: "Recovered materials.\nReady for what comes next.",
     description: "Preserve cleaner solar material streams, connect them with supporting information and prepare them for the next industrial use.",
@@ -69,6 +70,7 @@ export const upcyclingPage: UnifiedPublicPageProps = {
 
 export const easyCyclePage: UnifiedPublicPageProps = {
   pageLabel: "EasyCycle",
+  languagePath: "/easycycle/",
   hero: {
     title: "Every panel.\nA traceable record.",
     description: "Connect receiving, processing, material recovery and downstream destinations in one recycling passport.",
@@ -77,6 +79,29 @@ export const easyCyclePage: UnifiedPublicPageProps = {
   },
   sections: [],
   footerNote: "EasyCycle · recycling records and material traceability",
+};
+
+export const upcyclingPageJa: UnifiedPublicPageProps = {
+  ...upcyclingPage,
+  locale: "ja-JP",
+  pageLabel: "材料のアップサイクル",
+  hero: {
+    ...upcyclingPage.hero,
+    title: "回収した材料を、\n次の用途へ。",
+    description: "太陽光パネルから材料をきれいに分けて回収し、関連情報とともに、次の産業用途で使えるように整えます。",
+  },
+  footerNote: "回収材料の情報 · ロットごとに確認",
+};
+
+export const easyCyclePageJa: UnifiedPublicPageProps = {
+  ...easyCyclePage,
+  locale: "ja-JP",
+  hero: {
+    ...easyCyclePage.hero,
+    title: "すべてのパネルに、\n追跡できる記録を。",
+    description: "受け入れ、処理、材料の回収からその行き先までを、一つのリサイクルパスポートにまとめます。",
+  },
+  footerNote: "EasyCycle · リサイクル記録と材料のトレーサビリティ",
 };
 
 export const aboutPage: UnifiedPublicPageProps = {

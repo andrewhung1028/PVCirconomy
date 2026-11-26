@@ -11,7 +11,7 @@ import {
   shipmentLabels,
   type QuoteLine,
 } from "./batch-quote";
-import type { PricingSnapshot } from "./pricing-rules";
+import { pricingProfiles, type PricingSnapshot } from "./pricing-rules";
 
 export type QuotationDocumentLike = {
   id: string;
@@ -57,18 +57,21 @@ export function quotationContactFromText(text: string): QuotationContactView | n
 export function quotationLineViews(
   lines: QuoteLine[],
   pricing: PricingSnapshot,
-): { rows: QuotationLineView[]; subtotal: number; pending: number } {
+): { rows: QuotationLineView[]; subtotal: number; pending: number; discount: number; minimumAdjustment: number } {
+  const profile = pricing.profile ?? pricingProfiles.US;
   // Old snapshots predate Residential. Preserve their original line pricing basis,
   // including the historical Trailer-only quantity qualification.
-  const legacy = pricing.transport?.residentialMaxPanels === undefined;
+  const legacy = !pricing.batchPricing && pricing.transport?.residentialMaxPanels === undefined;
   const legacyLimits = {...normalizeTransportLimits(pricing.transport), residentialMaxPanels:0,
     trailerMinimumPanels:pricing.transport ? pricing.transport.trailerMinimumPanels : 1};
   const legacyQuantity = lines.filter(line=>line.scale==='trailer').reduce((n,line)=>n+Number(line.quantity),0);
-  const totals = legacy ? (()=>{const prices=lines.map(line=>lineQuote(line,pricing.rules,legacyLimits,line.scale==='trailer'?legacyQuantity:Number(line.quantity)));return {prices,subtotal:prices.reduce((n,price)=>n+(price.total??0),0),pending:prices.filter(price=>price.total===null).length}})()
-    : batchTotals(lines, pricing.rules, pricing.transport);
+  const totals = legacy ? (()=>{const prices=lines.map(line=>lineQuote(line,pricing.rules,legacyLimits,line.scale==='trailer'?legacyQuantity:Number(line.quantity),profile));return {prices,subtotal:prices.reduce((n,price)=>n+(price.total??0),0),pending:prices.filter(price=>price.total===null).length,discount:0,minimumAdjustment:0}})()
+    : batchTotals(lines, pricing.rules, pricing.transport, profile, pricing.batchPricing);
   return {
     subtotal: totals.subtotal,
     pending: totals.pending,
+    discount: totals.discount,
+    minimumAdjustment: totals.minimumAdjustment,
     rows: lines.map((line, index) => {
       const price = totals.prices[index];
       const model = line.selectedModel;
@@ -93,14 +96,14 @@ export function quotationLineViews(
       const rate =
         price.rate === undefined
           ? "Pending"
-          : `${rateMoney(price.rate)} / ${price.unit === "lb" ? "lb" : "panel"}`;
+          : `${rateMoney(price.rate,profile)} / ${price.unit === "panel" ? "panel" : profile.weightUnit}`;
       return {
         item: index + 1,
         description,
         specifications,
         quantity: Number(line.quantity),
         rate,
-        amount: price.total === null ? "Pending review" : money(price.total),
+        amount: price.total === null ? "Pending review" : money(price.total,profile),
         pending: price.total === null,
       };
     }),

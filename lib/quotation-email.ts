@@ -6,7 +6,7 @@ import {
   type QuotationContactView,
   type QuotationDocumentLike,
 } from "./quotation-document";
-import type { PricingSnapshot } from "./pricing-rules";
+import { pricingProfiles, type PricingSnapshot } from "./pricing-rules";
 
 type Charge = { label: string; amount: number | null };
 type FreightBreakdown = {
@@ -56,6 +56,8 @@ const td = (value: unknown, style = "") =>
 
 export function quotationEmail(input: Input) {
   const { document, lines, pricing, processingTotal, order, pickup } = input;
+  const profile=pricing.profile??pricingProfiles.US;
+  const currency=(value:number|null|undefined)=>value===null||value===undefined?'Pending review':new Intl.NumberFormat(profile.locale,{style:'currency',currency:profile.currency,maximumFractionDigits:profile.currency==='JPY'?0:2}).format(value);
   const data = quotationLineViews(lines, pricing);
   const contact = order?.contact ?? quotationContactFromText(document.text) ?? {
     name: "Customer",
@@ -78,6 +80,8 @@ export function quotationEmail(input: Input) {
   </tr></table>`;
 
   const totals = `<table role="presentation" align="right" cellspacing="0" cellpadding="0" style="width:330px;max-width:100%;margin:18px 0 28px auto;border-collapse:collapse;">
+    ${data.discount > 0 ? `<tr><td>Batch quantity discount</td><td style="text-align:right;">−${currency(data.discount)}</td></tr>` : ""}
+    ${data.minimumAdjustment > 0 ? `<tr><td>Minimum processing fee adjustment</td><td style="text-align:right;">${currency(data.minimumAdjustment)}</td></tr>` : ""}
     ${data.pending ? `<tr><td style="padding:8px 0;color:#555b5e;">Priced items subtotal</td><td style="padding:8px 0;text-align:right;">${currency(data.subtotal)}</td></tr>` : ""}
     <tr><td style="padding:12px 0;border-top:2px solid #151719;font-weight:700;">${data.pending ? "Processing total" : "Total processing charges"}</td><td style="padding:12px 0;border-top:2px solid #151719;text-align:right;font-size:20px;font-weight:700;">${currency(processingTotal)}</td></tr>
   </table>`;
@@ -116,7 +120,7 @@ export function quotationEmail(input: Input) {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>@media(max-width:620px){.pv-shell{padding:18px!important}.pv-meta td{display:block!important;width:100%!important;padding:4px 0!important}.pv-items{font-size:11px!important}.pv-items th,.pv-items td{padding:8px 5px!important}.pv-item-index{display:none!important}}</style></head><body style="margin:0;background:#f1f2ef;color:#151719;font-family:Arial,Helvetica,sans-serif;line-height:1.5;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:24px 10px;"><table class="pv-shell" role="presentation" width="760" cellspacing="0" cellpadding="0" style="width:100%;max-width:760px;background:#fff;padding:34px;">
       <tr><td><table role="presentation" width="100%"><tr><td style="vertical-align:top;"><strong style="font-size:22px;">PV Circonomy</strong><span style="display:block;width:44px;height:3px;margin-top:9px;background:#f4c526;"></span></td><td align="right" style="vertical-align:top;"><strong style="display:block;font-size:20px;">${escapeHtml(kind)}</strong><span style="color:#555b5e;">${escapeHtml(reference)}</span></td></tr></table></td></tr>
-      <tr><td><table class="pv-meta" role="presentation" width="100%" style="margin-top:26px;color:#555b5e;font-size:12px;"><tr><td style="width:33%;">Issued<br><strong style="color:#151719;">${escapeHtml(formatDocumentDate(document.issued))}</strong></td><td style="width:33%;">Valid until<br><strong style="color:#151719;">${escapeHtml(formatDocumentDate(document.expires))}</strong></td><td style="width:34%;">Currency<br><strong style="color:#151719;">USD</strong></td></tr></table></td></tr>
+      <tr><td><table class="pv-meta" role="presentation" width="100%" style="margin-top:26px;color:#555b5e;font-size:12px;"><tr><td style="width:33%;">Issued<br><strong style="color:#151719;">${escapeHtml(formatDocumentDate(document.issued))}</strong></td><td style="width:33%;">Valid until<br><strong style="color:#151719;">${escapeHtml(formatDocumentDate(document.expires))}</strong></td><td style="width:34%;">Currency<br><strong style="color:#151719;">${profile.currency}</strong></td></tr></table></td></tr>
       <tr><td>${customer}${orderSummary}<table class="pv-items" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:13px;"><thead><tr style="background:#151719;color:#fff;"><th class="pv-item-index" align="left" style="padding:10px;">#</th><th align="left" style="padding:10px;">Description</th><th align="right" style="padding:10px;">Qty</th><th align="right" style="padding:10px;">Rate</th><th align="right" style="padding:10px;">Amount</th></tr></thead><tbody>${itemRows}</tbody></table>${totals}${bookings}${transport}
       <div style="clear:both;margin-top:32px;padding-top:18px;border-top:1px solid #d8d9d7;color:#555b5e;font-size:12px;"><strong style="color:#151719;">Terms</strong><p style="margin:7px 0;">Processing charges only. Transportation and applicable taxes are separate unless shown above. Final charges are subject to receiving verification of panel model, quantity and condition.</p><p style="margin:7px 0;">${order ? "This order request remains subject to company confirmation." : "This quotation is valid for seven days and does not reserve receiving capacity or confirm acceptance."}</p></div>
       </td></tr></table></td></tr></table></body></html>`;

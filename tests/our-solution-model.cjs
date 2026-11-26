@@ -20,7 +20,13 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
  assert.deepEqual(await parse(await exportBook(parsed),parsed),parsed,'current admin export includes required Assumptions section 12');
  assert.deepEqual(await parse(await exportBook(parsed,false,require('../server/metal-prices/service.ts').workbookPrices(parsed))),parsed,'DB-unavailable API export → parse lossless');
  assert.deepEqual(await parse(await exportBook(parsed,true)),parsed,'template is a complete parameter master');
- assert.deepEqual(await parse(await exportBook(japanSeed),japanSeed),japanSeed,'Japan parameter export → parse is lossless and preserves Japan metadata');
+ const japanWorkbook=await exportBook(japanSeed),japanParsed=await parse(japanWorkbook,japanSeed);
+ assert.deepEqual(japanParsed,japanSeed,'Japan parameter export → parse is lossless and preserves Japan metadata');
+ assert.equal(japanParsed.scenario.panel_weight_kg,20);assert.equal(japanParsed.scenario.panel_weight_lb,undefined);
+ assert.deepEqual([japanParsed.meta.currency,japanParsed.meta.locale,japanParsed.meta.localPerUSD],['JPY','ja-JP',158.01]);
+ assert.equal(japanParsed.assumptions[1]['Base rent'][1],'JPY/sq.m./month');
+ assert.equal(japanParsed.assumptions[1]['Landfill cost'][1],'JPY/metric ton');
+ assert.equal(japanParsed.assumptions[11]['Recovery fee'][1],'JPY/kg');
  assert.equal(model(japanSeed).annualPanels,50_000_000/300,'Japan seed models 50 MW/year at 300 W/panel');
  assert.deepEqual(diff(parsed,seed),[]);assert.equal(effectiveParameters({solutions:[]}),seed);
  const edit=async(fn)=>{const w=new ExcelJS.Workbook;await w.xlsx.load(fixture);fn(w);return parse(Buffer.from(await w.xlsx.writeBuffer()));};

@@ -4,12 +4,22 @@ function compile(source,target){const out=path.join(dir,target);fs.mkdirSync(pat
 // Resolve installed dependencies from this repository, even though compiled files are isolated.
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{try{
- for(const f of ['units','types','fallback','input','supported-countries','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
+ for(const f of ['units','types','fallback','input','supported-countries','market','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
  for(const f of ['business-case-pdf','report-time','solution-labels'])compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');
+ compile('lib/region-format.ts','lib/region-format.js');
  compile('server/business-case/workbook.ts','server/business-case/workbook.js');compile('server/auth/roles.ts','server/auth/roles.js');
  const {seed,parseWorkbook,exportWorkbook,diffData,validateData,sheets}=require(path.join(dir,'server/business-case/workbook.js'));
  const {calculateBusinessCase:calc}=require(path.join(dir,'lib/business-case/calculator/engine.js')),{fallback}=require(path.join(dir,'lib/business-case/fallback.js'));
  const v2=await parseWorkbook(fs.readFileSync('tests/fixtures/business-case-master-v2.xlsx'));
+ const {initialBusinessCaseRegion,businessCaseMarketForCountry}=require(path.join(dir,'lib/business-case/market.js'));
+ for(const market of ['US','AU','CA','UK','EU']){
+  const region=initialBusinessCaseRegion(v2.regions,market);
+  assert.equal(businessCaseMarketForCountry(region.countryCode),market);
+ }
+ assert.equal(initialBusinessCaseRegion(v2.regions,'EU','SE').code,'SE');
+ assert.equal(initialBusinessCaseRegion(v2.regions,undefined,'CA-BC').code,'CA-BC');
+ assert.equal(initialBusinessCaseRegion(v2.regions,'UK','US-CA').code,'GB');
+ assert.equal(initialBusinessCaseRegion(v2.regions.filter(region=>region.countryCode==='US'),'CA'),undefined);
  assert.deepEqual([v2.regions.length,v2.opex.length,v2.fx.length,v2.materials.length,v2.recovery.length],[101,264,13,9,27]);
  assert.deepEqual(await parseWorkbook(await exportWorkbook(v2)),v2);assert.deepEqual(diffData(v2,await parseWorkbook(await exportWorkbook(v2))),[]);
  const legacy=structuredClone(seed);for(const r of legacy.regions)delete r.wageUnit;

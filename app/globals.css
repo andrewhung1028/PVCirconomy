@@ -1,11 +1,21 @@
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/Manrope-Variable.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 300 800;
+}
+
 /* Shared design tokens. See docs/css-standards.md. */
 
 :root {
+  --pv-gray: #f5f5f2;
   /* Typeface */
-  --font-sans: Arial, Helvetica, sans-serif;
+  --font-sans: Manrope, sans-serif;
   /* Content widths */
   --container-reading: 1080px;
   --container-wide: 1400px;
+  --pv-right-heading-top: 200px;
+  --pv-landing-title-size: var(--pv-type-display);
   /* Palette — black, white, gray and green */
   --color-accent: #43b900;
   --color-accent-hover: #328c00;
@@ -42,8 +52,8 @@
   --color-ink-soft: #141414;
   --color-negative: #d63a2f;
   --color-success: #178943;
-  --color-surface: #f1f1f1;
-  --color-surface-soft: #f6f6f6;
+  --color-surface: var(--pv-gray);
+  --color-surface-soft: var(--pv-gray);
   --color-warning: #e5b522;
   --color-white: #ffffff;
   /* Type scale */
@@ -145,7 +155,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  font-size: var(--text-16);
+  font-size: var(--pv-type-body);
 }
 
 button, input, select, textarea {
@@ -206,8 +216,8 @@ a {
   border: 1px solid var(--color-white);
   border-radius: 30px;
   color: var(--color-white);
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transition: background var(--duration-fast) ease;
@@ -285,14 +295,14 @@ a {
 .eyebrow, .sectionEyebrow, .scheduleLabel, .fieldLabel, .solutionLabel {
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .hero .eyebrow {
   margin: 0 0 var(--space-30);
   color: rgba(255, 255, 255, 0.65);
-  font-size: var(--text-13);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -302,9 +312,9 @@ a {
   max-width: 940px;
   margin: 0;
   color: var(--color-white);
-  font-size: clamp( 76px, 7.5vw, 118px );
+  font-size: var(--pv-type-display);
   line-height: 0.92;
-  font-weight: 650;
+  font-weight: 800;
   letter-spacing: -0.06em;
 }
 
@@ -312,7 +322,7 @@ a {
   max-width: 650px;
   margin: var(--space-46) 0 0;
   color: rgba( 255, 255, 255, 0.82 );
-  font-size: var(--text-18);
+  font-size: var(--pv-type-group);
   line-height: 1.55;
 }
 
@@ -329,8 +339,8 @@ a {
 
 .sectionEyebrow {
   margin: 0 0 var(--space-26);
-  font-size: var(--text-13);
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -342,9 +352,9 @@ a {
 
 .sectionIntro h2, .businessIntro h2, .comparisonIntro h2, .followIntro h2 {
   margin: 0;
-  font-size: clamp( 48px, 5vw, 76px );
+  font-size: var(--pv-type-section);
   line-height: 0.98;
-  font-weight: 450;
+  font-weight: 800;
   letter-spacing: -0.055em;
 }
 
@@ -352,7 +362,7 @@ a {
   max-width: 780px;
   margin: var(--space-28) 0 0;
   color: var(--color-gray-600);
-  font-size: var(--text-17);
+  font-size: var(--pv-type-body);
   line-height: 1.55;
 }
 
@@ -383,13 +393,13 @@ a {
   gap: var(--space-10);
   margin-bottom: 13px;
   color: var(--color-ink);
-  font-size: var(--text-12);
+  font-size: var(--pv-type-caption);
 }
 
 .fieldLabel small {
   color: var(--color-gray-550);
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -404,7 +414,7 @@ a {
   outline: none;
   background: transparent;
   color: var(--color-ink);
-  font-size: var(--text-21);
+  font-size: var(--pv-type-group);
   appearance: auto;
 }
 
@@ -432,30 +442,30 @@ a {
 
 .scheduleLabel {
   margin: 0 0 var(--space-18);
-  font-size: var(--text-13);
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
   text-transform: uppercase;
 }
 
 .scheduleMain strong {
-  font-size: var(--text-24);
+  font-size: var(--pv-type-subsection);
   line-height: 1.2;
 }
 
 .dataSource {
   margin: var(--space-22) 0 0;
   color: var(--color-gray-450);
-  font-size: var(--text-10);
+  font-size: var(--pv-type-caption);
 }
 
 /* ========================================================= SCHEDULE INSIGHT ========================================================= */
 
 .scheduleInsight strong {
   display: block;
-  font-size: var(--text-18);
-  font-weight: 600;
+  font-size: var(--pv-type-group);
+  font-weight: 800;
 }
 
 /* ========================================================= BUSINESS CASE ========================================================= */
@@ -495,14 +505,14 @@ a {
 
 .businessTable th {
   color: var(--color-gray-600);
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .businessTable td {
-  font-size: var(--text-17);
+  font-size: var(--pv-type-interface);
 }
 
 .businessTable tbody tr:first-child td {
@@ -522,12 +532,12 @@ a {
 
 .tableExpandIcon {
   width: 12px;
-  font-size: var(--text-19);
-  font-weight: 300;
+  font-size: var(--pv-type-group);
+  font-weight: 400;
 }
 
 .strongRow td, .ebitdaRow td {
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .ebitdaRow td {
@@ -540,7 +550,7 @@ a {
   padding-top: var(--space-18);
   padding-bottom: var(--space-18);
   color: var(--color-gray-600);
-  font-size: var(--text-14);
+  font-size: var(--pv-type-interface);
 }
 
 .detailRow td:first-child {
@@ -553,7 +563,7 @@ a {
 
 .positive {
   color: var(--color-success) !important;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .negative {
@@ -568,7 +578,7 @@ a {
 
 .comparisonKpi span {
   color: var(--color-gray-400);
-  font-size: var(--text-13);
+  font-size: var(--pv-type-interface);
 }
 
 /* ========================================================= SOLUTION COMPARISON CARDS ========================================================= */
@@ -604,15 +614,15 @@ a {
 
 .solutionLabel {
   margin: 0 0 var(--space-32);
-  font-size: var(--text-10);
+  font-size: var(--pv-type-caption);
 }
 
 .solutionCard h3 {
   margin: 0;
   max-width: 570px;
-  font-size: clamp( 38px, 3.5vw, 58px );
+  font-size: var(--pv-type-section);
   line-height: 0.98;
-  font-weight: 400;
+  font-weight: 800;
   letter-spacing: -0.05em;
 }
 
@@ -631,11 +641,11 @@ a {
 
 .solutionMetrics span {
   color: var(--color-gray-600);
-  font-size: var(--text-13);
+  font-size: var(--pv-type-interface);
 }
 
 .solutionMetrics strong {
-  font-size: var(--text-15);
+  font-size: var(--pv-type-interface);
   text-align: right;
 }
 
@@ -654,17 +664,17 @@ a {
 .decisionSummary > p:first-child {
   margin: 0 0 var(--space-20);
   color: var(--color-gray-450);
-  font-size: var(--text-10);
-  font-weight: 700;
+  font-size: var(--pv-type-caption);
+  font-weight: 800;
   letter-spacing: 0.14em;
 }
 
 .decisionSummary h3 {
   max-width: 980px;
   margin: 0;
-  font-size: clamp( 36px, 4vw, 58px );
+  font-size: var(--pv-type-section);
   line-height: 1;
-  font-weight: 400;
+  font-weight: 800;
   letter-spacing: -0.045em;
 }
 
@@ -672,21 +682,21 @@ a {
   max-width: 850px;
   margin: var(--space-26) 0 0;
   color: var(--color-gray-350);
-  font-size: var(--text-15);
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
 .operationSupport p {
   margin: 0;
   color: var(--color-gray-350);
-  font-size: var(--text-14);
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
 /* ========================================================= SOLUTION ========================================================= */
 
 .solutionSection {
-  background: var(--color-gray-100);
+  background: var(--pv-gray);
 }
 
 .brochureActions {
@@ -705,15 +715,15 @@ a {
   padding: 0 var(--space-26);
   background: var(--color-ink);
   color: var(--color-white);
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .buttonText {
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -748,7 +758,7 @@ a {
   max-width: 720px;
   margin: var(--space-28) 0 0;
   color: var(--color-gray-400);
-  font-size: var(--text-16);
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
@@ -766,7 +776,7 @@ a {
   display: block;
   margin-bottom: 11px;
   color: var(--color-gray-350);
-  font-size: var(--text-11);
+  font-size: var(--pv-type-caption);
 }
 
 .followForm input, .followForm select {
@@ -778,7 +788,7 @@ a {
   outline: 0;
   background: var(--color-gray-920);
   color: var(--color-white);
-  font-size: var(--text-16);
+  font-size: var(--pv-type-body);
 }
 
 .followFull {
@@ -789,7 +799,7 @@ a {
   max-width: 850px;
   margin: var(--space-28) 0;
   color: var(--color-gray-500);
-  font-size: var(--text-11);
+  font-size: var(--pv-type-caption);
   line-height: 1.55;
 }
 
@@ -802,8 +812,8 @@ a {
   border: 0;
   background: var(--color-white);
   color: var(--color-ink);
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -820,7 +830,7 @@ a {
   border: 0;
   background: var(--color-accent);
   color: var(--color-ink);
-  font-size: var(--text-13);
+  font-size: var(--pv-type-interface);
 }
 
 /* ========================================================= FOOTER ========================================================= */
@@ -835,7 +845,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: var(--text-10);
+  font-size: var(--pv-type-caption);
 }
 
 .footerInner div {
@@ -887,8 +897,8 @@ footer {
   display: block;
   margin-bottom: var(--space-22);
   color: var(--color-gray-650);
-  font-size: var(--text-12);
-  font-weight: 600;
+  font-size: var(--pv-type-caption);
+  font-weight: 800;
   line-height: 1.3;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -898,8 +908,8 @@ footer {
   max-width: 340px;
   margin: 0 0 var(--space-18);
   color: var(--color-ink);
-  font-size: clamp(25px, 2.1vw, 31px);
-  font-weight: 600;
+  font-size: var(--pv-type-subsection);
+  font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.035em;
 }
@@ -908,7 +918,7 @@ footer {
   max-width: 360px;
   margin: 0;
   color: var(--color-gray-650);
-  font-size: var(--text-15);
+  font-size: var(--pv-type-body);
   line-height: 1.5;
 }
 
@@ -936,9 +946,9 @@ footer {
 .operationSupport span {
   display: block;
   color: var(--color-ink);
-  font-size: var(--text-10);
+  font-size: var(--pv-type-caption);
   line-height: 1.2;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 15px;
@@ -946,9 +956,9 @@ footer {
 
 .operationSupport h3 {
   color: var(--color-ink);
-  font-size: var(--text-27);
+  font-size: var(--pv-type-subsection);
   line-height: 1;
-  font-weight: 500;
+  font-weight: 800;
   letter-spacing: -0.035em;
   margin: 0;
 }
@@ -957,7 +967,7 @@ footer {
 
 .operationSupport > p {
   color: var(--color-gray-600);
-  font-size: var(--text-14);
+  font-size: var(--pv-type-body);
   line-height: 1.5;
   margin: 0;
   max-width: 720px;
@@ -1009,7 +1019,7 @@ footer {
   margin-top: var(--space-22);
   color: var(--color-white);
   display: block;
-  font-size: clamp(48px, 4vw, 68px);
+  font-size: var(--pv-type-section);
   line-height: 0.95;
   font-weight: 400;
   letter-spacing: -0.045em;
@@ -1022,7 +1032,7 @@ footer {
 .comparisonKpi small {
   margin-top: auto;
   padding-top: var(--space-24);
-  font-size: var(--text-11);
+  font-size: var(--pv-type-caption);
   color: var(--color-gray-550);
 }
 
@@ -1075,8 +1085,8 @@ footer {
   border: 0;
   background: var(--color-ink);
   color: var(--color-white);
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-align: left;
   text-transform: uppercase;
@@ -1110,8 +1120,8 @@ footer {
 
 .scheduleMain span {
   line-height: 1.4;
-  font-size: var(--text-16);
-  font-weight: 700;
+  font-size: var(--pv-type-body);
+  font-weight: 800;
   color: var(--color-ink);
 }
 
@@ -1131,14 +1141,14 @@ footer {
 .scheduleInsight p {
   margin: 0;
   color: var(--color-gray-600);
-  font-size: var(--text-14);
+  font-size: var(--pv-type-body);
   line-height: 1.6;
 }
 
 .scheduleInsight p strong {
   display: inline;
   font-size: inherit;
-  font-weight: 600;
+  font-weight: 800;
   color: var(--color-gray-900);
 }
 
@@ -1150,8 +1160,8 @@ footer {
   gap: var(--space-12);
   margin-top: var(--space-24);
   color: var(--color-ink);
-  font-size: var(--text-13);
-  font-weight: 600;
+  font-size: var(--pv-type-interface);
+  font-weight: 800;
   line-height: 1.5;
   letter-spacing: 0.075em;
   text-decoration: none;
@@ -1165,7 +1175,7 @@ footer {
 }
 
 .methodologyLink span {
-  font-size: var(--text-18);
+  font-size: var(--pv-type-group);
   line-height: 1;
 }
 
@@ -1213,8 +1223,8 @@ footer {
 .methodologyBack {
   color: var(--color-white);
   text-decoration: none;
-  font-size: var(--text-12);
-  font-weight: 500;
+  font-size: var(--pv-type-caption);
+  font-weight: 400;
   letter-spacing: .05em;
 }
 
@@ -1228,15 +1238,15 @@ footer {
 }
 
 .methodologyEyebrow {
-  font-size: var(--text-13);
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: .16em;
   margin: 0 0 var(--space-28);
 }
 
 .methodologyHero h1 {
-  font-size: clamp(48px, 6vw, 76px);
-  font-weight: 450;
+  font-size: var(--pv-type-display);
+  font-weight: 800;
   letter-spacing: -.055em;
   line-height: 1.02;
   margin: 0 0 var(--space-28);
@@ -1245,7 +1255,7 @@ footer {
 .methodologyLead {
   max-width: 780px;
   color: var(--color-gray-650);
-  font-size: var(--text-18);
+  font-size: var(--pv-type-group);
   line-height: 1.4;
   margin: 0;
 }
@@ -1260,39 +1270,44 @@ footer {
 
 .methodologySectionLabel {
   margin: 0;
-  font-size: var(--text-12);
+  font-size: var(--pv-type-caption);
   letter-spacing: .13em;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
+}
+
+@media (min-width: 761px) {
+  .methodologySection > .methodologySectionLabel { align-self: center; }
+  .methodologySection > .methodologyContent { padding-block-start: calc(var(--pv-right-heading-top) - var(--space-72)); }
 }
 
 .methodologyContent h2 {
   margin: 0 0 var(--space-20);
-  font-size: clamp(26px, 3vw, 38px);
-  font-weight: 500;
+  font-size: var(--pv-type-panel);
+  font-weight: 800;
   letter-spacing: -.04em;
   line-height: 1.12;
 }
 
 .methodologyContent h3 {
-  font-size: var(--text-17);
+  font-size: var(--pv-type-body);
   margin: var(--space-28) 0 var(--space-10);
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .methodologyContent p {
-  font-size: var(--text-15);
+  font-size: var(--pv-type-body);
   color: #515151;
   line-height: 1.4;
   margin: 0 0 14px;
 }
 
 .methodologyFormula {
-  background: var(--color-gray-125);
+  background: var(--pv-gray);
   border-left: 3px solid var(--color-accent);
   padding: var(--space-18) var(--space-22);
-  font-size: var(--text-15);
-  font-weight: 600;
+  font-size: var(--pv-type-interface);
+  font-weight: 800;
   line-height: 1.6;
   margin: var(--space-16) 0 var(--space-22);
   overflow-wrap: anywhere;
@@ -1306,11 +1321,11 @@ footer {
 .methodologyTable {
   border-collapse: collapse;
   width: 100%;
-  font-size: var(--text-14);
+  font-size: var(--pv-type-interface);
 }
 
 .methodologyTable th {
-  font-size: var(--text-12);
+  font-size: var(--pv-type-caption);
   letter-spacing: .06em;
   text-align: left;
   text-transform: uppercase;
@@ -1325,12 +1340,12 @@ footer {
 }
 
 .methodologyTable td:first-child {
-  font-weight: 600;
+  font-weight: 800;
   min-width: 175px;
 }
 
 .methodologyNote {
-  font-size: var(--text-13) !important;
+  font-size: var(--pv-type-interface) !important;
   color: var(--color-gray-600) !important;
   line-height: 1.4 !important;
 }
@@ -1346,7 +1361,7 @@ footer {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-20);
-  font-size: var(--text-12);
+  font-size: var(--pv-type-caption);
 }
 
 .businessSummarySection {
@@ -1363,8 +1378,8 @@ footer {
 .businessSummarySection .decisionSummary > .sectionEyebrow {
   margin: 0 0 var(--space-26);
   color: var(--color-white);
-  font-size: var(--text-13);
-  font-weight: 500;
+  font-size: var(--pv-type-interface);
+  font-weight: 400;
   letter-spacing: 0.16em;
   line-height: 1.4;
 }
@@ -1372,8 +1387,8 @@ footer {
 .businessSummarySection .decisionSummary h2 {
   max-width: 1080px;
   margin: 0;
-  font-size: clamp(42px, 4.6vw, 68px);
-  font-weight: 450;
+  font-size: var(--pv-type-section);
+  font-weight: 800;
   line-height: 1.04;
   letter-spacing: -0.05em;
 }
@@ -1382,13 +1397,13 @@ footer {
   max-width: 900px;
   margin: var(--space-28) 0 0;
   color: var(--color-gray-340);
-  font-size: var(--text-17);
+  font-size: var(--pv-type-body);
   line-height: 1.45;
 }
 
 .businessSummarySection .decisionSummary .summaryLead strong, .businessSummarySection .decisionSummary .summaryPayback strong {
   color: var(--color-white);
-  font-weight: 650;
+  font-weight: 800;
 }
 
 .comparisonSection {
@@ -1428,7 +1443,7 @@ footer {
 }
 
 .comparisonSection .solutionCompareCard, .comparisonSection .solutionCard:not(.solutionPrimary) {
-  background: var(--color-gray-150);
+  background: var(--pv-gray);
   color: var(--color-ink);
   border-left-color: var(--color-gray-300);
 }
@@ -1454,7 +1469,7 @@ footer {
     min-height: 900px;
   }
   .hero h1 {
-    font-size: clamp( 64px, 8vw, 94px );
+    font-size: var(--pv-type-display);
   }
   .operationBottomRow {
     grid-template-columns: 1fr 1fr;
@@ -1497,13 +1512,13 @@ footer {
     background: linear-gradient( 90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.78) 48%, rgba(0, 0, 0, 0.30) 100% );
   }
   .hero h1 {
-    font-size: clamp( 50px, 14vw, 72px );
+    font-size: var(--pv-type-display);
     line-height: 0.94;
   }
   .heroLede {
     max-width: 92%;
     margin-top: var(--space-32);
-    font-size: var(--text-15);
+    font-size: var(--pv-type-interface);
   }
   .section {
     padding: var(--space-80) 0;
@@ -1512,7 +1527,7 @@ footer {
     padding-top: var(--space-46);
   }
   .sectionIntro h2, .businessIntro h2, .comparisonIntro h2, .followIntro h2 {
-    font-size: var(--text-46);
+    font-size: var(--pv-type-panel);
   }
   .operationTopRow, .operationBottomRow {
     grid-template-columns: 1fr;
@@ -1552,7 +1567,7 @@ footer {
     min-height: 220px;
   }
   .solutionCard h3 {
-    font-size: var(--text-40);
+    font-size: var(--pv-type-panel);
   }
   .beyondGrid {
     grid-template-columns: 1fr;
@@ -1639,7 +1654,7 @@ footer {
     padding: var(--space-52) 0;
   }
   .methodologyLead {
-    font-size: var(--text-16);
+    font-size: var(--pv-type-body);
   }
   .methodologyFooterInner {
     flex-direction: column;
@@ -1665,3 +1680,29 @@ footer {
     scroll-behavior: auto !important;
   }
 }
+
+/* Shared responsive typography for the public site. */
+:root {
+  --pv-type-display: 80px;
+  --pv-type-section: 56px;
+  --pv-type-panel: 40px;
+  --pv-type-subsection: 28px;
+  --pv-type-group: 20px;
+  --pv-type-body: 16px;
+  --pv-type-interface: 14px;
+  --pv-type-caption: 12px;
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  :root { --pv-type-display: 56px; --pv-type-section: 40px; --pv-type-panel: 28px; }
+}
+@media (max-width: 760px) {
+  :root {
+    --pv-type-display: 40px;
+    --pv-type-section: 32px;
+    --pv-type-panel: 28px;
+    --pv-type-subsection: 24px;
+    --pv-type-group: 18px;
+  }
+}
+body { font-weight: 400; }
+:where(.pv-review, .bc-calculator) :where(b, strong, th, h1, h2, h3, h4, h5, h6) { font-weight: 800; }

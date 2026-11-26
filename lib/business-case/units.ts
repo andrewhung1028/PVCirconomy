@@ -2,10 +2,30 @@
 export const REGION_UNIT_SUFFIXES = {
   feeUnit: ['/kg', '/lb'],
   wageUnit: ['/hour'],
-  rentUnit: ['/sq.ft./year'],
+  rentUnit: ['/sq.ft./year', '/sq.m./year', '/sq.m./month'],
   electricityUnit: ['/kWh'],
   landfillUnit: ['/short ton', '/metric ton', '/metric tonne'],
 } as const;
+
+export const KG_PER_LB = 0.45359237;
+export const SQ_FT_PER_SQ_M = 10.7639;
+export const SHORT_TON_PER_METRIC_TON = 1.10231131;
+
+export function annualFacilityCost(
+  spaceSqFt: number,
+  equipmentLines: number,
+  baseRent: number,
+  cam: number,
+  rentUnit: string,
+): number {
+  const rate = baseRent + cam;
+  switch (unitSuffix(rentUnit)) {
+    case '/sq.ft./year': return spaceSqFt * equipmentLines * rate;
+    case '/sq.m./year': return (spaceSqFt / SQ_FT_PER_SQ_M) * equipmentLines * rate;
+    case '/sq.m./month': return (spaceSqFt / SQ_FT_PER_SQ_M) * equipmentLines * rate * 12;
+    default: throw Error(`Unknown unit ${rentUnit} for rentUnit`);
+  }
+}
 export function unitCurrency(unit: string): string {
   return unit.split('/')[0].trim().toUpperCase();
 }

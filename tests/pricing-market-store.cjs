@@ -1,0 +1,23 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),ts=require('typescript');
+const {PGlite}=require('@electric-sql/pglite');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pv-pricing-market-'));
+const compile=source=>{const target=path.join(dir,source.replace(/\.ts$/,'.js'));fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,ts.transpileModule(fs.readFileSync(source,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText)};
+process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
+(async()=>{const db=new PGlite();try{
+  compile('lib/pickup.ts');compile('lib/pricing-rules.ts');compile('server/pricing/store.ts');
+  const client=path.join(dir,'server/db/client.js');fs.mkdirSync(path.dirname(client),{recursive:true});fs.writeFileSync(client,'exports.database=()=>global.__pricingSql;');
+  const delivery=path.join(dir,'server/delivery/store.js');fs.mkdirSync(path.dirname(delivery),{recursive:true});fs.writeFileSync(delivery,'exports.deliverySettings=async()=>({version:"delivery-test",settings:{transport:{residentialMaxPanels:20,residentialSurchargePct:50,trailerMinimumPanels:500}}});');
+  const sql=(parts,...values)=>{const query=parts.reduce((s,p,i)=>s+p+(i<values.length?'$'+(i+1):''),'');if(query.includes('pg_advisory_xact_lock'))return Promise.resolve([]);return db.query(query,values).then(result=>result.rows)};
+  sql.transaction=queries=>Promise.all(queries);global.__pricingSql=sql;
+  const store=require(path.join(dir,'server/pricing/store.js')),{initialJapanRules}=require(path.join(dir,'lib/pricing-rules.js'));
+  const us=await store.activePricing('US'),jp=await store.activePricing('JP');assert.equal(us.profile.currency,'USD');assert.equal(us.profile.weightUnit,'lb');assert.equal(jp.profile.currency,'JPY');assert.equal(jp.profile.weightUnit,'kg');
+  const updated={...initialJapanRules,panelBase:1600};const saved=await store.savePricing(updated,jp.version,{oid:'test',email:'andrew@tsgc.com.tw'},'JP test','JP profile','JP');assert.equal(saved.rules.panelBase,1600);assert.equal((await store.activePricing('US')).version,us.version);assert.equal((await store.pricingHistory('JP'))[0].rules.panelBase,1600);
+  assert.equal(us.batchPricing.minimumProcessingUsd,300);
+  assert.equal(jp.batchPricing,undefined);
+  const revised=await store.savePricing({...us.rules,minimumProcessingUsd:350.25},us.version,{oid:'test',email:'andrew@tsgc.com.tw'},'US minimum test','US profile','US');
+  assert.equal(revised.batchPricing.minimumProcessingUsd,350.25);
+  assert.equal((await store.activePricing('US')).batchPricing.minimumProcessingUsd,350.25);
+  assert.equal((await store.pricingHistory('US'))[0].rules.minimumProcessingUsd,350.25);
+  assert.equal((await store.activePricing('JP')).batchPricing,undefined);
+  console.log('Passed: US/JP pricing versions coexist; JP publish leaves the US active version unchanged.');
+}finally{await db.close();fs.rmSync(dir,{recursive:true,force:true});delete global.__pricingSql}})().catch(error=>{console.error(error);process.exit(1)});

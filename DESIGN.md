@@ -5,28 +5,29 @@ colors:
   review-yellow: "#f4c526"
   review-ink: "#151719"
   review-paper: "#fff"
+  review-gray: "#f5f5f2"
   review-line: "#d8d9d7"
 typography:
   display:
     fontFamily: "Manrope, sans-serif"
-    fontSize: "clamp(38px,4vw,64px)"
+    fontSize: "80px"
     fontWeight: 800
     lineHeight: 1.08
     letterSpacing: "-.035em"
   headline:
     fontFamily: "Manrope, sans-serif"
-    fontSize: "clamp(32px,3.2vw,52px)"
+    fontSize: "56px"
     fontWeight: 800
     lineHeight: 1.06
     letterSpacing: "-.035em"
   body:
     fontFamily: "Manrope, sans-serif"
-    fontWeight: 300
+    fontWeight: 400
     lineHeight: 1.6
   label:
     fontFamily: "Manrope, sans-serif"
     fontSize: "12px"
-    fontWeight: 300
+    fontWeight: 400
 rounded:
   control: "0"
 spacing:
@@ -59,15 +60,17 @@ Large imagery, fuller bold headings, light supporting text and a restrained yell
 
 ### Primary
 
-Review yellow identifies the infinity mark, action arrows, current section indicators and keyboard focus.
+PV Circonomy Yellow is `#F4C526` and is exposed as `--pv-yellow` (design token `review-yellow`). Use this exact color for all yellow UI elements across the site, including navigation icons, action arrows, fills, indicators and focus outlines. Use ink, paper and line tokens when a component needs more contrast.
 
 ### Neutral
 
-Review ink carries text and dark interactive surfaces. Review paper forms reading panels and reversed text. Review line separates results and disclosures. Image overlays support readable white type; they do not form a separate blank header strip.
+Page and section backgrounds use exactly three surface colors: black (review ink, `#151719`), gray (`#F5F5F2`, `--pv-gray`), and white (review paper, `#FFFFFF`). Use the exact gray from the Our Solution Wave chart pane for every gray background. Review line separates results and disclosures. Image overlays support readable white type. The shared site header is transparent across every page and section, revealing the underlying photo or page background. Use white navigation text on dark sections and ink navigation text on light sections. Use PV Circonomy Yellow line icons with no shadow or underline, and retain a visible keyboard focus outline.
 
 ## Typography
 
-Self-hosted Manrope is the sole site family. It approximates the user-selected generated sample under its included license. Light text (300) and bold headings/emphasis (800) are the only used weights. Navigation and action labels remain light. Heading scale and spacing are normative in the frontmatter; responsive adjustments live in the source stylesheet.
+Front-end typography uses self-hosted Manrope in English, Noto Sans TC in Traditional Chinese and Noto Sans JP in Japanese. Across the public site, use 400 for regular text and 800 for headings and emphasis.
+
+The shared CSS in `app/globals.css` defines eight semantic sizes. Desktop uses 80, 56, 40, 28, 20, 16, 14 and 12 px. Mobile uses 40, 32, 28, 24, 18, 16, 14 and 12 px. Tablet uses the same scale with a 56 px display, 40 px section heading and 28 px panel heading. Body text and form inputs remain 16 px. Interface labels and table text use 14 px, while chart legends, sources and notes use 12 px.
 
 ## Layout
 

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
+import type { OurSolutionLocale, PublicSolutionMarket } from "../../lib/our-solution/market";
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
 
@@ -30,6 +31,10 @@ export type UnifiedPublicPageProps = {
   };
   sections: PageSection[];
   footerNote: string;
+  locale?: OurSolutionLocale;
+  solutionMarket?: PublicSolutionMarket;
+  languageHref?: string;
+  languagePath?: `/${string}`;
 };
 
 function Arrow() {
@@ -44,7 +49,9 @@ function MultilineTitle({ children }: { children: string }) {
   return <>{children.split("\n").map((line, index) => <Fragment key={line}>{index > 0 && <br />}{line}</Fragment>)}</>;
 }
 
-export function UnifiedPublicPage({ pageLabel, hero, sections, footerNote }: UnifiedPublicPageProps) {
+export function UnifiedPublicPage({ pageLabel, hero, sections, footerNote, locale = "en-US", languageHref, languagePath, solutionMarket }: UnifiedPublicPageProps) {
+  const japanese = locale === "ja-JP";
+  const chinese = locale === "zh-TW";
   const heroId = "overview";
   const [active, setActive] = useState(heroId);
   const navigation = useMemo(
@@ -74,9 +81,9 @@ export function UnifiedPublicPage({ pageLabel, hero, sections, footerNote }: Uni
 
   return (
     <div className={`pv-review${active !== heroId ? " pv-light-nav" : ""}`}>
-      <a className="pv-skip" href={`#${heroId}`}>Skip to {pageLabel}</a>
-      <PublicHeader assistantInlineLinks assistantTechnologyAnchor={sections[0] ? `#${sections[0].id}` : "#overview"} />
-      <nav className="pv-dots" aria-label={`${pageLabel} sections`}>
+      <a className="pv-skip" href={`#${heroId}`}>{chinese ? `跳至${pageLabel}` : japanese ? `${pageLabel}へスキップ` : `Skip to ${pageLabel}`}</a>
+      <PublicHeader locale={locale} solutionMarket={solutionMarket} languageHref={languageHref} languagePath={languagePath} assistantInlineLinks assistantTechnologyAnchor={sections[0] ? `#${sections[0].id}` : "#overview"} />
+      <nav className="pv-dots" aria-label={chinese ? `${pageLabel}章節` : japanese ? `${pageLabel}のセクション` : `${pageLabel} sections`}>
         {navigation.map(([id, label]) => (
           <a key={id} href={`#${id}`} aria-current={active === id ? "step" : undefined}>
             <i />
@@ -103,7 +110,7 @@ export function UnifiedPublicPage({ pageLabel, hero, sections, footerNote }: Uni
             {hero.action && <Link className="pv-button pv-button-white" href={hero.action.href}>{hero.action.label}<Arrow /></Link>}
           </div>
           {firstSection && (
-            <a className="pv-down" href={`#${firstSection.id}`} aria-label={`Continue to ${firstSection.label}`}>
+            <a className="pv-down" href={`#${firstSection.id}`} aria-label={chinese ? `前往${firstSection.label}` : japanese ? `${firstSection.label}へ進む` : `Continue to ${firstSection.label}`}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v16M6 13l6 6 6-6" stroke="currentColor" strokeWidth="1.3" /></svg>
             </a>
           )}
@@ -130,7 +137,7 @@ export function UnifiedPublicPage({ pageLabel, hero, sections, footerNote }: Uni
                 <footer className="pv-footer pv-unified-footer">
                   <span>© {new Date().getFullYear()} PV Circonomy</span>
                   <span>{footerNote}</span>
-                  <a className="pv-text-button" href={`#${heroId}`}>Back to top</a>
+                  <a className="pv-text-button" href={`#${heroId}`}>{chinese ? "回到頁首" : japanese ? "ページの先頭へ" : "Back to top"}</a>
                 </footer>
               )}
             </div>

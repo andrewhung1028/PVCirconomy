@@ -1,7 +1,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 require('./helpers/typescript.cjs');
 const {seededOurSolutionData:seed,economicsView,effectiveParameters}=require('../lib/our-solution-data.ts');
-const {model}=require('../lib/our-solution/model.ts');
+const {impactRouteMetrics,model}=require('../lib/our-solution/model.ts');
+const {validateParameters}=require('../lib/our-solution/validation.ts');
 const {websiteDataDefaults,normalizedWebsiteAssumptionRows}=require('../lib/our-solution/public-data.ts');
 
 const component=fs.readFileSync('app/components/our-solution.tsx','utf8');
@@ -15,11 +16,30 @@ assert.doesNotMatch(component,/Elkem|Actual measured value 1\.5%/,'measured silv
 assert.doesNotMatch(component,/direct_staff_per_shift|indirect_staff_per_shift/,'the current UI uses one total-staff value per method');
 
 const baseline=model(seed),edited=structuredClone(seed);
+const saleWorkbook=structuredClone(seed);
+saleWorkbook.assumptions[6].Silver[7]=0.25;
+saleWorkbook.assumptions[6].Silicon[7]=0.15;
+const changedSale=economicsView(saleWorkbook).cellPowder;
+assert.deepEqual(changedSale.directSaleRealization,{silver:0.25,silicon:0.15});
+assert.equal(changedSale.scenario1,model(saleWorkbook).solutions.PVCIRCULATOR.materials.filter(row=>['Silver','Silicon'].includes(row.name)).reduce((sum,row)=>sum+row.revenue,0));
 edited.assumptions[12]['methods.thermal.total_staff_per_shift'][0]=6;
 const changed=model(edited);
 assert.ok(Math.abs(changed.solutions.HOT_KNIFE.opex.labor/baseline.solutions.HOT_KNIFE.opex.labor-6/5)<1e-12,'thermal labor follows the workbook total-staff value');
 assert.equal(changed.solutions.SHREDDING.opex.labor,baseline.solutions.SHREDDING.opex.labor,'editing thermal staff does not alter shredding labor');
 assert.equal(changed.solutions.PVCIRCULATOR.opex.labor,baseline.solutions.PVCIRCULATOR.opex.labor,'editing thermal staff does not alter PV Circulator labor');
+
+const impactWorkbook=structuredClone(seed);
+impactWorkbook.assumptions[10]['Panel rating'][0]=300;
+impactWorkbook.scenario.panel_weight_lb=20/impactWorkbook.assumptions[3]['Kilograms per pound'][0];
+impactWorkbook.assumptions[6].EVA[3]=0;
+impactWorkbook.assumptions[6].Backsheet[3]=0;
+const impact=impactRouteMetrics(impactWorkbook,model(impactWorkbook));
+assert.equal(impact.find(row=>row.code==='HOT_KNIFE').residueTPerMw.toFixed(2),'5.72');
+assert.equal(impact.find(row=>row.code==='PVCIRCULATOR').residueTPerMw.toFixed(2),'0.47');
+impactWorkbook.assumptions[12]['methods.circulator.product_recovery_percent'][0]=100;
+assert.equal(impactRouteMetrics(impactWorkbook,model(impactWorkbook)).find(row=>row.code==='PVCIRCULATOR').residueTPerMw,0);
+impactWorkbook.assumptions[12]['methods.circulator.product_recovery_percent'][0]=101;
+assert.ok(validateParameters(impactWorkbook).some(error=>error.includes('100%')));
 
 const legacy=structuredClone(seed);
 delete legacy.assumptions[12]['methods.thermal.total_staff_per_shift'];

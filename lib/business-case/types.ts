@@ -5,4 +5,4 @@ export type Fx={currency:string;localPerUSD:number;effectiveDate:string;active:b
 export type Material={code:string;name:string;category:string;composition:number;benchmarkPrice:number|null;currency:string;priceUnit:string;active:boolean;sortOrder:number};
 export type Recovery={solutionCode:string;materialCode:string;recoveryRate:number|null;realization:number|null;saleable:boolean;recoveredTreatment:string;unrecoveredTreatment:string;active:boolean};
 export type MasterData={regions:Region[];solutions:Solution[];opex:OpexParam[];fx:Fx[];materials:Material[];recovery:Recovery[];source:string};
-export type CalcInput={regionCode:string;panelsPerMonth:number;processingFee:number;solutionCodes:string[];panelWeightLb?:number};
+export type CalcInput={regionCode:string;panelsPerMonth:number;processingFee:number;solutionCodes:string[];panelWeightLb?:number;panelWeightKg?:number};

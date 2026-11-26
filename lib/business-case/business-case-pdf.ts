@@ -1,6 +1,7 @@
 import {resolveReportTimeZone, reportDate} from './report-time';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import {solutionLabel} from './solution-labels';
+import {formatCurrency, formatRegionNumber, isJapaneseRegion} from '../region-format';
 
 /** Build the complete annual case from the exact submitted result snapshot. */
 export async function createBusinessCasePdf(result: any, reference: string, timeZone = 'UTC', generatedAt = new Date()) {
@@ -11,8 +12,8 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   const primary = result.solutions.find((s: any) => s.code === 'PVCIRCULATOR') || result.solutions[0];
   const compare = result.solutions.find((s: any) => s.code !== primary.code);
   const currency = result.region.currency;
-  const number = (v: number, digits = 0) => new Intl.NumberFormat('en-US', {maximumFractionDigits: digits}).format(v);
-  const money = (v: number) => new Intl.NumberFormat('en-US', {style:'currency',currency,maximumFractionDigits:0}).format(v);
+  const number = (v: number, digits = 0) => formatRegionNumber(v, result.region, {maximumFractionDigits: digits});
+  const money = (v: number) => formatCurrency(v, result.region, {maximumFractionDigits:0});
   // Standard PDF fonts cannot encode every possible name. Keep numbers/currency intact.
   const safe = (s: string) => String(s).replace(/[^\x20-\x7e\u00a0-\u00ff]/g, '-');
   let page = doc.addPage([595.28,841.89]);
@@ -37,7 +38,8 @@ export async function createBusinessCasePdf(result: any, reference: string, time
   line('OPERATING BASIS',12,true);
   line(`Region: ${result.region.region} (${result.region.code}) | Currency: ${currency}`);
   line(`Processing fee: ${number(result.input.processingFee,4)} ${result.region.feeUnit}`);
-  line(`Panel weight: ${result.region.feeUnit.endsWith('/kg') ? `${number(result.input.panelWeightLb * 0.45359237,2)} kg (${number(result.input.panelWeightLb,2)} lb)` : `${number(result.input.panelWeightLb,2)} lb`} | Annual panels: ${number(result.input.annualPanels)}`);
+  const panelWeightKg=result.input.panelWeightKg??result.input.panelWeightLb*0.45359237;
+  line(`Panel weight: ${isJapaneseRegion(result.region) ? `${number(panelWeightKg,2)} kg` : result.region.feeUnit.endsWith('/kg') ? `${number(panelWeightKg,2)} kg (${number(result.input.panelWeightLb,2)} lb)` : `${number(result.input.panelWeightLb,2)} lb`} | Annual panels: ${number(result.input.annualPanels)}`);
   line(`Operating days/month: ${number(result.input.operatingDaysPerMonth,2)} | Hours/shift: ${number(result.input.operatingHoursPerDay,2)}`);
   line(`FX: ${number(result.fx.localPerUSD,6)} ${currency}/USD | Effective: ${result.fx.effectiveDate || 'Not specified'}`,9);
   if(compare) {
@@ -48,7 +50,7 @@ export async function createBusinessCasePdf(result: any, reference: string, time
     line(`Additional material value: ${annualPanels?moneyPerPanel((primary.materialRevenue-compare.materialRevenue)/annualPanels):'N/A'} / panel`);
     line(`Residual reduction: ${compare.residualMetricTons?number((1-primary.residualMetricTons/compare.residualMetricTons)*100)+'%':'N/A'}`);
   }
-  function moneyPerPanel(value:number){return new Intl.NumberFormat('en-US',{style:'currency',currency,minimumFractionDigits:2,maximumFractionDigits:2}).format(value);}
+  function moneyPerPanel(value:number){return formatCurrency(value,result.region,{minimumFractionDigits:2,maximumFractionDigits:2});}
   newPage();
   line('ANNUAL BUSINESS CASE',19,true);
   line('See where the economics come from.',13);

@@ -2,7 +2,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 require('./helpers/typescript.cjs');
 
-const { assertOurSolutionMarketRegion } = require('../lib/our-solution/market.ts');
+const { assertOurSolutionMarketRegion, publicSolutionMarketForPage, solutionMarketForPage, solutionHref } = require('../lib/our-solution/market.ts');
+
+assert.equal(solutionMarketForPage(undefined, 'en-US'), 'US');
+assert.equal(solutionMarketForPage(undefined, 'ja-JP'), 'JP');
+assert.equal(solutionMarketForPage('US', 'ja-JP'), 'US');
+assert.equal(solutionMarketForPage('JP', 'en-US'), 'JP');
+assert.equal(solutionMarketForPage(['JP', 'US'], 'en-US'), 'US');
+assert.equal(solutionMarketForPage('GB', 'ja-JP'), 'JP');
+assert.equal(solutionHref('ja-JP', 'US'), '/ja/solutions/?market=US');
+assert.equal(solutionHref('en-US', 'JP'), '/solutions/?market=JP');
 
 assert.doesNotThrow(() => assertOurSolutionMarketRegion('JP', 'JP'));
 assert.doesNotThrow(() => assertOurSolutionMarketRegion('JP', ' jp '));
@@ -22,3 +31,5 @@ assert.match(admin, /發布目標：/);
 assert.match(admin, /Workbook Scenario\.region_code/);
 
 console.log('Our Solution region guard: JP accepts only JP; US rejects JP; preview, publish and confirmation integrations passed.');
+
+for(const market of ['US','JP','AU','CA','UK','EU'])for(const locale of ['en-US','zh-TW','ja-JP']){assert.equal(publicSolutionMarketForPage(market,locale),market);assert.match(solutionHref(locale,market),new RegExp('market='+market+'$'));}

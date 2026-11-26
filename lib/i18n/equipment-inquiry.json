@@ -1,0 +1,314 @@
+{
+  "Not yet determined": [
+    "尚未確定",
+    "未定"
+  ],
+  "Feedstock and capacity": [
+    "處理物料與產能",
+    "処理対象と処理能力"
+  ],
+  "Target capacity (panels/month)": [
+    "目標處理量（片／月）",
+    "目標処理量（枚／月）"
+  ],
+  "Operating hours per day": [
+    "每日運轉時數",
+    "1日の稼働時間"
+  ],
+  "Panel technology": [
+    "模組技術",
+    "モジュールの種類"
+  ],
+  "Crystalline silicon": [
+    "結晶矽",
+    "結晶シリコン"
+  ],
+  "Thin-film": [
+    "薄膜",
+    "薄膜"
+  ],
+  "Mixed or other": [
+    "混合或其他",
+    "混合またはその他"
+  ],
+  "Panel condition": [
+    "模組狀態",
+    "モジュールの状態"
+  ],
+  "Mostly intact": [
+    "大多完整",
+    "主に破損なし"
+  ],
+  "Mostly damaged": [
+    "大多破損",
+    "主に破損あり"
+  ],
+  "Mixed": [
+    "混合",
+    "混在"
+  ],
+  "Recovered material requirements": [
+    "回收物料要求",
+    "回収材料の要件"
+  ],
+  "Material": [
+    "物料",
+    "材料"
+  ],
+  "Minimum purity (%)": [
+    "最低純度（%）",
+    "最低純度（%）"
+  ],
+  "Glass": [
+    "玻璃",
+    "ガラス"
+  ],
+  "Aluminum": [
+    "鋁",
+    "アルミニウム"
+  ],
+  "Copper": [
+    "銅",
+    "銅"
+  ],
+  "Silicon": [
+    "矽",
+    "シリコン"
+  ],
+  "Silver": [
+    "銀",
+    "銀"
+  ],
+  "Customization requirements": [
+    "客製化需求",
+    "カスタマイズ要件"
+  ],
+  "Optional": [
+    "選填",
+    "任意"
+  ],
+  "Installation and operation": [
+    "安裝與營運",
+    "設置と運用"
+  ],
+  "Installation country or region (required)": [
+    "安裝國家或地區（必填）",
+    "設置国・地域（必須）"
+  ],
+  "Select a country or region": [
+    "選擇國家或地區",
+    "国・地域を選択"
+  ],
+  "Installation city or site": [
+    "安裝城市或場址",
+    "設置都市・拠点"
+  ],
+  "Installation environment": [
+    "安裝環境",
+    "設置環境"
+  ],
+  "Indoor": [
+    "室內",
+    "屋内"
+  ],
+  "Outdoor": [
+    "室外",
+    "屋外"
+  ],
+  "Available floor area": [
+    "可用樓地板面積",
+    "設置可能面積"
+  ],
+  "Available floor area unit": [
+    "可用面積單位",
+    "面積の単位"
+  ],
+  "Equipment interface language": [
+    "設備介面語言",
+    "設備画面の言語"
+  ],
+  "English": [
+    "英文",
+    "英語"
+  ],
+  "Japanese": [
+    "日文",
+    "日本語"
+  ],
+  "Operator training language": [
+    "操作培訓語言",
+    "操作研修の言語"
+  ],
+  "Project documents or samples available": [
+    "可提供的專案文件或樣品",
+    "提供可能な資料・サンプル"
+  ],
+  "Facility layout availability": [
+    "廠房平面圖提供狀態",
+    "施設レイアウトの準備状況"
+  ],
+  "Facility layout available": [
+    "可提供廠房平面圖",
+    "施設レイアウトあり"
+  ],
+  "Representative panel specifications or samples available": [
+    "可提供模組規格或樣品",
+    "代表的なモジュールの仕様書またはサンプルあり"
+  ],
+  "Both available": [
+    "兩者皆可提供",
+    "両方あり"
+  ],
+  "Still preparing": [
+    "準備中",
+    "準備中"
+  ],
+  "Site power supply": [
+    "場地供電",
+    "設置場所の電源"
+  ],
+  "Three-phase": [
+    "三相",
+    "三相"
+  ],
+  "Other site power supply": [
+    "其他供電規格（請在下方說明）",
+    "その他の電源仕様（下欄に記入）"
+  ],
+  "Compressed air supply": [
+    "壓縮空氣供應",
+    "圧縮空気の供給"
+  ],
+  "Site network connection": [
+    "場地網路連線",
+    "設置場所のネットワーク接続"
+  ],
+  "Available": [
+    "可用",
+    "あり"
+  ],
+  "Not available": [
+    "無",
+    "なし"
+  ],
+  "Wired Ethernet": [
+    "有線乙太網路",
+    "有線LAN"
+  ],
+  "Wired Ethernet and Wi-Fi": [
+    "有線乙太網路及 Wi-Fi",
+    "有線LANとWi-Fi"
+  ],
+  "Voltage, frequency, and phase": [
+    "電壓、頻率、相數",
+    "電圧、周波数、相数"
+  ],
+  "Installation, commissioning, or other project needs": [
+    "安裝、試運轉或其他需求",
+    "設置・試運転などの要件"
+  ],
+  "Contact details": [
+    "聯絡資料",
+    "ご連絡先"
+  ],
+  "Company (required)": [
+    "公司（必填）",
+    "会社名（必須）"
+  ],
+  "Job title": [
+    "職稱",
+    "役職"
+  ],
+  "Your name (required)": [
+    "姓名（必填）",
+    "氏名（必須）"
+  ],
+  "Work email (required)": [
+    "公司電子郵件（必填）",
+    "勤務先メールアドレス（必須）"
+  ],
+  "Phone": [
+    "電話",
+    "電話番号"
+  ],
+  "Online inquiry": [
+    "線上詢價",
+    "オンライン見積もり"
+  ],
+  "Equipment configuration": [
+    "設備方案",
+    "設備構成"
+  ],
+  "Number of equipment lines": [
+    "產線數量",
+    "設備ライン数"
+  ],
+  "Configuration requirements": [
+    "配置需求",
+    "設備構成の要件"
+  ],
+  "Project stage": [
+    "專案階段",
+    "プロジェクト段階"
+  ],
+  "Target start date": [
+    "預計啟動日期",
+    "開始予定時期"
+  ],
+  "Initial feasibility": [
+    "初步評估",
+    "初期検討"
+  ],
+  "Planning a new facility": [
+    "規劃新設廠房",
+    "新規施設の計画"
+  ],
+  "Expanding an operation": [
+    "既有產線擴充",
+    "既存事業の拡張"
+  ],
+  "Itemize installation and training in the quote?": [
+    "安裝與培訓是否分項報價？",
+    "見積書に設置・研修費の内訳を記載しますか？"
+  ],
+  "Configuration": [
+    "配置",
+    "構成"
+  ],
+  "Yes, show each service separately": [
+    "是，請分項列出",
+    "はい、個別に記載"
+  ],
+  "No preference": [
+    "無偏好",
+    "指定なし"
+  ],
+  "Back to specifications": [
+    "返回規格",
+    "仕様に戻る"
+  ],
+  "Review inquiry": [
+    "確認詢價內容",
+    "見積もり内容を確認"
+  ],
+  "Edit details": [
+    "修改資料",
+    "入力内容を修正"
+  ],
+  "Preview submission": [
+    "預覽送出",
+    "送信をプレビュー"
+  ],
+  "Preview complete. Your inquiry was not sent.": [
+    "預覽完成，詢價資料尚未送出。",
+    "プレビューが完了しました。見積もり依頼は送信されていません。"
+  ],
+  "Preview only. Use sample contact details.": [
+    "目前為預覽，請使用測試聯絡資料。",
+    "プレビューです。テスト用の連絡先を入力してください。"
+  ],
+  "Base configuration for PLUS": [
+    "PLUS 搭配的主機方案",
+    "PLUS と組み合わせる基本構成"
+  ]
+}

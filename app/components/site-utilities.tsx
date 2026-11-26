@@ -16,7 +16,7 @@ export function Announcement({ settings }: { settings: SiteSettings }) {
 
 type Message = { role: 'user' | 'assistant'; text: string; links?: GuideReply['links']; source?: 'guide' | 'ai' };
 const greeting: Message = { role: 'assistant', text: 'Have a question about panel recycling? I can help you understand the information to prepare, processing estimates and delivery options.', source: 'guide' };
-export function AssistantBar({ inlineLinks = false, technologyAnchor = '#technology', onOpen }: { inlineLinks?: boolean; technologyAnchor?: string; onOpen?: () => void } = {}) {
+export function AssistantBar({ inlineLinks = false, technologyAnchor = '#technology', onOpen, actionLabel = 'AI assistant' }: { inlineLinks?: boolean; technologyAnchor?: string; onOpen?: () => void; actionLabel?: string } = {}) {
   const [open, setOpen] = useState(false); const [draft, setDraft] = useState(''); const [messages, setMessages] = useState<Message[]>([greeting]);
   const [ai, setAi] = useState(false); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState('');
   const input = useRef<HTMLInputElement>(null); const opener = useRef<HTMLButtonElement>(null); const log = useRef<HTMLDivElement>(null); const root = useRef<HTMLDivElement>(null);
@@ -45,7 +45,7 @@ export function AssistantBar({ inlineLinks = false, technologyAnchor = '#technol
   }
   function submit(event: FormEvent) { event.preventDefault(); void ask(draft); }
   return <div ref={root} className="pc-header-assistant">
-    <button ref={opener} aria-label="Get help from the PV Circonomy assistant" title="Get Help" className="pc-ask-trigger" onClick={() => { if (!open) onOpen?.(); setOpen(v => !v); }} aria-expanded={open} aria-controls="pv-assistant"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z" stroke="currentColor" strokeWidth="1.5"/><path d="M8 9h8m-8 3h5" stroke="currentColor"/></svg></button>
+    <button ref={opener} aria-label={actionLabel} title={actionLabel} className="pc-ask-trigger" onClick={() => { if (!open) onOpen?.(); setOpen(v => !v); }} aria-expanded={open} aria-controls="pv-assistant"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16v12H9l-5 4V4Z"/><path d="M8 9h8m-8 3h5"/></svg></button>
     {open && <section id="pv-assistant" className="pc-chat-panel" role="region" aria-labelledby="pv-assistant-title" onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } }}>
       <div className="pc-chat-response">
         <header><div><h2 id="pv-assistant-title">PV Circonomy Assistant</h2><p>{ai ? 'AI assistant' : 'Website guide · AI not connected'}</p></div></header>

@@ -127,7 +127,7 @@ export function ReviewHome() {
       <a className="pv-skip" href="#pricing">
         Skip to estimate
       </a>
-      <PublicHeader onHomeJump={(section) => jump(section)} assistantInlineLinks assistantTechnologyAnchor="#traceability" />
+      <PublicHeader showMarketPicker onHomeJump={(section) => jump(section)} assistantInlineLinks assistantTechnologyAnchor="#traceability" />
       <nav className="pv-dots" aria-label="Quick section navigation">
         {sections.map(([id, label]) => (
           <a

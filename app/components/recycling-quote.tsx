@@ -1,7 +1,8 @@
 'use client';
 import {usePricing} from './use-pricing';
 import { useEffect, useState } from 'react';
-import { recyclingQuote, type QuoteInput } from '../../lib/recycling-quote';
+import type { QuoteInput } from '../../lib/recycling-quote';
+import { estimateProcessing } from '../../lib/batch-quote';
 import './recycling-quote.css';
 const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 export function RecyclingQuote() {
@@ -42,7 +43,7 @@ export function RecyclingQuote() {
     finally { setSaving(false); }
   }
   const {pricing,pricingError,loading,refresh}=usePricing();
-  const quote = pricing?recyclingQuote({ quantity: Number(quantity), watts: Number(watts), scale, condition },pricing.rules,pricing.transport):{total:null,reason:loading?'Loading current rates…':'Current rates unavailable.',rate:undefined,unit:undefined,weight:undefined,qualificationNote:undefined,processingScale:undefined};
+  const quote = pricing?estimateProcessing({ quantity: Number(quantity), watts: Number(watts), scale, condition },pricing):{total:null,reason:loading?'Loading current rates…':'Current rates unavailable.',rate:undefined,unit:undefined,weight:undefined,qualificationNote:undefined,processingScale:undefined};
   useEffect(() => { if (!photo) { setPhotoUrl(''); return; } const url = URL.createObjectURL(photo); setPhotoUrl(url); return () => URL.revokeObjectURL(url); }, [photo]);
   useEffect(() => { setShowSummary(false); setSaveStatus(''); }, [quantity, watts, scale, condition, model, delivery, zip, photo]);
   function example(q: string, w: string, s: QuoteInput['scale']) { setQuantity(q); setWatts(w); setScale(s); setCondition('complete'); }

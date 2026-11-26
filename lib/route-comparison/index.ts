@@ -1,17 +1,17 @@
 import "server-only";
 import { calculateBusinessCase } from "../business-case/calculator/engine";
 import type { MasterData } from "../business-case/types";
-import { REFERENCE_CASE, GRID_KG_CO2E_PER_KWH, SHOW_COMPETITOR_PROFIT } from "./config";
+import { REFERENCE_CASE, GRID_KG_CO2E_PER_KWH, SHOW_COMPETITOR_PROFIT, type ReferenceCase } from "./config";
 
-export function routeComparison(data: MasterData) {
-  const r = REFERENCE_CASE;
+export function routeComparison(data: MasterData, referenceCase:ReferenceCase=REFERENCE_CASE) {
+  const r = referenceCase;
   if (!data.regions.some(region => region.code === r.regionCode && region.active)) {
-    console.warn("Route comparison unavailable: US-CA is inactive in the published master data.");
+    console.warn(`Route comparison unavailable: ${r.regionCode} is inactive in the published master data.`);
     return [];
   }
   const codes = ["CONVENTIONAL", "HOT_KNIFE", "PVCIRCULATOR"].filter(code => data.solutions.some(s => s.code === code && s.active));
   if (!codes.length) return [];
-  const out = calculateBusinessCase(data, { regionCode: r.regionCode, panelsPerMonth: r.panelsPerMonth, processingFee: r.processingFee, solutionCodes: codes, panelWeightLb: r.panelWeightLb });
+  const out = calculateBusinessCase(data, { regionCode: r.regionCode, panelsPerMonth: r.panelsPerMonth, processingFee: r.processingFee, solutionCodes: codes, ...('panelWeightKg' in r?{panelWeightKg:r.panelWeightKg}:{panelWeightLb:r.panelWeightLb}) });
   const mw = r.panelsPerMonth * 12 * r.panelWatts / 1e6;
   const panelsPerMw = 1e6 / r.panelWatts;
   return out.solutions.map(s => {

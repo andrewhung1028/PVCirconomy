@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { createBusinessCasePdf } from './business-case-pdf';
 import {solutionLabel} from './solution-labels';
+import {formatCurrency, formatRegionNumber} from '../region-format';
 
 export type EmailStatus = 'accepted' | 'not_configured' | 'failed';
 export type EmailResult = {status: EmailStatus; errorCode?: string};
@@ -18,10 +19,7 @@ export async function sendBusinessCaseEmail(
 ): Promise<EmailResult> {
   if (!mailConfigured()) return {status: 'not_configured'};
 
-  const money = (amount: number) => new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: result.region.currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
+  const money = (amount: number) => formatCurrency(amount, result.region, {maximumFractionDigits: 0});
   const lines = [
     `Hello ${name || 'there'},`, '',
     'Thank you for your interest in PV Circonomy.', '',
@@ -29,7 +27,7 @@ export async function sendBusinessCaseEmail(
     'Here is a quick summary based on the operating assumptions you selected:', '',
     `Reference: ${calculationId}`,
     `Operating region: ${result.region.region} (${result.region.code})`,
-    `Panels per month: ${new Intl.NumberFormat('en-US').format(result.input.panelsPerMonth)}`,
+    `Panels per month: ${formatRegionNumber(result.input.panelsPerMonth, result.region)}`,
     `FX: ${result.fx.localPerUSD} ${result.region.currency}/USD | Effective: ${result.fx.effectiveDate || 'Not specified'}`,
     `Processing fee: ${result.input.processingFee} ${result.region.feeUnit}`, '',
   ];
