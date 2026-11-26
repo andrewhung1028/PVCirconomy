@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'phase2-routes-'));
 try {
  fs.mkdirSync(path.join(dir,"node_modules"),{recursive:true});fs.writeFileSync(path.join(dir,"node_modules/server-only.js"),"// Server-only marker stub for this Node server test.\n");
- for(const f of ['business-case/units','business-case/types','business-case/fallback','business-case/calculator/engine','route-comparison/index','route-comparison/config']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync('lib/'+f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText);}
+ for(const f of ['business-case/units','business-case/types','business-case/defaults','business-case/fallback','business-case/calculator/engine','route-comparison/index','route-comparison/config']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync('lib/'+f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText);}
  const {fallback}=require(path.join(dir,'business-case/fallback.js')),helper=require(path.join(dir,'route-comparison/index.js')),config=require(path.join(dir,'route-comparison/config.js'));
  assert.equal(config.REFERENCE_CASE.panelWatts,300);assert.equal(config.REFERENCE_CASE.panelWeightLb,44.09245243697551);
  const routes=helper.routeComparison(fallback);assert.equal(config.SHOW_COMPETITOR_PROFIT,false);

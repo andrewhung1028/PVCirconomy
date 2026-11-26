@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode, type WheelEvent as ReactWheelEvent } from "react";
 import { CapacityEstimate, useCapacityEstimate } from "./pv-capacity-estimate";
-import { SpecificationInquiry } from "./specification-inquiry";
+import { EquipmentMouPreview, SpecificationInquiry } from "./specification-inquiry";
+import type { EquipmentBaseVariant, EquipmentMouReview, EquipmentVariant } from "../../lib/equipment-mou";
 import { inquiryTranslate } from "./marketing";
+import { defaultEquipmentConfigurations, equipmentElectricalRows, equipmentLineRating, equipmentSpecificationGroups, type EquipmentConfigurations } from "../../lib/equipment-configurations";
+import { defaultEquipmentQuantitative, type EquipmentClaims, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
 
@@ -26,9 +29,6 @@ function formatCopy(template: string, values: Record<string, string | number>) {
   return template.replace(/\{([\w.]+)\}/g, (placeholder, name) => String(values[name] ?? placeholder));
 }
 
-const infeedPanelsPerPallet = 30;
-const maxAnnualPanels = 240_000;
-
 const sections = [
   ["pvcirculator", "PV Circulator"],
   ["performance", "Performance"],
@@ -44,15 +44,15 @@ const sections = [
 ] as const;
 
 const performance = [
-  ["1\nPANEL/MIN", "Rated throughput", `Up to ${maxAnnualPanels.toLocaleString("en-US")} panels a year from one compact line, based on published operating assumptions.`],
-  ["1\nOPERATOR", "Automated operation", "AI-assisted automation and centralized controls keep manual work to a minimum."],
+  ["{throughput}\nPANEL/MIN", "Rated throughput", "Up to {panelsPerYear} panels a year from one compact line, based on published operating assumptions."],
+  ["{operators}\nOPERATOR", "Automated operation", "AI-assisted automation and centralized controls keep manual work to a minimum."],
+  [">{recovery}% RECOVERY", "By weight", "More of every panel leaves the site as a separated material stream."],
   ["DRY PROCESS", "No secondary treatment", "No chemicals, heat or process water means no wastewater treatment and fewer consumables."],
-  [">99% RECOVERY", "By weight", "More of every panel leaves the site as a separated material stream."],
   ["MODULAR\nDESIGN", "Flexible deployment", "A compact line designed to install quickly and relocate as feedstock volumes shift."],
 ] as const;
 
 const processStages = [
-  { src: "/videos/pvc-process-01.mp4", short: "Infeed", title: "Infeed", lead: "Load a pallet. Let it run.", description: `Automated continuous infeed handles ${infeedPanelsPerPallet}+ PV modules per pallet, supporting consistent, high-throughput operation.` },
+  { src: "/videos/pvc-process-01.mp4", short: "Infeed", title: "Infeed", lead: "Load a pallet. Let it run.", description: "Automated continuous infeed handles {panelsPerPallet}+ PV modules per pallet, supporting consistent, high-throughput operation." },
   { src: "/videos/pvc-process-02.mp4", short: "Identification", title: "Identification & Measurement", lead: "Know every module before processing.", description: "AI-assisted identification and measurement support automated setup, module handling and traceability." },
   { src: "/videos/pvc-process-03.mp4", short: "Frame removal", title: "Frame Removal", lead: "Clean aluminum, no glass attached.", description: "Aluminum frames are automatically dismantled and collected as a dedicated material stream." },
   { src: "/videos/pvc-process-04.mp4", short: "Backsheet", title: "Backsheet Separation", lead: "Keep the backsheet out of the furnace.", description: "Room-temperature mechanical separation recovers the backsheet as a dedicated stream without thermal treatment." },
@@ -61,7 +61,7 @@ const processStages = [
 ] as const;
 
 const japaneseProcessStages = [
-  { short: "投入", title: "モジュールの投入", lead: "パレットをセットすれば、連続運転が始まります。", description: "パレット1枚に30枚以上の太陽光モジュールを積載でき、自動で連続投入することで安定した処理を支えます。" },
+  { short: "投入", title: "モジュールの投入", lead: "パレットをセットすれば、連続運転が始まります。", description: "パレット1枚に{panelsPerPallet}枚以上の太陽光モジュールを積載でき、自動で連続投入することで安定した処理を支えます。" },
   { short: "識別", title: "識別・計測", lead: "処理前にモジュールを一枚ずつ識別します。", description: "AIによる識別・計測が、自動設定、モジュールの取り扱い、トレーサビリティを支えます。" },
   { short: "フレーム取り外し", title: "フレームの取り外し", lead: "ガラスが付着していないアルミを回収します。", description: "アルミフレームを自動で取り外し、他の材料と分けて回収します。" },
   { short: "バックシート分離", title: "バックシートの分離", lead: "バックシートは加熱せずに回収します。", description: "常温で機械的に分離し、バックシートを単独で回収します。" },
@@ -70,7 +70,7 @@ const japaneseProcessStages = [
 ] as const satisfies readonly Record<"short" | "title" | "lead" | "description", string>[] & { length: typeof processStages.length };
 
 const chineseProcessStages = [
-  { short: "進料", title: "模組進料", lead: "把棧板放入後啟動連續進料。", description: "每個棧板可放 30 片以上的太陽能模組，自動連續進料讓處理量更穩定。" },
+  { short: "進料", title: "模組進料", lead: "把棧板放入後啟動連續進料。", description: "每個棧板可放 {panelsPerPallet} 片以上的太陽能模組，自動連續進料讓處理量更穩定。" },
   { short: "辨識", title: "辨識與量測", lead: "處理前逐片辨識太陽能模組。", description: "AI 輔助辨識與量測，讓設備能設定參數、搬送模組並保留追溯資料。" },
   { short: "拆框", title: "拆除鋁框", lead: "回收乾淨且不摻雜玻璃的鋁框", description: "設備使用巧勁自動拆除鋁框並分開收集，供下游回收。" },
   { short: "背板分離", title: "背板分離", lead: "在常溫下分離背板。", description: "以機械方式分離背板，不需熱處理，即可單獨回收。" },
@@ -96,9 +96,9 @@ const functions = [
 ] as const;
 
 const outputs = [
-  ["GLASS", ">99% PURITY", "Clean low-iron glass with minimal contamination."],
+  ["GLASS", ">{purity}% PURITY", "Clean low-iron glass with minimal contamination."],
   ["ALUMINUM FRAME", "GLASS-FREE", "Clean aluminum frames ready for downstream metal recycling."],
-  ["CELL POWDER", "<1% GLASS", "Concentrated silicon and silver for downstream refining."],
+  ["CELL POWDER", "<{glass}% GLASS", "Concentrated silicon and silver for downstream refining."],
   ["POLYMERS", "SEPARATED", "EVA and backsheet remain separate from glass and metals."],
   ["J-BOX + CABLE", "SIZE-REDUCED", "Collected separately for downstream metal and plastic recovery."],
 ] as const;
@@ -112,12 +112,11 @@ const configurationRows = [
   ["Cell Separation", false, true, true],
   ["Glass Cleaning & Outfeed", false, true, true],
   ["Discharge", true, true, true],
-  ["Rated Throughput", "1 panel/min", "1 panel/min", "1 panel/min"],
   ["Digital Traceability", false, false, true],
   ["Manual Intervention", "Higher", "Moderate", "Minimal"],
 ] as const;
 
-type SpecVariant = "economic" | "basic" | "premium" | "plus";
+type SpecVariant = EquipmentVariant;
 
 const specificationVariants: Record<SpecVariant, { label: string; title: string; description: string; drawing: string }> = {
   economic: { label: "Economic", title: "Start lean.", description: "Core automated processing for intact crystalline-silicon modules.", drawing: "/images/pvc_specs_economic.png" },
@@ -125,54 +124,6 @@ const specificationVariants: Record<SpecVariant, { label: string; title: string;
   premium: { label: "Premium", title: "Automated & traceable.", description: "Integrated identification, junction-box removal and digital traceability for a highly automated line.", drawing: "/images/pvc_specs_premium.png" },
   plus: { label: "PLUS", title: "Expanded feedstock capability.", description: "Integrated crushing and material separation for broken and glass-glass modules across Economic, Basic and Premium configurations.", drawing: "/images/pvc_specs_pluss.png" },
 };
-
-const standardRating = { panelsPerMinute: 1, direct: 1, support: 2 };
-
-const specificationGroups = [
-  { title: "Performance", items: [
-    ["Rated throughput", { economic: "1 panel/min", basic: "1 panel/min", premium: "1 panel/min", plus: "5 panel/min" }],
-    ["Annual capacity", { economic: "115,200 panels/yr", basic: "115,200 panels/yr", premium: "115,200 panels/yr", plus: "576,000 panels/yr" }],
-    ["Annual capacity (weight)", { economic: "2,304 t/yr", basic: "2,304 t/yr", premium: "2,304 t/yr", plus: "11,520 t/yr" }],
-    ["Material recovery rate", { economic: ">90 wt.%", basic: ">99 wt.%", premium: ">99 wt.%", plus: ">90 wt.%" }],
-    ["Equipment availability", { economic: ">90%", basic: ">90%", premium: ">90%", plus: ">90%" }],
-    ["Energy consumption", { economic: "<1 kWh/panel", basic: "<1 kWh/panel", premium: "<1 kWh/panel", plus: "<1 kWh/panel" }],
-    ["Direct operating personnel", { economic: "1 person/shift", basic: "1 person/shift", premium: "1 person/shift", plus: "1 person/shift" }],
-    ["Indirect operating personnel", { economic: "2 persons/shift", basic: "2 persons/shift", premium: "2 persons/shift", plus: "2 persons/shift" }],
-    ["Consumables cost", { economic: "0.05 USD/panel", basic: "0.1 USD/panel", premium: "0.1 USD/panel", plus: "0.15 USD/panel" }],
-  ] },
-  { title: "Dimensions & Weight", items: [
-    ["Equipment length", { economic: "14,175 mm", basic: "17,340 mm", premium: "20,100 mm", plus: "5,147 mm" }],
-    ["Equipment width", { economic: "1,883 mm", basic: "1,883 mm", premium: "1,883 mm", plus: "1,883 mm" }],
-    ["Equipment height", { economic: "2,120 mm", basic: "2,120 mm", premium: "2,120 mm", plus: "2,120 mm" }],
-    ["Equipment weight", { economic: "6,480 kg", basic: "9,180 kg", premium: "11,940 kg", plus: "6,120 kg" }],
-    ["Recommended footprint", { economic: "18,175 × 5,883 mm", basic: "21,340 × 5,883 mm", premium: "24,100 × 5,883 mm", plus: "7,227 × 5,883 mm" }],
-    ["Floor load", { economic: "242.8 kg/m²", basic: "281.2 kg/m²", premium: "315.5 kg/m²", plus: "631.5 kg/m²" }],
-  ] },
-  { title: "Module Compatibility", items: [
-    ["Module length", { economic: "1,525–2,500 mm", basic: "1,525–2,500 mm", premium: "1,525–2,500 mm", plus: "—" }],
-    ["Module width", { economic: "915–1,150 mm", basic: "915–1,150 mm", premium: "915–1,150 mm", plus: "—" }],
-    ["Module max. weight", { economic: "50 kg", basic: "50 kg", premium: "50 kg", plus: "—" }],
-    ["Module technology", { economic: "Crystalline-silicon PV", basic: "Crystalline-silicon PV", premium: "Crystalline-silicon PV", plus: "Crystalline-silicon PV" }],
-    ["Module structure", { economic: "Glass-backsheet", basic: "Glass-backsheet", premium: "Glass-backsheet", plus: "Glass-glass / bifacial" }],
-    ["Broken modules", { economic: "Not included", basic: "Not included", premium: "Not included", plus: "Included" }],
-  ] },
-  { title: "Utilities & Installation", items: [
-    ["Installed power", { economic: "65 kW", basic: "85 kW", premium: "100 kW", plus: "35 kW" }],
-    ["Maximum demand", { economic: "45 kVA", basic: "55 kVA", premium: "65 kVA", plus: "30 kVA" }],
-    ["Process water", { economic: "Not required", basic: "Not required", premium: "Not required", plus: "Not required" }],
-    ["Thermal treatment", { economic: "Not required", basic: "Not required", premium: "Not required", plus: "Not required" }],
-    ["Chemicals", { economic: "Not required", basic: "Not required", premium: "Not required", plus: "Not required" }],
-    ["Installation time", { economic: "1 day", basic: "1 day", premium: "1 day", plus: "1 day" }],
-  ] },
-  { title: "Processing & Safety", items: [
-    ["Control", { economic: "PLC / IPC", basic: "PLC / IPC", premium: "PLC / IPC", plus: "PLC / IPC" }],
-    ["Traceability", { economic: "Optional", basic: "Optional", premium: "Included", plus: "Optional" }],
-    ["Remote support", { economic: "Included", basic: "Included", premium: "Included", plus: "—" }],
-    ["Certification", { economic: "CE / UL 508A", basic: "CE / UL 508A", premium: "CE / UL 508A", plus: "CE / UL 508A" }],
-    ["Noise level", { economic: "<80 dB @ 1 m", basic: "<85 dB @ 1 m", premium: "<85 dB @ 1 m", plus: "<80 dB @ 1 m" }],
-    ["Warranty", { economic: "12 months", basic: "12 months", premium: "12 months", plus: "12 months" }],
-  ] },
-] as const;
 
 function Arrow() {
   return <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 9h11M10 5l4 4-4 4" stroke="currentColor" strokeWidth="1.3" /></svg>;
@@ -201,13 +152,14 @@ function LoopVideo({ src, className = "" }: { src: string; className?: string })
   return <video ref={ref} className={className} autoPlay muted loop playsInline preload="metadata" aria-hidden="true"><source src={src} type="video/mp4" /></video>;
 }
 
-export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-process-title", heading, locale = "en-US", productCopy = false }: {
+export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-process-title", heading, locale = "en-US", productCopy = false, infeedPanelsPerPallet = defaultEquipmentQuantitative.claims.infeedPanelsPerPallet }: {
   active: boolean;
   sectionId?: string;
   titleId?: string;
   heading?: ReactNode;
   locale?: ProductLocale;
   productCopy?: boolean;
+  infeedPanelsPerPallet?: number;
 }) {
   const [stage, setStage] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -255,7 +207,7 @@ export function ProcessPlaylist({ active, sectionId = "process", titleId = "pvc-
         <span>{String(stage + 1).padStart(2, "0")} / {String(processStages.length).padStart(2, "0")}</span>
         <h3>{useChineseProductCopy ? stageTitle(stage) : current.title}</h3>
         <strong>{useChineseProductCopy && stage === 0 ? t(processStages[0].lead) : current.lead}</strong>
-        <p>{useChineseProductCopy && stage === 0 ? formatCopy(t(processStages[0].description), { panelsPerPallet: infeedPanelsPerPallet }) : current.description}</p>
+        <p>{formatCopy(useChineseProductCopy && stage === 0 ? t(processStages[0].description) : current.description, { panelsPerPallet: infeedPanelsPerPallet.toLocaleString(locale) })}</p>
       </div>
       <div className="pvc2-process-progress" role="group" aria-label={useChineseProductCopy ? t("Process stages") : isChinese ? "處理步驟" : isJapanese ? "処理工程" : "Process stages"}>
         {stages.map((item, index) => <button key={item.src} type="button" aria-current={index === stage ? "step" : undefined} onClick={() => setStage(index)} aria-label={useChineseProductCopy ? t(`Play ${processStages[index].title}`, formatCopy("播放 {e.title}", { "e.title": stageTitle(index) })) : isChinese ? `播放${item.title}` : isJapanese ? `${item.title}を再生` : `Play ${item.title}`}><i style={{ width: index === stage ? `${progress}%` : "0%" }} /><span>{useChineseProductCopy ? stageTitle(index) : item.short}</span></button>)}
@@ -270,28 +222,44 @@ function ConfigurationValue({ value, premium = false, t }: { value: boolean | st
     aria-label={t(value ? "Included" : "Not included")}>{!value && "—"}</span>;
 }
 
-function Specifications({ locale, market, businessCaseHref, specificationFx, estimate }: {
+function Specifications({ locale, market, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions }: {
+  equipmentConfigurations: EquipmentConfigurations;
+  marketDefaults: EquipmentMarketDefaults;
+  sitePowerOptions: SitePowerOptions;
   locale: ProductLocale;
   market: PublicSolutionMarket;
   businessCaseHref?: string;
   specificationFx?: number;
   estimate: ReturnType<typeof useCapacityEstimate>;
+  recyclingFee: number | null;
 }) {
   const t = translate(locale);
   const chinese = locale === "zh-TW";
   const japanese = locale === "ja-JP";
   const [variant, setVariant] = useState<SpecVariant>("basic");
+  const [baseVariant, setBaseVariant] = useState<EquipmentBaseVariant>("basic");
+  const [includePlus, setIncludePlus] = useState(false);
   const selected = specificationVariants[variant];
   const variants = Object.keys(specificationVariants) as SpecVariant[];
   const [inquiry, setInquiry] = useState(false);
+  const [mouReview, setMouReview] = useState<EquipmentMouReview | null>(null);
   const quote = inquiryTranslate(locale);
   const openQuote = useRef<HTMLButtonElement>(null);
   const returnToSpecs = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (new URLSearchParams(location.search).get("inquiry") === "1") setInquiry(true);
   }, []);
+  function selectSpecification(next: SpecVariant) {
+    setVariant(next);
+    if (next === "plus") setIncludePlus(true);
+    else {
+      setBaseVariant(next);
+      if (!inquiry) setIncludePlus(false);
+    }
+  }
   function toggleInquiry() {
     setInquiry(!inquiry);
+    setMouReview(null);
     requestAnimationFrame(() => {
       document.getElementById("specification")?.scrollIntoView({ behavior: "instant", block: "start" });
       (inquiry ? openQuote : returnToSpecs).current?.focus({ preventScroll: true });
@@ -309,6 +277,10 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
   return <section id="specification" className={`pv-screen pvc2-specification${inquiry ? " is-inquiry" : ""}`} aria-labelledby={inquiry ? undefined : "specification-title"} aria-label={inquiry ? quote("Online inquiry") : undefined}>
     <div className="pvc2-spec-layout">
     <div className="pvc2-spec-main">
+    {mouReview ? <EquipmentMouPreview key={mouReview.token?.id} review={mouReview} onEdit={() => {
+      setMouReview(null);
+      requestAnimationFrame(() => document.querySelector<HTMLElement>("#equipment-inquiry h2")?.focus());
+    }} /> : <>
     <div className="pvc2-spec-top">
       {!inquiry && <span id="specification-title">{t("Specifications")}</span>}
       <div className="pvc2-spec-tabs" role="tablist" aria-label={t("PV Circulator configuration")}
@@ -319,11 +291,11 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
             : event.key === "Home" ? 0 : event.key === "End" ? variants.length - 1 : -1;
           if (next < 0) return;
           event.preventDefault();
-          setVariant(variants[next]);
+          selectSpecification(variants[next]);
           event.currentTarget.querySelectorAll("button")[next]?.focus();
         }}>
         {variants.map(key => <button key={key} id={`pvc2-spec-tab-${key}`} type="button" role="tab" tabIndex={variant === key ? 0 : -1}
-          aria-selected={variant === key} aria-controls="pvc2-spec-detail" onClick={() => setVariant(key)}>{specificationVariants[key].label}</button>)}
+          aria-selected={variant === key} aria-controls="pvc2-spec-detail" onClick={() => selectSpecification(key)}>{specificationVariants[key].label}</button>)}
       </div>
     </div>
     <div className="pvc2-spec-actions">
@@ -345,16 +317,30 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
         <div><span>{chinese ? formatCopy("{label} 配置", { label: selected.label }) : japanese ? `${selected.label} 構成` : `${selected.label} configuration`}</span><h2>{t(selected.title)}</h2><p>{t(selected.description)}</p></div>
         <figure><img key={selected.drawing} src={selected.drawing} alt={chinese ? (variant === "basic" ? t("Basic PV Circulator engineering drawing") : formatCopy("{u.label} PV Circulator 工程圖", { "u.label": selected.label })) : japanese ? `PV Circulator ${selected.label} の設計図` : `${selected.label} PV Circulator engineering drawing`} /></figure>
       </div>
-      <div className="pvc2-specs">{specificationGroups.map((group, index) => <details key={group.title} open={!inquiry && index < 2}><summary><span>{t(group.title)}</span><span aria-hidden="true">+</span></summary><dl>{group.items.map(([label, values]) => <div key={label}><dt>{t(label)}</dt><dd>{formatSpecification(values[variant])}</dd></div>)}</dl></details>)}</div>
+      <div className="pvc2-specs">
+        {equipmentSpecificationGroups.map((group, index) => {
+          const spec = equipmentConfigurations[variant];
+          const values = group.items.map(([label]) => [label, formatSpecification(spec.values[label])] as const);
+          const rows = group.title === "Utilities & Installation" ? [...equipmentElectricalRows(spec.electrical, locale), ...values] : values;
+          return <details key={group.title} open={!inquiry && index < 2}>
+            <summary><span>{t(group.title)}</span><span aria-hidden="true">+</span></summary>
+            <dl>{rows.map(([label, value]) => <div key={label}><dt>{t(label)}</dt><dd>{value}</dd></div>)}</dl>
+          </details>;
+        })}
+      </div>
     </div>
     <p className="pv-note">{t("Published specifications are configuration- and site-dependent. Confirm feedstock, operating assumptions, utilities, compliance scope and final specifications during commercial and engineering review.")}{specificationFx ? chinese ? " 消耗品成本依日本營運資料的匯率換算。" : " 消耗品費は日本向け事業収支データの為替レートで換算した概算です。" : null}</p>
+    </>}
     </div>
     {inquiry && <SpecificationInquiry
-      configuration={variant}
-      configurations={variants.map(value => ({ value, label: specificationVariants[value].label }))}
-      onConfigurationChange={setVariant}
+      configuration={baseVariant}
+      configurations={variants.filter(value => value !== "plus").map(value => ({ value, label: specificationVariants[value].label }))}
+      onConfigurationChange={selectSpecification}
+      includePlus={includePlus}
+      onPlusChange={value => { setIncludePlus(value); setVariant(value ? "plus" : baseVariant); }}
       performance={estimate.valid ? { monthlyAverage: estimate.monthlyAverage, dailyHours: estimate.dailyHours } : null}
-      locale={locale} market={market}
+      recyclingFee={recyclingFee} review={mouReview} setReview={setMouReview}
+      locale={locale} market={market} defaults={marketDefaults} sitePowerOptions={sitePowerOptions}
     />}
     </div>
     <footer className="pv-footer"><span>© {new Date().getFullYear()} PV Circonomy</span><span>{t("PV Circulator technology · developed by TSGC")}</span><a className="pv-text-button" href="#pvcirculator">{t("Back to top")}</a></footer>
@@ -385,14 +371,24 @@ function SilverGradeComparison({ grades, locale, market, t }: { grades?: PVCircu
   </div>;
 }
 
-export function PVCirculatorPage({ routes = [], reference, recovery, silverGrades, transportPricing, locale = "en-US", specificationFx, market = "US" }: { routes?: PVCirculatorProfitRoute[]; reference?: PVCirculatorReference; recovery?: PVCirculatorRecovery; silverGrades?: PVCirculatorSilverGrades; transportPricing?: PVCirculatorTransportPricing; locale?: ProductLocale; specificationFx?: number; market?: PublicSolutionMarket }) {
+export function PVCirculatorPage({ routes = [], reference, recovery, silverGrades, transportPricing, locale = "en-US", specificationFx, market = "US", equipmentConfigurations = defaultEquipmentConfigurations, equipmentClaims = defaultEquipmentQuantitative.claims, marketDefaults = defaultEquipmentQuantitative.markets[market], sitePowerOptions = defaultEquipmentQuantitative.sitePower }: { equipmentConfigurations?: EquipmentConfigurations; equipmentClaims?: EquipmentClaims; marketDefaults?: EquipmentMarketDefaults; sitePowerOptions?: SitePowerOptions; routes?: PVCirculatorProfitRoute[]; reference?: PVCirculatorReference; recovery?: PVCirculatorRecovery; silverGrades?: PVCirculatorSilverGrades; transportPricing?: PVCirculatorTransportPricing; locale?: ProductLocale; specificationFx?: number; market?: PublicSolutionMarket }) {
   const t = translate(locale);
-  const rating = reference ? {
-    panelsPerMinute: reference.panelsPerMinute,
-    direct: Math.min(standardRating.direct, reference.staffPerShift),
-    support: Math.max(0, reference.staffPerShift - standardRating.direct),
-  } : standardRating;
-  const estimate = useCapacityEstimate(rating);
+  const rating = equipmentLineRating(equipmentConfigurations);
+  const estimate = useCapacityEstimate(rating, marketDefaults);
+  const baseVariants = ["economic", "basic", "premium"] as const;
+  const configurationValues = baseVariants.map(variant => equipmentConfigurations[variant].values["Rated throughput"]) as [string, string, string];
+  const shareThroughput = baseVariants.every(variant => equipmentLineRating(equipmentConfigurations, variant).panelsPerMinute === rating.panelsPerMinute);
+  const rows = [...configurationRows.slice(0, 8), ["Rated Throughput", ...configurationValues] as const, ...configurationRows.slice(8)];
+  const number = (value: number) => value.toLocaleString(locale, { maximumFractionDigits: 3 });
+  const claimValues = {
+    throughput: number(rating.panelsPerMinute),
+    operators: number(rating.direct),
+    panelsPerYear: number(equipmentClaims.annualPanels),
+    recovery: number(equipmentClaims.recoveryPercent),
+    purity: number(equipmentClaims.glassPurityPercent),
+    glass: number(equipmentClaims.glassInCellPowderPercent),
+    hours: number(equipmentClaims.relocationHours),
+  };
   const [feeOverride, setFeeOverride] = useState<{ market: PublicSolutionMarket; value: string }>();
   const feeInput = feeOverride?.market === market ? feeOverride.value : String(reference?.processingFee ?? "");
   const enteredFee = feeInput.trim() === "" ? NaN : Number(feeInput);
@@ -405,16 +401,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
   const revenueRatio = materialRevenuePerPanel !== undefined && feePerPanel !== null && feePerPanel > 0
     ? Math.round(materialRevenuePerPanel / feePerPanel * 100) / 100
     : null;
-  const revenueComparison = estimate.valid && estimate.netAnnual > 0 && recovery
-    ? revenueRatio !== null
-      ? formatCopy(t(revenueRatio > 1
-          ? "At the current fee, material sales generate {ratio}× as much revenue as recycling fees, making recovered materials the larger revenue source."
-          : "At the current fee, material sales generate {ratio}× as much revenue as recycling fees."),
-        { ratio: revenueRatio.toLocaleString(locale, { maximumFractionDigits: 2 }) })
-      : feePerPanel === 0 && materialRevenuePerPanel
-        ? t("At a zero recycling fee, material sales are the only modeled revenue source.")
-        : null
-    : null;
+  const showRevenueComparison = estimate.valid && estimate.netAnnual > 0 && Boolean(recovery);
   const businessCaseHref = marketCalculatorHref(locale, market);
   const [active, setActive] = useState<(typeof sections)[number][0]>("pvcirculator");
   const paneNavigationLocked = useRef(false);
@@ -473,13 +460,13 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
         <div className="pvc2-performance-overview">
           <header className="pvc2-section-heading"><h2 id="performance-title">{t("Built for industrial")}<br />{t("PV recycling.")}</h2><p>{t("Every line is designed around one question: how much value can you recover per panel, at what operating cost?")}</p></header>
           <figure className="pvc2-machine"><img src="/images/pvc-machine.webp" alt={t("PV Circulator industrial solar panel recycling line")} /></figure>
-          <div className="pvc2-card-row">{performance.map(([value, title, text]) => <article key={value}><strong>{t(value)}</strong><h3>{t(title)}</h3><p>{locale === "zh-TW" && value === performance[0][0] ? formatCopy(t(text), { panelsPerYear: maxAnnualPanels.toLocaleString("zh-TW") }) : t(text)}</p></article>)}</div>
+          <div className="pvc2-card-row">{performance.map(([value, title, text]) => <article key={value}><strong>{formatCopy(t(value), claimValues)}</strong><h3>{t(title)}</h3><p>{formatCopy(t(text), claimValues)}</p></article>)}</div>
         </div>
-        <CapacityEstimate estimate={estimate} rating={rating} businessCaseHref={businessCaseHref} locale={locale} t={t}
+        <CapacityEstimate estimate={estimate} rating={rating} shareThroughput={shareThroughput} businessCaseHref={businessCaseHref} locale={locale} t={t}
           reference={reference} feeInput={feeInput} setFeeInput={value => setFeeOverride({ market, value })} annualFeeRevenue={annualFeeRevenue} />
       </section>
 
-      <ProcessPlaylist active={active === "process"} locale={locale} productCopy
+      <ProcessPlaylist active={active === "process"} locale={locale} productCopy infeedPanelsPerPallet={equipmentClaims.infeedPanelsPerPallet}
         heading={<>{t("Simple principle.")}<br />{t("Layer by layer.")}<br />{t("Material by material.")}</>} />
 
       <section id="functions" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="functions-title">
@@ -504,7 +491,13 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <header className="pvc2-section-heading">
             <h2 id="quality-title">{t("What comes out")}<br />{t("matters.")}</h2>
             <p>{t("Recovery rate tells you how much comes back. Purity determines what the recovered material can become—and what it may be worth.")}</p>
-            {revenueComparison && <p>{revenueComparison}</p>}
+            {showRevenueComparison && revenueRatio !== null && Number.isFinite(revenueRatio) && <div className="os-materials-demand">
+              <strong><span>{revenueRatio.toLocaleString(locale, { maximumFractionDigits: 2 })}×</span></strong>
+              <h3>{t("Material sales revenue relative to recycling fee revenue")}</h3>
+              {revenueRatio > 1 && <p>{t("Recovered materials are the larger revenue source at the current fee.")}</p>}
+            </div>}
+            {showRevenueComparison && feePerPanel === 0 && Boolean(materialRevenuePerPanel)
+              && <p>{t("At a zero recycling fee, material sales are the only modeled revenue source.")}</p>}
           </header>
           <RecoveryEstimate recovery={recovery} reference={reference} annualPanels={estimate.valid ? estimate.netAnnual : null} locale={locale} t={t} />
         </div>
@@ -512,7 +505,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <h3>{t("Recovered material quality")}</h3>
           <div className="pvc2-material-grid">
             {outputs.map(([name, value, text]) => <article key={name}>
-              <div><span>{t(name)}</span><strong>{t(value)}</strong></div>
+              <div><span>{t(name)}</span><strong>{formatCopy(t(value), claimValues)}</strong></div>
               <p>{t(text)}</p>
             </article>)}
           </div>
@@ -560,7 +553,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
               <details className="pv-details pvc2-deployment-features">
                 <summary>{t("Deployment features")}</summary>
                 <article><strong>{t("Modular")}</strong> · <span>{t("Install. Dismantle. Redeploy.")}</span><p>{t("Integrated processing modules enable efficient installation, dismantling and redeployment.")}</p></article>
-                <article><strong>{t("24 Hours")}</strong> · <span>{t("Relocate in a day.")}</span><p>{t("Designed for rapid teardown and restart, subject to site readiness. Transport time excluded.")}</p></article>
+                <article><strong>{formatCopy(t("{hours} Hours"), claimValues)}</strong> · <span>{t(equipmentClaims.relocationHours === 24 ? "Relocate in a day." : "Rapid relocation.")}</span><p>{t("Designed for rapid teardown and restart, subject to site readiness. Transport time excluded.")}</p></article>
                 <article><strong>{t("Relocatable")}</strong> · <span>{t("Follow the feedstock.")}</span><p>{t("Move the line as panel volumes and collection locations change.")}</p></article>
               </details>
             </div>
@@ -572,10 +565,10 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
       <section id="configurations" className="pv-screen pvc2-split pvc2-split-43" aria-labelledby="configurations-title">
         <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability", true)}><div><h2 id="configurations-title">{t("Choose")}<br />{t("the right fit.")}</h2><strong>{t("Three configurations.")}<br />{t("One goal: maximum material value.")}</strong><p>{t("Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.")}</p><div className="pvc2-business-case"><strong>{t("Evaluate the economics of your configuration.")}</strong><p>{t("Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.")}</p>
           <p>{t("Premium integrates junction-box removal. Economic and Basic require separate preparation for that step. Check power, floor loading and staffing in the specifications.")}</p><a className="pv-text-button" href={businessCaseHref}>{t("Calculate your business case")}{' '}<Arrow /></a></div></div></div>
-        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{t(lead)}</small></span>)}</div>{configurationRows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value={economic} /><ConfigurationValue t={t} value={basic} /><ConfigurationValue t={t} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value /><ConfigurationValue t={t} value /><ConfigurationValue t={t} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
+        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "specification", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{t(lead)}</small></span>)}</div>{rows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value={economic} /><ConfigurationValue t={t} value={basic} /><ConfigurationValue t={t} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value /><ConfigurationValue t={t} value /><ConfigurationValue t={t} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
       </section>
 
-      <Specifications locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} />
+      <Specifications locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} recyclingFee={feeRate} marketDefaults={marketDefaults} sitePowerOptions={sitePowerOptions} equipmentConfigurations={equipmentConfigurations} />
     </main>
   </div>;
 }

@@ -12,6 +12,9 @@ export type WebsiteData = Record<string, WebsiteDataRecord>;
 // These defaults preserve the currently approved website values and are also
 // written to Assumptions section 12 in every newly exported workbook.
 export const websiteDataDefaults: WebsiteData = {
+  "wave.threshold_low_t": { section: "Wave Settings", label: "First annual retirement threshold", value: 100000, unit: "t/year", source: "PV Circonomy retirement chart setting" },
+  "wave.threshold_middle_t": { section: "Wave Settings", label: "Second annual retirement threshold", value: 500000, unit: "t/year", source: "PV Circonomy retirement chart setting" },
+  "wave.threshold_high_t": { section: "Wave Settings", label: "Third annual retirement threshold", value: 1000000, unit: "t/year", source: "PV Circonomy retirement chart setting" },
   "stakes.circularity_goal_percent": { section: "Stakes", label: "Circularity goal", value: 100, unit: "%", source: "PV Circonomy goal" },
   "stakes.cost.reference_panel_watts": { section: "Stakes", label: "Cost comparison reference module rating", value: 350, unit: "W", source: "PV Circonomy comparison basis" },
   "stakes.cost.nrel_recycling_low_usd_per_panel": { section: "Stakes", label: "NREL recycling cost, low", value: 15, unit: "USD/panel", source: "NREL/TP-6A20-74550" },
@@ -101,3 +104,10 @@ export function websiteNumber(data: WebsiteData, key: keyof typeof websiteDataDe
   return value;
 }
 
+
+
+export const retirementThresholdKeys = ["wave.threshold_low_t", "wave.threshold_middle_t", "wave.threshold_high_t"] as const;
+
+export function retirementThresholds(data: WebsiteData) {
+  return retirementThresholdKeys.map(key => websiteNumber(data, key));
+}

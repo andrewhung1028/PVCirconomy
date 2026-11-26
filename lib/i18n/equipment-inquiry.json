@@ -91,6 +91,7 @@
     "安裝與營運",
     "設置と運用"
   ],
+  "Country / region": ["安裝國家或地區", "設置国・地域"],
   "Installation country or region (required)": [
     "安裝國家或地區（必填）",
     "設置国・地域（必須）"
@@ -142,10 +143,6 @@
   "Project documents or samples available": [
     "可提供的專案文件或樣品",
     "提供可能な資料・サンプル"
-  ],
-  "Facility layout availability": [
-    "廠房平面圖提供狀態",
-    "施設レイアウトの準備状況"
   ],
   "Facility layout available": [
     "可提供廠房平面圖",
@@ -251,6 +248,8 @@
     "專案階段",
     "プロジェクト段階"
   ],
+  "Target assessment completion": ["預計完成評估時間", "評価完了予定"],
+  "Expected production start": ["預計啟動生產時間", "生産開始予定時期"],
   "Target start date": [
     "預計啟動日期",
     "開始予定時期"
@@ -310,5 +309,170 @@
   "Base configuration for PLUS": [
     "PLUS 搭配的主機方案",
     "PLUS と組み合わせる基本構成"
-  ]
+  ],
+  "Memorandum of understanding": [
+    "合作意向書（MOU）",
+    "基本合意書（MOU）"
+  ],
+  "Draft for review by PV Circonomy and the prospective buyer. Both parties intend to evaluate the proposed installation and confirm its scope and feasibility.": [
+    "本草案供 PV Circonomy 與準買方審閱。雙方擬就設備部署方案確認範圍與可行性。",
+    "PV Circonomyと購入検討者が確認するための草案です。両者は設備導入の範囲と実現可能性を確認する意向です。"
+  ],
+  "Installation market": [
+    "安裝市場",
+    "設置市場"
+  ],
+  "MSRP per line": [
+    "每條產線建議售價（MSRP）",
+    "1ラインあたりのメーカー希望価格（MSRP）"
+  ],
+  "Total equipment MSRP": [
+    "設備建議售價總額",
+    "設備のメーカー希望価格合計"
+  ],
+  "Pending confirmation": [
+    "待確認",
+    "確認待ち"
+  ],
+  "Modeled equipment investment": [
+    "設備投資試算值",
+    "設備投資の試算額"
+  ],
+  "Estimated annual EBITDA": [
+    "預估年度 EBITDA",
+    "年間EBITDAの見込み"
+  ],
+  "Estimated simple payback": [
+    "預估簡單回收期",
+    "単純投資回収期間の見込み"
+  ],
+  "{value} years": [
+    "{value} 年",
+    "{value} 年"
+  ],
+  "Not reached under these assumptions": [
+    "在此情境下無法回本",
+    "この条件では回収できません"
+  ],
+  "Target throughput exceeds the capacity of the selected number of lines under the market operating assumptions.": [
+    "依該市場的營運假設，目標處理量超過所選產線數的處理能力。",
+    "市場別の稼働条件では、目標処理量が選択したライン数の処理能力を上回ります。"
+  ],
+  "Simple payback divides the equipment investment by positive annual EBITDA, based on the market’s Our Solution reference operating profile.": [
+    "簡單回收期以設備投資除以正值的年度 EBITDA，採用該市場 Our Solution 的參考營運條件。",
+    "単純投資回収期間は設備投資額を正の年間EBITDAで割った値です。市場別のOur Solutionの参考稼働条件に基づきます。"
+  ],
+  "Further equipment information and commercial terms follow once both parties confirm the MOU.": [
+    "雙方確認 MOU 後，再提供詳細設備資料與交易條件。",
+    "両者によるMOUの確認後に、設備の詳細情報と取引条件をご案内します。"
+  ],
+  "Buyer signatory": [
+    "買方簽署人",
+    "買主側の署名者"
+  ],
+  "Awaiting signature": [
+    "待簽署",
+    "署名待ち"
+  ],
+  "Email me this MOU": [
+    "寄送 MOU 到我的信箱",
+    "MOUを自分のメールに送る"
+  ],
+  "Sending MOU…": [
+    "正在寄送 MOU…",
+    "MOUを送信中…"
+  ],
+  "Email accepted for delivery.": [
+    "郵件已提交寄送。",
+    "メールが送信処理に受け付けられました。"
+  ],
+  "Email is currently unavailable. Please try again later.": [
+    "目前無法寄信，請稍後再試。",
+    "現在メールを送信できません。時間をおいて再度お試しください。"
+  ],
+  "Email limit reached. Please try again in an hour.": [
+    "已達寄信次數上限，請一小時後再試。",
+    "送信上限に達しました。1時間後に再度お試しください。"
+  ],
+  "Preparing MOU…": [
+    "正在準備 MOU…",
+    "MOUを準備中…"
+  ],
+  "The MOU preview could not be prepared. Please try again.": [
+    "暫時無法產生 MOU 預覽，請再試一次。",
+    "MOUのプレビューを作成できませんでした。再度お試しください。"
+  ],
+  "Review your inquiry to preview a draft MOU.": [
+    "確認詢價資料後，可預覽 MOU 草案。",
+    "入力内容を確認すると、MOUの草案をプレビューできます。"
+  ],
+  "View MOU": [
+    "查看 MOU",
+    "MOUを表示"
+  ],
+  "Signed by the buyer · awaiting PV Circonomy confirmation": [
+    "買方已簽署，待 PV Circonomy 確認",
+    "購入者が署名済み、PV Circonomyの確認待ち"
+  ],
+  "MOU reference": [
+    "MOU 編號",
+    "MOU参照番号"
+  ],
+  "By confirming, you sign this MOU using the buyer details above. A copy will be sent to your work email.": [
+    "點擊確認即以上方買方資料簽署 MOU，副本將寄到您的工作信箱。",
+    "確認すると、上記の購入者情報でMOUに署名し、控えが勤務先メールアドレスに送信されます。"
+  ],
+  "Confirm and sign": [
+    "確認並簽署",
+    "確認して署名"
+  ],
+  "Processing MOU…": [
+    "正在處理 MOU…",
+    "MOUを処理中…"
+  ],
+  "Retry email delivery": [
+    "重試寄送",
+    "メール送信を再試行"
+  ],
+  "The MOU was signed. Email delivery is unavailable.": [
+    "MOU 已簽署，郵件暫時無法寄送。",
+    "MOUへの署名が完了しました。現在メールを送信できません。"
+  ],
+  "The email is being processed.": [
+    "郵件正在處理中。",
+    "メールを処理中です。"
+  ],
+  "This preview expired. Edit the inquiry and review it again.": [
+    "預覽已過期，請返回詢價表重新確認。",
+    "プレビューの有効期限が切れました。入力画面に戻って再度確認してください。"
+  ],
+  "Please try again in an hour.": [
+    "請一小時後再試。",
+    "1時間後に再度お試しください。"
+  ],
+  "Signing is currently unavailable. Please try again later.": [
+    "目前無法簽署，請稍後再試。",
+    "現在署名できません。時間をおいて再度お試しください。"
+  ],
+  "Site information for technical review": [
+    "技術評估所需的場地資料",
+    "技術評価に必要な設置場所の情報"
+  ],
+  "When available, please provide a facility floor plan or a dimensioned site sketch showing the proposed installation area and equipment access.": [
+    "進入技術評估後，請在資料備妥時提供廠房平面圖，或提供標有尺寸的場地示意圖，並標示預計安裝區域及設備進場動線。",
+    "技術評価の段階で、ご用意でき次第、設置予定エリアと設備の搬入経路を記載した施設の平面図、または寸法入りの現場略図をご提供ください。"
+  ],
+  "PLUS module": ["PLUS 模組", "PLUS モジュール"],
+  "Without PLUS": ["不加選 PLUS", "PLUS なし"],
+  "Add PLUS": ["加選 PLUS", "PLUS を追加"],
+  "EVA and backsheet offtake": ["EVA／背板去化", "EVA・バックシートの引き取り"],
+  "Offtake inquiry": ["洽詢 Offtake", "引き取りを相談"],
+  "Self-managed": ["自行處理", "自社で手配"],
+  "We will confirm offtake availability for your site during the project review.": [
+    "是否能安排去化，將於專案評估時依場址確認。",
+    "引き取りの可否は、案件評価時に設置場所ごとに確認します。"
+  ],
+  "Buyer company address": ["買方公司地址", "購入企業の住所"],
+  "Processing capacity": ["處理能力", "処理能力"],
+  "Recovered materials and offtake": ["回收物料與去化", "回収材料と引き取り"]
 }

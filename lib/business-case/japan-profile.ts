@@ -1,3 +1,4 @@
+import { shiftsPerLineParameter } from "./defaults";
 import { pricePerTonne } from '../our-solution/model';
 import { localPerUSD, parameter, scenarioPanelWeightKg, type Parameters } from '../our-solution/parameters';
 import { websiteDataFromAssumptions, websiteNumber } from '../our-solution/public-data';
@@ -63,6 +64,7 @@ export function japanBusinessCaseProfile(workbook: Parameters) {
     opex: [
       opex('OPERATING_DAYS_MONTH', scenario.working_weeks_per_year * scenario.working_days_per_week / 12, 'days/month'),
       opex('OPERATING_HOURS_DAY', scenario.operating_hours_per_day, 'hours/day'),
+      opex(shiftsPerLineParameter, n(3, 'Shifts per equipment line (limit)'), 'shifts/day/line'),
       opex('PANEL_WEIGHT_KG', scenarioPanelWeightKg(workbook), 'kg'),
       opex('LABOR_BURDEN_PCT', n(2, 'Labor burden'), '%'),
       opex('WORKERS_COMP_PCT', n(2, "Workers' compensation"), '%'),

@@ -1,3 +1,4 @@
+import { businessCasePositiveInteger, defaultPanelsParameter, shiftsPerLineParameter } from "../../lib/business-case/defaults";
 import {checkRegionUnit, checkMaterialUnit, REGION_UNIT_SUFFIXES, unitCurrency} from '../../lib/business-case/units';
 import ExcelJS from 'exceljs';
 import {fallback} from '../../lib/business-case/fallback';
@@ -46,6 +47,15 @@ export function validateData(input:unknown):BusinessCaseData {
  }
  for(const [i,m] of data.materials.entries())if(m.active){try{checkMaterialUnit(m.priceUnit);}catch(error){throw Error(`Materials row ${i+2}, column Price Unit: ${(error as Error).message}`);}}
  for(const o of data.opex)if(!regionCodes.has(o.countryCode))throw Error(`OPEX Parameters row ${data.opex.indexOf(o)+2}, column Country Code: Unknown OPEX country`);
+ for(const [index,row] of data.opex.entries()){
+  const code=row.parameter.trim().toUpperCase();
+  const prefix=`${row.countryCode}-`;
+  const key=code.startsWith(prefix)?code.slice(prefix.length):code;
+  if((key===defaultPanelsParameter||key===shiftsPerLineParameter)
+   && (!businessCasePositiveInteger(row.value)||(key===shiftsPerLineParameter&&row.value>24)))
+   throw Error(`OPEX Parameters row ${index+2}, column Value: ${key} requires a positive integer`);
+ }
+
  for(const r of data.recovery)if(!data.solutions.some(s=>s.code===r.solutionCode)||!data.materials.some(m=>m.code===r.materialCode))throw Error(`Solution Material Recovery row ${data.recovery.indexOf(r)+2}, columns Solution Code / Material Code: Unknown recovery reference`);
  for(const r of data.regions.filter(r=>r.active)){try{calculateBusinessCase(data,{regionCode:r.code,panelsPerMonth:1000,processingFee:r.defaultFee,solutionCodes:data.solutions.filter(s=>s.active).map(s=>s.code)});}catch{throw Error(`Operating Regions row ${data.regions.indexOf(r)+2}, column Region Code: Calculation validation failed for ${r.code}; check linked OPEX, FX and recovery data`);}}
  return {...data,source:'master'};

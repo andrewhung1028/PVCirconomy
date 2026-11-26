@@ -1484,3 +1484,27 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
   .pvc2-quality-estimate { padding: 100px 28px 36px 35px; }
   .pvc2-quality-materials { padding: 36px 28px 48px 35px; border-left: 0; border-top: 1px solid var(--pv-line); }
 }
+
+
+.pvc2-mou-preview { padding-bottom: 32px; }
+.pvc2-mou-preview h2 { font-size: var(--pv-type-panel); margin: 0 0 16px; }
+.pvc2-mou-preview p { margin-block: 12px; }
+.pvc2-mou-preview .pv-note { color: var(--pv-ink); }
+.pvc2-mou-terms { width: 100%; margin: 22px 0 12px; border-collapse: collapse; table-layout: fixed; border-top: 1px solid var(--pv-line); }
+.pvc2-mou-terms :is(th, td) { padding: 9px 0; border-bottom: 1px solid var(--pv-line); vertical-align: top; overflow-wrap: anywhere; }
+.pvc2-mou-terms th { width: 44%; padding-inline-end: 12px; text-align: start; font-weight: inherit; }
+.pvc2-mou-terms td { text-align: end; font-variant-numeric: tabular-nums; white-space: pre-line; }
+.pvc2-mou-signature { margin-block: 24px; padding-top: 14px; border-top: 1px solid var(--pv-line); }
+.pvc2-mou-signature h3, .pvc2-mou-signature dl { margin: 0 0 8px; }
+
+
+.pvc2-mou-article { margin-block: 22px; padding-top: 14px; border-top: 1px solid var(--pv-line); }
+.pvc2-mou-article h3 { font-size: var(--pv-type-subsection); margin: 0 0 8px; }
+#equipment-mou-actions { margin-top: 20px; }
+.pvc2-mou-signing-language { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-block-end: 12px; }
+.pvc2-mou-signing-language p { margin: 0; }
+
+
+.pvc2-mou-items { margin: 10px 0 0; padding-inline-start: 1.75em; }
+.pvc2-mou-items > li { padding-inline-start: 0.25em; margin-block: 0 10px; overflow-wrap: anywhere; }
+.pvc2-mou-items p { margin-block: 0 5px; }

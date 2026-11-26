@@ -9,7 +9,7 @@ import { model, type EffectivePrices } from '../../lib/our-solution/model';
 import { sharedAssumptionKeys, withSharedParameters, type SharedParameters } from '../../lib/our-solution/shared';
 import { emptyMarketTransport, transportUnits, type MarketTransport } from '../../lib/our-solution/transport';
 import { ourSolutionMarket } from '../../lib/our-solution/market';
-import { japanFeeBenchmarkRows, websiteAssumptionRows } from '../../lib/our-solution/public-data';
+import { japanFeeBenchmarkRows, retirementThresholdKeys, websiteAssumptionRows } from '../../lib/our-solution/public-data';
 const baseSections:Record<string,Record<string,(string|number)[]>> = {...(schema as Record<string,Record<string,(string|number)[]>>),'12':websiteAssumptionRows};
 const sectionsFor=(currency:string)=>{const out=structuredClone(baseSections);if(currency!=='USD'){out[11]['Processing fee steps']=out[11]['Processing fee steps (USD/lb)'];delete out[11]['Processing fee steps (USD/lb)'];}return out;};
 const streamMaterial: Record<string,string>={'Glass':'Glass','Aluminium frame':'Aluminium','Junction box + cable':'Junction box','EVA':'EVA','Backsheet':'Backsheet','Silicon cell':'Silicon','Copper ribbon':'Copper','Other':'Residual / mixed fraction'};
@@ -222,6 +222,10 @@ export async function parseOurSolutionWorkbook(buffer:Buffer, base?:Parameters, 
     for(const [label,values] of Object.entries(defs)){
       if (shared?.assumptions[section]?.[label]) {
         assumptions[section][label] = shared.assumptions[section][label];
+        continue;
+      }
+      if (section === '12' && retirementThresholdKeys.some(key => key === label) && !groups[section]?.has(label)) {
+        assumptions[section][label] = [...(base?.assumptions[section]?.[label] ?? values)];
         continue;
       }
       const row=get(groups[section],label,'Assumptions');

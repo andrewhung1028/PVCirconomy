@@ -1,17 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { EconomicsDiff, OurSolutionEconomics } from "../../lib/our-solution-data";
 import type { SharedParameters } from "../../lib/our-solution/shared";
 import { ourSolutionParameterMarkets, type OurSolutionParameterMarket } from "../../lib/our-solution/market";
 import { AdminNavigation } from "./admin-navigation";
+import { BusinessCaseAdmin } from "./business-case-admin";
+import { EquipmentConfigurationsAdmin } from "./equipment-configurations-admin";
 import "./pricing-admin.css";
 
-type Session = { configured: boolean; user?: { email: string; role: string } };
+type Session = { configured: boolean; user?: { email: string; role: string; adminRole?: string } };
 type Market = OurSolutionParameterMarket;
 type Scope = Market | "shared";
 const scopeQuery = (scope: Scope) => scope === "shared" ? "scope=shared" : `market=${scope}`;
 const markets = Object.keys(ourSolutionParameterMarkets) as Market[];
+const solutionTabs = [
+  { key: "shared", label: "全球共用參數" },
+  ...markets.map(key => ({ key, label: `${ourSolutionParameterMarkets[key].label}參數` })),
+] as const;
+const businessCaseTab = { key: "business-case", label: "Business Case 主檔" } as const;
+const equipmentTab = { key: "equipment", label: "設備參數" } as const;
+type DataTab = Scope | typeof businessCaseTab.key | typeof equipmentTab.key;
+
+const tabHash = (tab: DataTab) => tab === "business-case" ? "business-case-parameters"
+  : tab === "equipment" ? "equipment-parameters" : `solution-parameters-${tab}`;
+
+function tabFromHash(hash: string): DataTab | undefined {
+  if (!hash || hash === "#solution-parameters") return "US";
+  if (hash === "#business-case-master") return "business-case";
+  return [...solutionTabs, businessCaseTab, equipmentTab].find(({ key }) => `#${tabHash(key)}` === hash)?.key;
+}
 type Snapshot = { version: string; createdAt: string; data: OurSolutionEconomics | SharedParameters };
 type History = { id: string; createdAt: string; actorEmail: string; note: string; active: boolean };
 type State = { market: Scope; active: Snapshot | null; history: History[] };
@@ -42,6 +60,9 @@ function ParameterDiff({ rows }: { rows: EconomicsDiff[] }) {
 
 export function EconomicsAdmin() {
   const [market, setMarket] = useState<Scope>("US");
+  const [additionalTab, setAdditionalTab] = useState<"business-case" | "equipment" | null>(null);
+  const [visited, setVisited] = useState({ "business-case": false, equipment: false });
+  const [focusedTab, setFocusedTab] = useState<DataTab | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [state, setState] = useState<State | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -86,11 +107,54 @@ export function EconomicsAdmin() {
     return () => controller.abort();
   }, [market]);
 
-  function selectMarket(target: Scope) {
+  const selectMarket = useCallback((target: Scope) => {
     if (marketRef.current === target) return;
     marketRef.current = target;
     setState(null); setDraft(null); setErrors([]); setStatus("載入中…"); setLoadFailed(false);
     setMarket(target);
+  }, []);
+
+  const canManageEquipment = session?.user?.adminRole === "admin";
+  const activeTab = additionalTab === "equipment" && !canManageEquipment ? market : additionalTab ?? market;
+  const tabs = [...solutionTabs, businessCaseTab, ...(canManageEquipment ? [equipmentTab] : [])];
+
+  const activate = useCallback((tab: DataTab, updateUrl = true) => {
+    setFocusedTab(null);
+    if (tab === "business-case" || tab === "equipment") {
+      setAdditionalTab(tab);
+      setVisited(current => current[tab] ? current : { ...current, [tab]: true });
+    } else {
+      setAdditionalTab(null);
+      selectMarket(tab);
+    }
+    const hash = `#${tabHash(tab)}`;
+    if (updateUrl && window.location.hash !== hash) window.history.pushState(null, "", hash);
+  }, [selectMarket]);
+
+  useEffect(() => {
+    function restoreTab() {
+      const tab = tabFromHash(window.location.hash);
+      if (tab) activate(tab, false);
+    }
+    restoreTab();
+    window.addEventListener("hashchange", restoreTab);
+    window.addEventListener("popstate", restoreTab);
+    return () => {
+      window.removeEventListener("hashchange", restoreTab);
+      window.removeEventListener("popstate", restoreTab);
+    };
+  }, [activate]);
+
+  function moveTabFocus(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const count = tabs.length;
+    const target = event.key === "ArrowRight" ? (index + 1) % count
+      : event.key === "ArrowLeft" ? (index - 1 + count) % count
+      : event.key === "Home" ? 0 : event.key === "End" ? count - 1 : undefined;
+    if (target === undefined) return;
+    event.preventDefault();
+    const key = tabs[target].key;
+    setFocusedTab(key);
+    document.getElementById(`parameter-tab-${key}`)?.focus();
   }
 
   async function upload(file: File | undefined) {
@@ -129,22 +193,21 @@ export function EconomicsAdmin() {
     <div className="pa-header-session"><span>{session.user.email}</span><button onClick={logout}>登出</button></div>
   ) : undefined} />
     <div className="pa-heading pa-economics-heading">
-      <div className="pa-system-title">
-        <h1>系統管理</h1>
-        {session?.user?.role === "staff" && <a href="#business-case-master">前往 Business Case 主檔</a>}
-      </div>
-      <p className="pa-economics-summary">
-        <span><strong>Our Solution / PV Circulator 參數</strong>　管理全球共用資料及各市場參數版本。</span>
-        {session?.user?.role === "staff" && <span className="pa-economics-version" aria-live="polite">{marketName} 資料集 · {state?.active
-          ? `現行版本：${new Date(state.active.createdAt).toLocaleString("zh-TW")}`
-          : state ? "尚未發布" : "尚未讀取資料"}</span>}
-      </p>
+      <h1>系統管理</h1>
     </div>
     {session?.user?.role !== "staff" ? <section className="pa-login"><h2>Log in</h2><p>使用 pvcirconomy.com 或 tsgc.com.tw 的 Microsoft 公司帳號管理資料。</p>{session?.configured ? <a className="pa-primary" href="/api/auth/microsoft/login/">Log in with Microsoft</a> : session ? <p>Microsoft 登入尚未設定完成。</p> : null}<p role="status">{status}</p><button onClick={() => void load()}>重新檢查</button></section> : <>
-      <div className="pa-market-switch" role="group" aria-label="選擇參數資料集">
-        <button type="button" aria-pressed={isShared} onClick={() => selectMarket("shared")}>全球共用參數</button>
-        {markets.map(key => <button key={key} type="button" aria-pressed={market === key} onClick={() => selectMarket(key)}>{ourSolutionParameterMarkets[key].label}參數</button>)}
+      <div className="pa-market-switch pa-parameter-tabs" id="solution-parameters" role="tablist" aria-label="選擇參數資料集"
+        onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocusedTab(null); }}>
+        {tabs.map(({ key, label }, index) => <button key={key} id={`parameter-tab-${key}`} type="button" role="tab"
+          aria-selected={activeTab === key} aria-controls={`parameter-panel-${key}`} tabIndex={(focusedTab ?? activeTab) === key ? 0 : -1}
+          onKeyDown={event => moveTabFocus(event, index)} onClick={() => activate(key)}>{label}</button>)}
       </div>
+      {tabs.map(({ key }) => key !== market && key !== "business-case" && key !== "equipment" &&
+        <div key={key} role="tabpanel" id={`parameter-panel-${key}`} aria-labelledby={`parameter-tab-${key}`} hidden />)}
+      <div id={`parameter-panel-${market}`} role="tabpanel" aria-labelledby={`parameter-tab-${market}`} tabIndex={0} hidden={activeTab !== market}>
+        <p className="pa-economics-version" aria-live="polite">{state?.active
+          ? `現行版本：${new Date(state.active.createdAt).toLocaleString("zh-TW")}`
+          : state ? "尚未發布" : status || "載入中…"}</p>
       <div className="pa-economics-workspace">
         <section className="pa-downloads">
           <h2>1. 下載{marketName}工作簿</h2>
@@ -199,6 +262,13 @@ export function EconomicsAdmin() {
           <a href={`/api/admin/our-solution-data/export/?${query}&version=${item.id}`}>下載此版本</a>
         </div>)}
       </section>
+      </div>
+      <div id="parameter-panel-business-case" role="tabpanel" aria-labelledby="parameter-tab-business-case" tabIndex={0} hidden={activeTab !== "business-case"}>
+        {visited["business-case"] && <BusinessCaseAdmin />}
+      </div>
+      {canManageEquipment && <div id="parameter-panel-equipment" role="tabpanel" aria-labelledby="parameter-tab-equipment" tabIndex={0} hidden={activeTab !== "equipment"}>
+        {visited.equipment && <EquipmentConfigurationsAdmin />}
+      </div>}
     </>}
   </main>;
 }

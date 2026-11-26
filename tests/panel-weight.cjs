@@ -1,7 +1,7 @@
 // Master-driven panel weight (PANEL_WEIGHT_LB OPEX row, Andrew t519u) and engine breakeven fees.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),ts=require('typescript');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'panel-weight-'));
-for(const f of ['units','types','fallback','calculator/engine','breakeven']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync('lib/business-case/'+f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText);}
+for(const f of ['units','types','defaults','fallback','calculator/engine','breakeven']){const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync('lib/business-case/'+f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText);}
 const {fallback}=require(path.join(dir,'fallback.js')),{calculateBusinessCase}=require(path.join(dir,'calculator/engine.js')),{breakevenFees}=require(path.join(dir,'breakeven.js'));
 const codes=['CONVENTIONAL','HOT_KNIFE','PVCIRCULATOR'],input={regionCode:'US-CA',panelsPerMonth:5000,processingFee:0.2,solutionCodes:codes};
 assert.equal(calculateBusinessCase(fallback,input).input.panelWeightLb,44.09,'v1 default unchanged without a master row');

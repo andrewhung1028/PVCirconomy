@@ -1,4 +1,5 @@
 'use client';
+import {businessCaseDefaultPanels, businessCaseOpexValue, businessCasePositiveInteger, defaultPanelsParameter} from '../../lib/business-case/defaults';
 import {solutionLabel as defaultSolutionLabel} from '../../lib/business-case/solution-labels';
 import {formatCurrency} from '../../lib/region-format';
 import {localizedPublicPath, type OurSolutionLocale, type PublicSolutionMarket} from '../../lib/our-solution/market';
@@ -184,6 +185,13 @@ function opexName(x: any, fallback: string) {
   );
 }
 
+function defaultPanelsForRegion(data: any, region?: Region) {
+  if (region?.code === 'JP' && Number.isFinite(data?.japan?.defaultPanels) && data.japan.defaultPanels > 0)
+    return data.japan.defaultPanels;
+  const value = region && businessCaseOpexValue(data?.opex ?? [], defaultPanelsParameter, region.countryCode);
+  return businessCasePositiveInteger(value) ? value : businessCaseDefaultPanels;
+}
+
 function opexValue(x: any) {
   return Math.abs(
     Number(
@@ -226,7 +234,7 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
   const [country, setCountry] = useState('');
   const monthlyVolume = initialMonthlyVolume && /^\d+$/.test(initialMonthlyVolume) ? Number(initialMonthlyVolume) : NaN;
   const transferredPanels = Number.isSafeInteger(monthlyVolume) && monthlyVolume > 0 ? monthlyVolume : undefined;
-  const [panels, setPanels] = useState(transferredPanels ?? 5000);
+  const [panels, setPanels] = useState(transferredPanels ?? businessCaseDefaultPanels);
   const [fee, setFee] = useState(0.2);
   const [activeSection, setActiveSection] = useState('overview');
 
@@ -296,7 +304,7 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
         const selected = initialBusinessCaseRegion(regions, requestedMarket, initialRegion);
         setRegion(selected?.code ?? '');
         setCountry(selected?.country ?? '');
-        if (transferredPanels === undefined && selected?.code === 'JP' && d.japan) setPanels(d.japan.defaultPanels);
+        if (transferredPanels === undefined) setPanels(defaultPanelsForRegion(d, selected));
 
         const compareSolutions =
           d.solutions?.filter(
@@ -362,9 +370,9 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
     );
     setRegion(nextRegion?.code || '');
     if (nextRegion?.defaultFee != null) setFee(Number(nextRegion.defaultFee));
-    if (transferredPanels === undefined) {
-      if (nextRegion?.code === 'JP') setPanels(data.japan.defaultPanels);
-      else if (region === 'JP') setPanels(5000);
+    const previousRegion = (data?.regions || []).find((entry: Region) => entry.code === region);
+    if (transferredPanels === undefined && panels === defaultPanelsForRegion(data, previousRegion)) {
+      setPanels(defaultPanelsForRegion(data, nextRegion));
     }
     invalidateCalc();
   }

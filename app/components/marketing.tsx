@@ -6,6 +6,8 @@ import './marketing.css';
 import { PublicHeader } from './public-header';
 import { useSiteSettings } from './site-utilities';
 
+import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, otherSitePowerSupply, polymerOfftakeOptions } from "../../lib/equipment-mou";
+import { defaultSitePowerOptions, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
 import inquiryCopy from "../../lib/i18n/equipment-inquiry.json";
 import { marketNames, type OurSolutionLocale, type PublicSolutionMarket } from "../../lib/our-solution/market";
 import { products } from './marketing-data';
@@ -19,7 +21,7 @@ export function Shell({ children, overlayHeader = false, showMarketPicker = fals
     const hero = content.current?.querySelector(".pc-catalog-hero");
     if (!hero) return;
     const observer = new IntersectionObserver(([entry]) => setHeroInView(entry.isIntersecting), {
-      rootMargin: "-80px 0px 0px",
+      rootMargin: "-36px 0px 0px",
     });
     observer.observe(hero);
     return () => observer.disconnect();
@@ -126,28 +128,19 @@ function MaterialRecoveryRequirements({ t, materials }: { t: InquiryTranslate; m
 export type EquipmentPerformance = { monthlyAverage: number; dailyHours: number };
 
 const floorAreaSettings = {
-  ft2: { initial: 10_000, step: 1_000 },
-  m2: { initial: 1_000, step: 100 },
-};
+  ft2: "floorAreaFt2",
+  m2: "floorAreaM2",
+} as const;
 type FloorAreaUnit = keyof typeof floorAreaSettings;
 
 const catalogInquiryMaterials = products.map(({ name }) => name);
-const specificationInquiryMaterials = ["Glass", "Silicon", "Silver"];
 
-// Nominal line-to-line voltages: https://www.worldstandards.eu/electricity/three-phase-electric-power/
-const industrialPowerByMarket = {
-  US: ["208 V · 60 Hz", "240 V · 60 Hz", "480 V · 60 Hz"],
-  CA: ["208 V · 60 Hz", "240 V · 60 Hz", "480 V · 60 Hz", "600 V · 60 Hz"],
-  AU: ["400 V · 50 Hz", "415 V · 50 Hz"],
-  UK: ["400 V · 50 Hz"],
-  EU: ["400 V · 50 Hz"],
-  JP: ["200 V · 50 Hz", "200 V · 60 Hz"],
-} satisfies Record<PublicSolutionMarket, readonly string[]>;
-
-export function EquipmentFields({ locale = "en-US", market, specificationPerformance }: {
+export function EquipmentFields({ locale = "en-US", market, specificationPerformance, defaults, sitePowerOptions = defaultSitePowerOptions }: {
   locale?: OurSolutionLocale;
   market?: PublicSolutionMarket;
   specificationPerformance?: EquipmentPerformance | null;
+  defaults?: EquipmentMarketDefaults;
+  sitePowerOptions?: SitePowerOptions;
 } = {}) {
   const t = inquiryTranslate(locale);
   const fromSpecification = specificationPerformance !== undefined;
@@ -158,33 +151,20 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
   const marketFloorAreaUnit = market === "US" || market === "UK" ? "ft2" : "m2";
   const floorAreaUnit = fromSpecification ? floorAreaUnitOverride ?? marketFloorAreaUnit : "m2";
   const floorArea = floorAreaSettings[floorAreaUnit];
-  const facilityAndPowerFields = <>
-    <label>{t(fromSpecification ? "Facility layout availability" : "Project documents or samples available")}
-      <select name="projectMaterials" defaultValue={unspecified}>
-        <option value={unspecified}>{t(unspecified)}</option>
-        <option value="Facility layout available">{t("Facility layout available")}</option>
-        {!fromSpecification && <>
-          <option value="Representative panel specifications or samples available">{t("Representative panel specifications or samples available")}</option>
-          <option value="Both available">{t("Both available")}</option>
-        </>}
-        <option value="Still preparing">{t("Still preparing")}</option>
-      </select>
-    </label>
-    <label>{t("Site power supply")}
-      {fromSpecification ? <select key={installationMarket} name="powerSupply" defaultValue={unspecified}>
-        <option value={unspecified}>{t(unspecified)}</option>
-        {installationMarket && industrialPowerByMarket[installationMarket].map(supply => {
-          const label = `${supply} · ${t("Three-phase")}`;
-          return <option key={supply} value={label}>{label}</option>;
-        })}
-        <option value="Other site power supply">{t("Other site power supply")}</option>
-      </select> : <input name="powerSupply" placeholder={t("Voltage, frequency, and phase")} />}
-    </label>
-  </>;
+  const powerSupplyField = <label>{t("Site power supply")}
+    {fromSpecification ? <select key={installationMarket} name="powerSupply" defaultValue={unspecified}>
+      <option value={unspecified}>{t(unspecified)}</option>
+      {installationMarket && sitePowerOptions[installationMarket].map(supply => {
+        const label = `${supply} · ${t("Three-phase")}`;
+        return <option key={supply} value={supply}>{label}</option>;
+      })}
+      <option value={otherSitePowerSupply}>{t(otherSitePowerSupply)}</option>
+    </select> : <input name="powerSupply" placeholder={t("Voltage, frequency, and phase")} />}
+  </label>;
 
   return <>
     <fieldset className="pc-booking-fieldset">
-      <legend>{t("Feedstock and capacity")}</legend>
+      <legend>{t(fromSpecification ? "Processing capacity" : "Feedstock and capacity")}</legend>
       <div className="pc-form-pair">
         <label>{t("Target capacity (panels/month)")}
           <input name="targetCapacity" type="number" min={fromSpecification ? 0 : 500} step={fromSpecification ? 1 : 500}
@@ -213,12 +193,22 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           </select>
         </label>
       </div>
-      <MaterialRecoveryRequirements t={t} materials={fromSpecification ? specificationInquiryMaterials : catalogInquiryMaterials} />
+      {!fromSpecification && <MaterialRecoveryRequirements t={t} materials={catalogInquiryMaterials} />}
     </fieldset>
+    {fromSpecification && <fieldset className="pc-booking-fieldset">
+      <legend>{t("Recovered materials and offtake")}</legend>
+      <MaterialRecoveryRequirements t={t} materials={equipmentInquiryMaterials} />
+      <label>{t("EVA and backsheet offtake")}
+        <select name="polymerOfftake" defaultValue={polymerOfftakeOptions[0]} aria-describedby="equipment-polymer-offtake-note">
+          {polymerOfftakeOptions.map(option => <option key={option} value={option}>{t(option)}</option>)}
+        </select>
+        <span id="equipment-polymer-offtake-note">{t("We will confirm offtake availability for your site during the project review.")}</span>
+      </label>
+    </fieldset>}
     <fieldset className="pc-booking-fieldset">
       <legend>{t("Installation and operation")}</legend>
       <div className="pc-form-pair">
-        <label>{t("Installation country or region (required)")}
+        <label>{t(fromSpecification ? "Country / region" : "Installation country or region (required)")}
           <select name="installationCountry" required value={installationMarket}
             onChange={event => setInstallationMarket(event.currentTarget.value as PublicSolutionMarket)}>
             <option value="" disabled>{t("Select a country or region")}</option>
@@ -227,7 +217,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
             ))}
           </select>
         </label>
-        <label>{t("Installation city or site")}<input name="installationSite" /></label>
+        <label>{t("Installation city or site")}<input name="installationSite" maxLength={fromSpecification ? 240 : undefined} /></label>
         <label>{t("Installation environment")}
           <select name="installationEnvironment" defaultValue={unspecified}>
             <option value={unspecified}>{t(unspecified)}</option>
@@ -239,7 +229,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           <label htmlFor="pc-equipment-floor-area">{t("Available floor area")}</label>
           <div className="pc-floor-area-controls">
             <input key={floorAreaUnit} id="pc-equipment-floor-area" name="floorSpace" type="number" min="0"
-              step={fromSpecification ? floorArea.step : "any"} defaultValue={fromSpecification ? floorArea.initial : undefined}
+              step="any" defaultValue={fromSpecification ? defaults?.[floorArea] : undefined}
               inputMode={fromSpecification ? "numeric" : "decimal"} />
             <select name="floorSpaceUnit" aria-label={t("Available floor area unit")}
               value={fromSpecification ? floorAreaUnit : undefined} defaultValue={fromSpecification ? undefined : "m2"}
@@ -256,9 +246,17 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
             <option value="Japanese">{t("Japanese")}</option>
           </select> : <input name="interfaceLanguage" />}
         </label>
-        {!fromSpecification && <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
+        {fromSpecification ? powerSupplyField : <label>{t("Operator training language")}<input name="trainingLanguage" /></label>}
       </div>
-      {fromSpecification ? <div className="pc-form-pair">{facilityAndPowerFields}</div> : facilityAndPowerFields}
+      {!fromSpecification && <>
+        <label>{t("Project documents or samples available")}
+          <select name="projectMaterials" defaultValue={unspecified}>
+            {[unspecified, "Facility layout available", "Representative panel specifications or samples available", "Both available", "Still preparing"].map(option =>
+              <option key={option} value={option}>{t(option)}</option>)}
+          </select>
+        </label>
+        {powerSupplyField}
+      </>}
       {fromSpecification && <div className="pc-form-pair">
         <label>{t("Compressed air supply")}
           <select name="compressedAir" defaultValue={unspecified}>
@@ -273,16 +271,17 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
           </select>
         </label>
       </div>}
-      <label>{t("Installation, commissioning, or other project needs")}<textarea name="requirements" /></label>
+      <label>{t("Installation, commissioning, or other project needs")}<textarea name="requirements" maxLength={fromSpecification ? equipmentInquiryNotesLimit : undefined} /></label>
     </fieldset>
     <fieldset className="pc-booking-fieldset">
       <legend>{t("Contact details")}</legend>
       <div className="pc-form-pair">
         <label>{t("Company (required)")}<input name="company" autoComplete="organization" required /></label>
+        {fromSpecification && <label>{t("Buyer company address")}<input name="companyAddress" autoComplete="street-address" maxLength={240} /></label>}
         <label>{t("Job title")}<input name="jobTitle" autoComplete="organization-title" /></label>
         <label>{t("Your name (required)")}<input name="name" autoComplete="name" required /></label>
         <label>{t("Work email (required)")}<input name="email" type="email" autoComplete="email" required /></label>
-        <label>{t("Phone")}<input name="phone" type="tel" autoComplete="tel" /></label>
+        <label>{t("Phone")}<input name="phone" type="tel" autoComplete="tel" maxLength={fromSpecification ? 80 : undefined} /></label>
       </div>
     </fieldset>
   </>;

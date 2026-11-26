@@ -108,7 +108,7 @@ export function ProfitComparison({ routes, reference, feePerPanel, feeRate, loca
 }) {
   const [tab, setTab] = useState<typeof profitTabs[number][0]>("comparison");
   const [selected, setSelected] = useState<PVCirculatorProfitRoute["code"]>("PVCIRCULATOR");
-  const [period, setPeriod] = useState<ReportingPeriod>("mw");
+  const [period, setPeriod] = useState<ReportingPeriod>("year");
   const capacityHref = `#${capacityEstimateId}`;
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   const money = reference && new Intl.NumberFormat(locale, { style: "currency", currency: reference.currency, maximumFractionDigits: 0 });

@@ -4,7 +4,7 @@ module.exports=async function({browser,base}){
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bc-eu-ui-'));
  process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
  try{
-  for(const f of ['lib/business-case/units','lib/business-case/types','lib/business-case/fallback','lib/business-case/input','lib/business-case/supported-countries','lib/business-case/calculator/engine','server/business-case/workbook']){
+  for(const f of ['lib/business-case/units','lib/business-case/types','lib/business-case/defaults','lib/business-case/fallback','lib/business-case/input','lib/business-case/supported-countries','lib/business-case/calculator/engine','server/business-case/workbook']){
    const out=path.join(dir,f+'.js');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,ts.transpileModule(fs.readFileSync(f+'.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText);
   }
   const {parseWorkbook}=require(path.join(dir,'server/business-case/workbook.js'));

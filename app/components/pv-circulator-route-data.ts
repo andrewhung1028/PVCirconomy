@@ -4,13 +4,19 @@ import { parameter, parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeigh
 import type { MarketTransport } from "../../lib/our-solution/transport";
 import { resolveMarketTransport } from "../../server/our-solution/transport";
 import { loadSolutionOperatingData } from "../../server/our-solution/public-view";
+import { publicEquipmentData } from "../../server/equipment-configurations/store";
 
 export type PVCirculatorTransportPricing = MarketTransport;
 
 export async function loadPVCirculatorReference(requestedMarket: unknown, locale: OurSolutionLocale) {
   const market = publicSolutionMarketForPage(requestedMarket, locale);
-  const source = await loadSolutionOperatingData(market);
-  if (!source) return { market };
+  const [source, equipment] = await Promise.all([
+    loadSolutionOperatingData(market),
+    publicEquipmentData(),
+  ]);
+  const { configurations: equipmentConfigurations, quantitative } = equipment;
+  const equipmentProps = { equipmentConfigurations, equipmentClaims: quantitative.claims, marketDefaults: quantitative.markets[market], sitePowerOptions: quantitative.sitePower };
+  if (!source) return { market, ...equipmentProps, reference: undefined, recovery: undefined, silverGrades: undefined, routes: undefined };
   const { data, prices } = source;
   const transportPricing = await resolveMarketTransport(market, data.transport, parameter(data, 7, "Pallet footprint"));
   const specificationFx = market === "JP" ? data.meta.localPerUSD : undefined;
@@ -34,6 +40,7 @@ export async function loadPVCirculatorReference(requestedMarket: unknown, locale
   const circulator = result.solutions.PVCIRCULATOR;
   return {
     market,
+    ...equipmentProps,
     routes,
     transportPricing,
     silverGrades: Object.values(result.solutions).map(({ code, silverUpperPct }) => ({
@@ -55,8 +62,6 @@ export async function loadPVCirculatorReference(requestedMarket: unknown, locale
       panelWeightKg: scenarioPanelWeightKg(data),
       panelWeightLb: scenarioPanelWeightLb(data),
       panelWatts: parameter(data, 10, "Panel rating"),
-      panelsPerMinute: parameter(data, 4, "Capacity", 2) / 60,
-      staffPerShift: parameter(data, 12, "methods.circulator.total_staff_per_shift"),
       panelsPerMonth: data.scenario.panels_per_month,
       processingFee: parameter(data, 11, "Recovery fee"),
       currency: parameterCurrency(data),

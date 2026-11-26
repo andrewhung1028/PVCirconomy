@@ -4,7 +4,7 @@ function compile(source,target){const out=path.join(dir,target);fs.mkdirSync(pat
 // Resolve installed dependencies from this repository, even though compiled files are isolated.
 process.env.NODE_PATH=path.join(process.cwd(),'node_modules');require('module').Module._initPaths();
 (async()=>{try{
- for(const f of ['units','types','fallback','input','supported-countries','market','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
+ for(const f of ['units','types','defaults','fallback','input','supported-countries','market','calculator/engine']){compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');}
  for(const f of ['business-case-pdf','report-time','solution-labels'])compile('lib/business-case/'+f+'.ts','lib/business-case/'+f+'.js');
  compile('lib/region-format.ts','lib/region-format.js');
  compile('server/business-case/workbook.ts','server/business-case/workbook.js');compile('server/auth/roles.ts','server/auth/roles.js');
