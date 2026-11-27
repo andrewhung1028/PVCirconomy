@@ -321,7 +321,7 @@ function systemCardContent(data: OurSolutionView): Record<SystemTopic, {
     const energyText = energy === 1 ? "1 kWh未満" : `${compactNumber(energy)} kWh以下`;
     return { ...staticSystemCardContent, process: { ...staticSystemCardContent.process, bullets: [
                 staticSystemCardContent.process.bullets[0],
-                `回収率は${compactNumber(recovery)}％${recovery > 99 ? "超" : ""}、処理能力は1枚あたり${compactNumber(minutesPerPanel)}分、消費電力量は1枚あたり${energyText}`,
+                `回収率 ≥${compactNumber(recovery)}%、処理能力は1枚あたり${compactNumber(minutesPerPanel)}分、消費電力量は1枚あたり${energyText}`,
                 staticSystemCardContent.process.bullets[2],
             ] } };
 }
@@ -565,7 +565,7 @@ function methodSources(data: OurSolutionView) {
         .map(([, row]) => row.source)
         .filter(source => !source.startsWith("No public") && source !== "SGS verification")
         .map(source => methodSourceLabels[source] ?? source);
-    return `出典：${[...new Set(sources)].join("；")}。製品回収率は、純度に基づき販売可能と判断された回収物の割合です。「—」は公開データなしを示します。`;
+    return `出典：${[...new Set(sources)].join("；")}。PV Circulator の回収率は、回収材の重量を投入モジュール重量で割った値です。「—」は公開データなしを示します。`;
 }
 function technologyRows(data: OurSolutionView): MethodRow[] {
     const n = (key: string) => webNum(data, key);
@@ -576,7 +576,7 @@ function technologyRows(data: OurSolutionView): MethodRow[] {
         { label: "\u30A8\u30CD\u30EB\u30AE\u30FC", shredding: `${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh／枚`, thermal: `${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} kWh／枚`, circulator: `<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh／枚` },
         { label: "\u51E6\u7406\u80FD\u529B", shredding: `~${compactNumber(shredMin)}–${compactNumber(shredMax)}枚／時`, thermal: `~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))}枚／時 (~${compactNumber(n("methods.thermal.seconds_per_panel"))}秒／枚)`, circulator: `~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))}枚／時` },
         { label: "\u4EBA\u54E1", shredding: `${compactNumber(n("methods.shredding.total_staff_per_shift"))}人／シフト`, thermal: `${compactNumber(n("methods.thermal.total_staff_per_shift"))}人／シフト`, circulator: `${compactNumber(n("methods.circulator.total_staff_per_shift"))}人／シフト` },
-        { label: "\u88FD\u54C1\u56DE\u53CE\u7387", shredding: `<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`, thermal: `~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`, circulator: `${compactNumber(n("methods.circulator.product_recovery_percent"))}%` },
+        { label: "\u88FD\u54C1\u56DE\u53CE\u7387", shredding: `<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`, thermal: `~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`, circulator: `≥${compactNumber(n("methods.circulator.product_recovery_percent"))}%` },
         { label: "\u526F\u7523\u7269", shredding: "\u6DF7\u5408\u7834\u7247\u306F\u8FFD\u52A0\u51E6\u7406\u304C\u5FC5\u8981\u3067\u3059", thermal: "\u30BB\u30EB\u30E9\u30DF\u30CD\u30FC\u30C8\uFF08EVA\u3001\u30D0\u30C3\u30AF\u30B7\u30FC\u30C8\u3001\u30BB\u30EB\uFF09\u306F\u8FFD\u52A0\u51E6\u7406\u304C\u5FC5\u8981\u3067\u3059", circulator: "\u6392\u30AC\u30B9\u3084\u6392\u6C34\u306F\u767A\u751F\u3057\u307E\u305B\u3093" },
     ];
 }
@@ -608,12 +608,13 @@ function materialRows(data: OurSolutionView): MethodRow[] {
         { label: "二次処理", shredding: `~${compactNumber(webNum(data, "methods.shredding.secondary_treatment_t_per_mw"))} t / MW`, thermal: `~${compactNumber(data.thermalSecondaryTreatmentTPerMw)} t / MW`, circulator: `~${compactNumber(webNum(data, "methods.circulator.secondary_treatment_t_per_mw"))} t / MW` },
     ];
 }
-function FootprintMethodVisual({ data }: {
+function FootprintMethodVisual({data, basicOperatingFootprint = "—"}: {basicOperatingFootprint?: string;
     data: OurSolutionView;
 }) {
     const shredding = webNum(data, "methods.shredding.footprint_m2"), thermal = webNum(data, "methods.thermal.footprint_m2"), pv = webNum(data, "methods.circulator.footprint_m2");
-    const reduction = (base: number, value: number) => Math.round((1 - value / base) * 100), pvLabel = `${compactNumber(pv)} m²`;
-    return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>モジュール式の PV Circulator の設置面積はわずか {pvLabel} で、破砕法より約 {reduction(shredding, pv)}％、熱処理法より約 {reduction(thermal, pv)}％小さくなります。省スペースの乾式処理設備なので、現場やその近くに設置できます。</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`設置面積の比較：破砕法 ${shredding} m²、熱処理法 ${thermal} m²、PV Circulator ${pv} m²`}><div><span>破砕法</span><i style={{ width: "100%" }}/><strong>{compactNumber(shredding)} m²</strong></div><div><span>熱処理法</span><i style={{ width: `${thermal / shredding * 100}%` }}/><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: `${pv / shredding * 100}%` }}/><strong>{pvLabel}</strong></div></div></div><MethodTable caption="リサイクル技術の比較" rows={technologyRows(data)}/><p className="os-chart-source">{methodSources(data)}</p></div>;
+    const reduction = (base: number, value: number) => Math.round((1 - value / base) * 100);
+  const pvLabel = `${compactNumber(pv)} m²`;
+    return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>設備本体の面積は約 {pvLabel} で、機種により異なります。この本体面積は破砕より約 {reduction(shredding,pv)}%、熱処理より約 {reduction(thermal,pv)}% 小さくなります。操作用に四方に各 1.5 m を確保します。Basic の操作スペース込みの寸法は {basicOperatingFootprint} です。PLUS 追加時は設備構成図をご確認ください。</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`設置面積の比較：破砕法 ${shredding} m²、熱処理法 ${thermal} m²、PV Circulator ${pv} m²`}><div><span>破砕法</span><i style={{ width: "100%" }}/><strong>{compactNumber(shredding)} m²</strong></div><div><span>熱処理法</span><i style={{ width: `${thermal / shredding * 100}%` }}/><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: `${pv / shredding * 100}%` }}/><strong>{pvLabel}</strong></div></div></div><MethodTable caption="リサイクル技術の比較" rows={technologyRows(data)}/><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 function OperatingCostMethodVisual({ economicsData }: {
     economicsData: OurSolutionView;
@@ -671,7 +672,7 @@ function SilverGradeTable({ economicsData }: {
     const silverRows = [
         { method: THREE_METHODS[0], fraction: "破片内に混在", silver: upper("SHREDDING", 4), recovery: `<${compactNumber(webNum(economicsData, "methods.shredding.product_recovery_percent"))}%` },
         { method: THREE_METHODS[1], fraction: "セルラミネート内に残留", silver: upper("HOT_KNIFE", 3), recovery: `~${compactNumber(webNum(economicsData, "methods.thermal.product_recovery_percent"))}%` },
-        { method: "PV Circulator", fraction: <strong>シリコン（セル）粉末に移行</strong>, silver: upper("PVCIRCULATOR", 3), recovery: `${compactNumber(webNum(economicsData, "methods.circulator.product_recovery_percent"))}%` }
+        { method: "PV Circulator", fraction: <strong>シリコン（セル）粉末に移行</strong>, silver: upper("PVCIRCULATOR", 3), recovery: `≥${compactNumber(webNum(economicsData, "methods.circulator.product_recovery_percent"))}%` }
     ];
     return <div className="os-method-detail-table os-silver-grade-table"><table><caption className="pv-sr-only">方法別の銀の行き先、銀濃度の理論上限、製品回収率</caption><thead><tr><th scope="col">方法</th><th scope="col">銀の行き先</th><th scope="col">銀濃度の理論上限</th><th scope="col">製品回収率</th></tr></thead><tbody>{silverRows.map(row => <tr key={row.method} className={row.method === "PV Circulator" ? "is-circulator" : undefined}><th scope="row">{row.method}</th><td>{row.fraction}</td><td>{row.silver}</td><td>{row.recovery}</td></tr>)}</tbody></table></div>;
 }
@@ -705,7 +706,7 @@ function ValueSection({ economicsData }: {
     <aside className="os-value-explanation">
       <div className="os-value-grade"><h3>銀の濃度を維持し、その価値を保持</h3><p>パネルの各層を分離することで、銀を混合ガラス中に分散させず、濃縮されたセル材料流を追加回収に向けて保持できます。</p>
         <SilverGradeTable economicsData={economicsData}/>
-        <p className="os-chart-source">理論上限 = 銀 ÷（銀＋製品に移行するモジュール構成材）で、モジュール内の銀がすべて製品に含まれると仮定しています。PV Circulator のシリコン（セル）粉末中の銀濃度は、実測で {compactNumber(webNum(economicsData, "value.circulator_measured_silver_percent"))}% です。</p></div>
+        <p className="os-chart-source">モデルは参照モジュールの銀がすべて粉末に移行すると仮定します。実測値 {compactNumber(webNum(economicsData, "value.circulator_measured_silver_percent"))}% は異なる投入試料によるものです。シリコン回収率は 100% 未満のため、粉末の質量と銀濃度はモデル値と異なる場合があります。</p></div>
       <div id="silver-trend" className="os-silver-trend">
         <h3>パネル当たりの銀が減少。回収技術にも進化が必要</h3>
         <SilverTechnologyTrend data={economicsData}/>
@@ -957,9 +958,9 @@ function MaterialsSection({ data }: {
     </aside>
   </section>;
 }
-export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "\u30EF\u30FC\u30AF\u30D6\u30C3\u30AF\u306E\u4FA1\u683C", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
+export function OurSolutionJa({ market, basicOperatingFootprint, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "\u30EF\u30FC\u30AF\u30D6\u30C3\u30AF\u306E\u4FA1\u683C", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
     market?: PublicSolutionMarket;
-    equipmentClaims?: EquipmentClaims;
+    basicOperatingFootprint?: string; equipmentClaims?: EquipmentClaims;
     economicsData?: OurSolutionView;
     routeMetrics?: ImpactRouteMetric[];
     breakeven?: BreakevenView;
@@ -1028,7 +1029,7 @@ export function OurSolutionJa({ market, equipmentClaims = defaultEquipmentQuanti
     ];
     const pvFacility = economicsSolutions(economicsData).circulator.facilityFootprint;
     const conventionalSlides: DeckSlide[] = [
-        { label: "\u30B9\u30DA\u30FC\u30B9\u3068\u6280\u8853", navigationLabel: "\u8A2D\u7F6E\u9762\u7A4D", visual: <FootprintMethodVisual data={economicsData}/>, noteTitle: "\u5C0F\u3055\u306A\u8A2D\u7F6E\u9762\u7A4D\u304C\u30EA\u30B5\u30A4\u30AF\u30EB\u306E\u5834\u6240\u3092\u5909\u9769", note: <><p>PV Circulator はモジュール式で配置可能なため、処理量の変化に応じて現場やその近くに処理能力を設置できます。考え方はシンプルで、パネルではなく機械を移動させます。</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>時間</span></p><small>モジュール式の PV Circulator は、{compactNumber(equipmentClaims.relocationHours)}時間以内に設置または撤去でき、移設が可能です。</small></div></> },
+        { label: "\u30B9\u30DA\u30FC\u30B9\u3068\u6280\u8853", navigationLabel: "\u8A2D\u7F6E\u9762\u7A4D", visual: <FootprintMethodVisual basicOperatingFootprint={basicOperatingFootprint} data={economicsData}/>, noteTitle: "\u5C0F\u3055\u306A\u8A2D\u7F6E\u9762\u7A4D\u304C\u30EA\u30B5\u30A4\u30AF\u30EB\u306E\u5834\u6240\u3092\u5909\u9769", note: <><p>PV Circulator はモジュール式で配置可能なため、処理量の変化に応じて現場やその近くに処理能力を設置できます。考え方はシンプルで、パネルではなく機械を移動させます。</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>時間</span></p><small>モジュール式の PV Circulator は、{compactNumber(equipmentClaims.relocationHours)}時間以内に設置または撤去でき、移設が可能です。</small></div></> },
         { label: "\u904B\u55B6\u30B3\u30B9\u30C8\uFF08OPEX\uFF09", navigationLabel: "運営コスト", visual: <OperatingCostMethodVisual economicsData={economicsData}/>, noteTitle: "PV Circulator \u304C\u904B\u55B6\u30B3\u30B9\u30C8\u69CB\u9020\u3092\u5909\u9769", note: <><p>自動化を優先します。搬送、測定、層分離の統合により反復作業を減らし、安定した出力を支えます。この運営シナリオでは、人員、電力、床面積の要件削減により、モデル上のパネル当たりコストが低下します。設備の減価償却費と施設外への輸送費は比較対象外です。</p><p className="os-operating-cost-note">主な運営コストは人件費と施設賃料です。PV Circulator は、1シフト当たり運転・構内物流スタッフ合計 {compactNumber(webNum(economicsData, "methods.circulator.total_staff_per_shift"))} 人を想定しています。</p><FacilityRentArea footprint={pvFacility} locale="ja-JP" /></> },
         { label: "\u4E8C\u6B21\u51E6\u7406\u3068\u6750\u6599", navigationLabel: "二次処理", visual: <MaterialMethodVisual data={economicsData}/>, noteTitle: "\u771F\u306E\u9055\u3044\u306F\u3001\u306A\u304A\u51E6\u7406\u304C\u5FC5\u8981\u306A\u6750\u6599\u306B\u3042\u308A\u307E\u3059\u3002", note: <p>PV Circulator は第一原理から出発します。太陽光パネルは層構造のため、製造工程を逆にたどり、層ごとに分離します。これにより、ガラス、シリコン（セル）粉末、ポリマーをそれぞれ独立した回収物として保持し、二次処理が必要な材料を減らします。</p> },
     ];

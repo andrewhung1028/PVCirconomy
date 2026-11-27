@@ -78,7 +78,7 @@ async function estimate(input: EquipmentMouInput, msrpPerLine: number | null): P
   if (!source || parameterCurrency(source.data) !== currency) return result;
   const { data, prices } = source;
   const scenario = { ...data.scenario, panels_per_month: input.panelsPerMonth, operating_hours_per_day: input.dailyHours };
-  const output = model({ ...data, scenario }, prices, { circulatorLines: input.lines }).solutions.PVCIRCULATOR;
+  const output = model({ ...data, scenario }, prices, { circulatorLines: input.lines, economic: (input.baseConfiguration ?? input.configuration) === "economic" }).solutions.PVCIRCULATOR;
   if (output.lines > input.lines) {
     result.capacityExceeded = true;
     return result;

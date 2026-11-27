@@ -75,6 +75,9 @@ export function BusinessCaseMethodology({ locale = 'en-US', region, market, pane
             <div className="methodologyFormula">{t("Material revenue = Σ (Input material mass × Recovery rate × Benchmark price × Realization factor), adjusted for price units")}</div>
             <div className="methodologyFormula">{t("Total revenue = Processing revenue + Material revenue")}</div>
             <p>{t("Material revenue is estimated by material type using the assumed panel composition, solution-specific recovery performance, saleability, benchmark prices and realization factors. Unsaleable materials and materials without sufficient recovery assumptions do not contribute modeled sales revenue.")}</p>
+            <p>{locale === "zh-TW" ? "設備收益以 Basic／Premium 為基準。接線盒、鋁框與玻璃回收率為 100%，其餘材料依原損失比例校準，整體重量回收率為 99.3%。Economic 詢價另依背板 0%、EVA 50%、其餘材料 100% 計算。"
+              : locale === "ja-JP" ? "設備の収益試算は Basic／Premium が基準です。接続箱、アルミ枠、ガラスは 100% 回収し、他の材料の損失を元の損失率に比例して補正し、重量回収率を 99.3% とします。Economic の問い合わせではバックシート 0%、EVA 50%、その他の材料 100% で計算します。"
+              : "The calculator uses Basic / Premium recovery. Junction boxes, aluminum frames and glass are fully recovered. Other material losses are scaled proportionally to reach 99.3% by input weight. Economic inquiries use 0% backsheet, 50% EVA and 100% recovery of the remaining materials."}</p>
             <p>{t("Where a benchmark is expressed per pound, recovered metric tonnes are converted to pounds before valuation. Currency conversion is applied where relevant.")}</p>
             <p className="methodologyNote">{t("Material values are modeled realizations, not committed purchase prices or guaranteed sale proceeds.")}</p>
           </div>

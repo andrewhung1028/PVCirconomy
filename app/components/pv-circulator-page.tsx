@@ -6,15 +6,16 @@ import { CapacityEstimate, useCapacityEstimate } from "./pv-capacity-estimate";
 import { PVCirculatorBusinessModel } from "./pv-business-model";
 import { EquipmentMouPreview, SpecificationInquiry } from "./specification-inquiry";
 import type { EquipmentBaseVariant, EquipmentMouReview, EquipmentPurchaseOption, EquipmentVariant } from "../../lib/equipment-mou";
+import { standardRecovery } from "../../lib/circulator-recovery";
 import { useTransferredVolume } from "./use-transferred-volume";
 import { inquiryTranslate } from "./marketing";
-import { defaultEquipmentConfigurations, equipmentElectricalRows, equipmentLineRating, integratedEquipmentThroughput, equipmentSpecificationGroups, type EquipmentConfigurations } from "../../lib/equipment-configurations";
+import { defaultEquipmentConfigurations, equipmentElectricalRows, equipmentFootprint, operatingFootprintLabel, equipmentLineRating, integratedEquipmentThroughput, equipmentSpecificationGroups, type EquipmentConfigurations } from "../../lib/equipment-configurations";
 import { defaultEquipmentQuantitative, type EquipmentClaims, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
 import { PublicHeader } from "./public-header";
 import "./review-home.css";
 
 import type { PVCirculatorProfitRoute, PVCirculatorReference, PVCirculatorRecovery, PVCirculatorSilverGrades, PVCirculatorTransportPricing } from "./pv-circulator-route-data";
-import { RecoveryEstimate } from "./pv-recovery-estimate";
+import { GlassRevenueComparison, RecoveryEstimate } from "./pv-recovery-estimate";
 import { DistanceSensitivity } from "./pv-distance-sensitivity";
 import { ProfitComparison } from "./pv-profit-comparison";
 import { formatCurrency } from "../../lib/region-format";
@@ -47,9 +48,9 @@ const sections = [
 ] as const;
 
 const performance = [
-  ["{throughput}\nPANEL/MIN", "Rated throughput", "Up to {panelsPerYear} panels a year from one compact line, based on published operating assumptions."],
+  ["{throughput}\nPANEL/MIN", "Rated throughput", "{panelsPerYear} panels/year before scheduled maintenance: {shifts} shift(s)/day, {shiftHours} h/shift, {workDays} days/week × 52 weeks, {speed}% speed and {uptime}% uptime."],
   ["{operators}\nOPERATOR", "Automated operation", "AI-assisted automation and centralized controls keep manual work to a minimum."],
-  [">{recovery}% RECOVERY", "By weight", "More of every panel leaves the site as a separated material stream."],
+  ["≥{recovery}% RECOVERY", "By weight", "Basic / Premium by input weight. Glass, aluminum frames and junction boxes are fully recovered; other streams have losses."],
   ["DRY PROCESS", "No secondary treatment", "No chemicals, heat or process water means no wastewater treatment and fewer consumables."],
   ["MODULAR\nDESIGN", "Flexible deployment", "A compact line designed to install quickly and relocate as feedstock volumes shift."],
 ] as const;
@@ -225,7 +226,7 @@ function ConfigurationValue({ value, premium = false, t }: { value: boolean | st
     aria-label={t(value ? "Included" : "Not included")}>{!value && "—"}</span>;
 }
 
-function Specifications({ locale, market, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions, inquiry, setInquiry, hasRecyclingPermit, purchaseOption, setPurchaseOption, mouReview, setMouReview }: {
+function Specifications({ locale, market, economicRate, panelWeightKg, businessCaseHref, specificationFx, estimate, recyclingFee, equipmentConfigurations, marketDefaults, sitePowerOptions, inquiry, setInquiry, hasRecyclingPermit, purchaseOption, setPurchaseOption, mouReview, setMouReview }: {
   inquiry: boolean;
   setInquiry: (open: boolean) => void;
   hasRecyclingPermit: boolean;
@@ -241,6 +242,8 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
   businessCaseHref?: string;
   specificationFx?: number;
   estimate: ReturnType<typeof useCapacityEstimate>;
+  economicRate?: number;
+  panelWeightKg?: number;
   recyclingFee: number | null;
 }) {
   const t = translate(locale);
@@ -270,6 +273,10 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
       (inquiry ? openQuote : returnToSpecs).current?.focus({ preventScroll: true });
     });
   }
+  const configuration = equipmentConfigurations[variant];
+  const footprint = equipmentFootprint(configuration);
+  const annual = estimate.effectiveHours * equipmentLineRating(equipmentConfigurations, variant).panelsPerMinute * 60;
+  const unitNumber = (value: number, digits = 2) => value.toLocaleString(locale, { maximumFractionDigits: digits });
   const formatSpecification = (value: string) => {
     const usdPerPanel = value.match(/^(\d+(?:\.\d+)?) USD\/panel$/);
     if (usdPerPanel && specificationFx) {
@@ -324,11 +331,27 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
       <div className="pvc2-specs">
         {equipmentSpecificationGroups.map((group, index) => {
           const spec = equipmentConfigurations[variant];
-          const values = group.items.map(([label]) => [label, formatSpecification(spec.values[label])] as const);
+          const values = group.items.map(([label]) => {
+            let value = formatSpecification(spec.values[label]);
+            if (label === "Material recovery rate" && variant !== "plus") {
+              value = variant === "economic"
+                ? economicRate == null ? "—" : unitNumber(economicRate * 100) + "% · " + t("Theoretical Economic recovery")
+                : "≥" + unitNumber(standardRecovery * 100) + " wt.%";
+            }
+            if (label === "Annual capacity") value = estimate.valid ? unitNumber(annual, 0) + " " + t("panels/year") : "—";
+            if (label === "Annual capacity (weight)") value = estimate.valid && panelWeightKg ? unitNumber(annual * panelWeightKg / 1000) + " t/yr" : "—";
+            if (label === "Recommended footprint") value = operatingFootprintLabel(spec, locale);
+            return [label, value] as const;
+          });
           const rows = group.title === "Utilities & Installation" ? [...equipmentElectricalRows(spec.electrical, locale), ...values] : values;
           return <details key={group.title} open={!inquiry && index < 2}>
             <summary><span>{t(group.title)}</span><span aria-hidden="true">+</span></summary>
             <dl>{rows.map(([label, value]) => <div key={label}><dt>{t(label)}</dt><dd>{value}</dd></div>)}</dl>
+            {group.title === "Performance" && <>
+              <p className="pv-note">{formatCopy(t("Standard annual capacity before scheduled maintenance: {shifts} shift(s)/day × {hours} h/shift × {days} days/year × {speed}% speed × {uptime}% uptime."), estimate.current)}</p>
+              {variant === "economic" && <p className="pv-note">{t("Economic theoretical recovery uses the shared panel composition: 0% of backsheet, 50% of EVA and 100% of all other materials.")}</p>}
+            </>}
+            {group.title === "Dimensions & Weight" && footprint && <p className="pv-note">{formatCopy(t("Equipment footprint: {area} m². Operating space includes 1.5 m on each side. Confirm the combined layout when adding PLUS."), { area: unitNumber(footprint.equipmentArea) })}</p>}
           </details>;
         })}
       </div>
@@ -380,14 +403,14 @@ function SilverGradeComparison({ grades, locale, market, volumeQuery, t }: { vol
     <h3 id="pvc2-silver-grade-title">{t("Theoretical silver concentration")}</h3>
     {grades ? <>
       <table aria-labelledby="pvc2-silver-grade-title">
-        <thead><tr><th scope="col">{t("Method")}</th><th scope="col">{t("Silver-bearing output")}</th><th scope="col">{t("Upper limit (wt.%)")}</th></tr></thead>
+        <thead><tr><th scope="col">{t("Method")}</th><th scope="col">{t("Silver-bearing output")}</th><th scope="col">{t("Reference panel model (wt.%)")}</th></tr></thead>
         <tbody>{silverStreams.map(([code, method, output]) => {
           const grade = grades.find(item => item.code === code)?.silverUpperPct;
           return <tr key={code}><th scope="row">{t(method)}</th><td>{t(output)}</td>
             <td>{grade == null ? "—" : new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(grade / 100)}</td></tr>;
         })}</tbody>
       </table>
-      <p>{t("The model assumes all module silver enters the indicated output. The upper limit is the mass of silver divided by the total mass of that output.")}</p>
+      <p>{t("The model assumes the reference panel’s silver enters this output. The measured powder came from a different sample. Only part of the silicon is recovered, so the measured silver concentration can differ.")}</p>
       <Link href={solutionHref(locale, market) + volumeQuery + "#value"}>{t("View silver assumptions in Our Solution")}</Link>
     </> : <p>{t("Silver concentration estimates are unavailable for this market.")}</p>}
   </div>;
@@ -405,8 +428,11 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
   const claimValues = {
     throughput: number(rating.panelsPerMinute),
     operators: number(rating.direct),
-    panelsPerYear: number(equipmentClaims.annualPanels),
-    recovery: number(equipmentClaims.recoveryPercent),
+    panelsPerYear: estimate.valid ? number(Math.round(estimate.standardAnnual)) : "—",
+    ...estimate.current,
+    shiftHours: estimate.current.hours,
+    workDays: number(Number(estimate.current.days) / 52),
+    recovery: number(100 * standardRecovery),
     purity: number(equipmentClaims.glassPurityPercent),
     glass: number(equipmentClaims.glassInCellPowderPercent),
     hours: number(equipmentClaims.relocationHours),
@@ -532,7 +558,8 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <header className="pvc2-section-heading">
             <h2 id="quality-title">{t("What comes out")}<br />{t("matters.")}</h2>
             <p>{t("Recovery rate tells you how much comes back.")}<br />{" "}{t("Purity determines what the recovered material can become—and what it may be worth.")}</p>
-            {showRevenueComparison && revenueRatio !== null && Number.isFinite(revenueRatio) && <div className="os-materials-demand">
+            {market === "US" && showRevenueComparison && recovery && annualFeeRevenue !== null && <GlassRevenueComparison recovery={recovery} annualPanels={estimate.netAnnual} feeRevenue={annualFeeRevenue} locale={locale} t={t} />}
+            {market !== "US" && showRevenueComparison && revenueRatio !== null && Number.isFinite(revenueRatio) && <div className="os-materials-demand">
               <strong>{revenueRatio.toLocaleString(locale, { maximumFractionDigits: 2 })}×</strong>
               <h3>{t("Material sales revenue relative to recycling fee revenue")}</h3>
               {revenueRatio > 1 && <p>{t("At the current fee, material sales generate more revenue than recycling fees.")}<br />{" "}{t("Lower recycling fees would make material sales even more important.")}</p>}
@@ -624,7 +651,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           setInquiry(true);
         }} />
 
-      <Specifications inquiry={inquiry} setInquiry={setInquiry} hasRecyclingPermit={hasRecyclingPermit} purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
+      <Specifications economicRate={recovery?.economicRate} panelWeightKg={reference?.panelWeightKg} inquiry={inquiry} setInquiry={setInquiry} hasRecyclingPermit={hasRecyclingPermit} purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
         mouReview={mouReview} setMouReview={setMouReview} locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} recyclingFee={feeRate} marketDefaults={marketDefaults} sitePowerOptions={sitePowerOptions} equipmentConfigurations={equipmentConfigurations} />
     </main>
   </div>;

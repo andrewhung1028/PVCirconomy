@@ -13,7 +13,7 @@ export const equipmentSpecificationGroups = [
     ["Rated throughput", { economic: "1 panel/min", basic: "1 panel/min", premium: "1 panel/min", plus: "5 panel/min" }],
     ["Annual capacity", { economic: "115,200 panels/yr", basic: "115,200 panels/yr", premium: "115,200 panels/yr", plus: "576,000 panels/yr" }],
     ["Annual capacity (weight)", { economic: "2,304 t/yr", basic: "2,304 t/yr", premium: "2,304 t/yr", plus: "11,520 t/yr" }],
-    ["Material recovery rate", { economic: ">90 wt.%", basic: ">99 wt.%", premium: ">99 wt.%", plus: ">90 wt.%" }],
+    ["Material recovery rate", { economic: ">90 wt.%", basic: "≥99.3 wt.%", premium: "≥99.3 wt.%", plus: ">90 wt.%" }],
     ["Equipment availability", { economic: ">90%", basic: ">90%", premium: ">90%", plus: ">90%" }],
     ["Energy consumption", { economic: "<1 kWh/panel", basic: "<1 kWh/panel", premium: "<1 kWh/panel", plus: "<1 kWh/panel" }],
     ["Direct operating personnel", { economic: "1 person/shift", basic: "1 person/shift", premium: "1 person/shift", plus: "1 person/shift" }],
@@ -25,7 +25,7 @@ export const equipmentSpecificationGroups = [
     ["Equipment width", { economic: "1,883 mm", basic: "1,883 mm", premium: "1,883 mm", plus: "1,883 mm" }],
     ["Equipment height", { economic: "2,120 mm", basic: "2,120 mm", premium: "2,120 mm", plus: "2,120 mm" }],
     ["Equipment weight", { economic: "6,480 kg", basic: "9,180 kg", premium: "11,940 kg", plus: "6,120 kg" }],
-    ["Recommended footprint", { economic: "18,175 × 5,883 mm", basic: "21,340 × 5,883 mm", premium: "24,100 × 5,883 mm", plus: "7,227 × 5,883 mm" }],
+    ["Recommended footprint", { economic: "17,175 × 4,883 mm", basic: "20,340 × 4,883 mm", premium: "23,100 × 4,883 mm", plus: "8,147 × 4,883 mm" }],
     ["Floor load", { economic: "242.8 kg/m²", basic: "281.2 kg/m²", premium: "315.5 kg/m²", plus: "631.5 kg/m²" }],
   ] },
   { title: "Module Compatibility", items: [
@@ -138,4 +138,23 @@ export function equipmentLineRating(configurations: EquipmentConfigurations, var
 
 export function integratedEquipmentThroughput(configurations: EquipmentConfigurations, base: EquipmentBaseVariant = "basic") {
   return Math.min(equipmentLineRating(configurations, base).panelsPerMinute, equipmentLineRating(configurations, "plus").panelsPerMinute);
+}
+
+export function equipmentFootprint(configuration: EquipmentConfiguration) {
+  const dimension = (key: "Equipment length" | "Equipment width") => {
+    const match = /^([\d,.]+)\s*mm$/i.exec(configuration.values[key].trim());
+    return match ? Number(match[1].replaceAll(",", "")) / 1000 : NaN;
+  };
+  const length = dimension("Equipment length"), width = dimension("Equipment width");
+  if (!(length > 0 && width > 0)) return null;
+  const operatingLength = length + 2 * 1.5, operatingWidth = width + 2 * 1.5;
+  return { equipmentArea: length * width, operatingLength, operatingWidth, operatingArea: operatingLength * operatingWidth };
+}
+
+export function operatingFootprintLabel(configuration: EquipmentConfiguration, locale: OurSolutionLocale) {
+  const footprint = equipmentFootprint(configuration);
+  if (!footprint) return "—";
+  const size = new Intl.NumberFormat(locale, { maximumFractionDigits: 3 });
+  const area = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  return `${size.format(footprint.operatingLength)} × ${size.format(footprint.operatingWidth)} m (${area.format(footprint.operatingArea)} m²)`;
 }

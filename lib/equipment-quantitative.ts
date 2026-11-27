@@ -3,8 +3,8 @@ import { publicSolutionMarkets, type PublicSolutionMarket } from "./our-solution
 type Field = readonly [key: string, label: string, initial: number, min: number, max: number, step?: number];
 
 export const equipmentClaimFields = [
-  ["annualPanels", "行銷情境產能上限（片／年）", 240_000, 1, 10_000_000, 1],
-  ["recoveryPercent", "行銷重量回收率下限（%）", 99, 0, 100],
+  ["annualPanels", "舊版行銷案例（片／年）；現行產能依排班計算", 240_000, 1, 10_000_000, 1],
+  ["recoveryPercent", "舊版行銷回收率（%）；現行整機規格 ≥99.3%", 99.3, 0, 100],
   ["glassPurityPercent", "玻璃純度下限（%）", 99, 0, 100],
   ["glassInCellPowderPercent", "細胞粉玻璃含量上限（%）", 1, 0, 100],
   ["infeedPanelsPerPallet", "自動進料參考片數（片／棧板）", 30, 1, 1000, 1],
