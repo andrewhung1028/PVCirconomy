@@ -80,10 +80,10 @@ export function inquiryText(input: EquipmentMouInput, mou: EquipmentMou, contact
   ];
   rows.push(
     ...equipmentMouPriceRows(input.locale, mou, terms),
-    [w("Budget estimate validity", "概估報價有效期限", "概算見積の有効期間"),
-      w(`Up to ${policy.validityDays} days from completion of signing, subject to Article 7. A formal quotation states its own validity.`,
-        `自完成簽署起最長 ${policy.validityDays} 日，依第 7 條終止。正式報價以其所載有效期限為準。`,
-        `署名完了日から最長${policy.validityDays}日。第7条に従い終了します。正式見積書の有効期限は当該見積書に明記します。`)],
+    [w("MOU evaluation period", "MOU 評估期間", "MOU の評価期間"),
+      w(`${policy.validityDays} ${policy.validityDays === 1 ? "day" : "days"} from the date all parties sign, unless ended earlier under Article 7 or extended by written agreement of all parties. The formal quotation specifies its own validity period.`,
+        `自各方完成簽署之日起 ${policy.validityDays} 日，得依第 7 條提前終止，或經各方書面同意延長。正式報價的有效期限以報價單所載為準。`,
+        `全当事者の署名完了日から${policy.validityDays}日間とします。ただし、第7条に基づく早期終了または全当事者の書面による合意に基づく延長が可能です。正式見積りの有効期間は見積書に明記します。`)],
   );
   if (!throughSalesAgent && mou.msrpTotal === null && mou.investment !== null)
     rows.push([t("Modeled equipment investment"), money.format(mou.investment)]);
