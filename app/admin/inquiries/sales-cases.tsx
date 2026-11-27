@@ -17,7 +17,7 @@ export async function SalesCases({ query, conflict }: { query: string; conflict:
   return <section id="sales-cases" aria-labelledby="sales-cases-title">
     <h2 id="sales-cases-title">已簽 MOU 的業務案件</h2>
     <form action="/admin/inquiries/#sales-cases">
-      <label>案件編號 <input name="case" defaultValue={query} /></label> <button>搜尋案件</button>
+      <label>MOU 編號／案件編號 <input name="case" defaultValue={query} /></label> <button>搜尋案件</button>
       {query && <a href="/admin/inquiries/#sales-cases"> 查看最近案件</a>}
     </form>
     {conflict && <p role="alert">文件編號未儲存。請核對目前案件的報價與合約紀錄。</p>}

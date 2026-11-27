@@ -32,5 +32,5 @@ export function equipmentSalesNextStep(input: EquipmentMouInput, terms: Equipmen
 }
 
 export function equipmentCaseLabel(locale: EquipmentMouInput["locale"]) {
-  return mouWording(locale)("Sales case number", "業務案件編號", "商談番号");
+  return mouWording(locale)("MOU number", "MOU 編號", "MOU 番号");
 }
