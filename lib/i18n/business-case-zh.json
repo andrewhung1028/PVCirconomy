@@ -18,7 +18,6 @@
   "Within standard shift capacity": "在標準輪班能力範圍內",
   "processing hours/day": "處理時間/天",
   "Single-shift capacity utilization": "單班產能利用率",
-  "Operating days or hours are missing from the selected country's SharePoint OPEX parameters. Verify OPERATING_DAYS_MONTH and OPERATING_HOURS_DAY.": "所選國家/地區的 SharePoint OPEX 參數中缺少運行天數或小時數。驗證 OPERATING_DAYS_MONTH 和 OPERATING_HOURS_DAY。",
   "BUSINESS CASE": "營運試算",
   "Annualized results using the same panel volume and recycling fee for both approaches.": "兩種方法使用相同的面板數量和處理費得出的年化結果。",
   "Read the Business Case calculation methodology (opens in a new tab)": "閱讀營運試算計算方法（在新分頁中開啟）",

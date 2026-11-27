@@ -18,7 +18,6 @@
   "Within standard shift capacity": "標準シフトで処理できます",
   "processing hours/day": "時間／日",
   "Single-shift capacity utilization": "標準シフトの稼働率",
-  "Operating days or hours are missing from the selected country's SharePoint OPEX parameters. Verify OPERATING_DAYS_MONTH and OPERATING_HOURS_DAY.": "選択した国の運営費データに稼働日数または稼働時間がありません。OPERATING_DAYS_MONTH と OPERATING_HOURS_DAY を確認してください。",
   "BUSINESS CASE": "事業収支",
   "Annualized results using the same panel volume and recycling fee for both approaches.": "同じ処理枚数と処理料金で比較した年間試算です。",
   "Read the Business Case calculation methodology (opens in a new tab)": "試算方法を読む（新しいタブで開きます）",

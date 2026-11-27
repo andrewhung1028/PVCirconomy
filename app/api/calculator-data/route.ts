@@ -23,8 +23,7 @@ export async function GET() {
 
     // The processing schedule uses country-level OPEX assumptions.
     // Include only the two schedule parameters in the public endpoint.
-    // Current master-data.ts may expose SharePoint descriptions instead
-    // of parameter codes, so support both until that mapping is corrected.
+    // Published and imported rows may use a description or a parameter code.
     const scheduleNames: Record<string, string> = {
       'OPERATING_DAYS_MONTH': 'OPERATING_DAYS_MONTH',
       'OPERATING_HOURS_DAY': 'OPERATING_HOURS_DAY',

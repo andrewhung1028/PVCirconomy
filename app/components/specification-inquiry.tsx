@@ -231,7 +231,9 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
 
   return <section className="pvc2-inquiry-pane" id="equipment-inquiry" aria-labelledby={id}>
     <h2 id={id} ref={heading} tabIndex={-1}>{t("Online inquiry")}</h2>
-    <p className="pv-note">{t("Review your inquiry to preview a draft MOU.")}</p>
+    <p className="pv-note">{t(noMsrp
+      ? "Review your configuration and draft MOU. After you sign, your local sales agent will contact you about the formal quotation."
+      : "Check the suggested retail price (MSRP) for your selected equipment, then review and sign the MOU. The equipment team uses that configuration to prepare your formal quotation.")}</p>
     <form ref={formRef} className="pc-form" onSubmit={preview} noValidate hidden={Boolean(review)}
       onChange={event => {
         const target = event.target;
@@ -402,7 +404,7 @@ export function EquipmentMouPreview({ review: initialReview, onEdit }: { review:
       </time></p>}
       {receipt?.signedAt && <div role="status" lang={initialReview.input.locale}>
         <p><strong>{equipmentCaseLabel(initialReview.input.locale)}</strong> {receipt.caseNumber}</p>
-        <p>{equipmentSalesNextStep(review.input, initialReview.input.locale)}</p>
+        <p>{equipmentSalesNextStep(review.input, review.terms, initialReview.input.locale)}</p>
       </div>}
     </div>
     {actionsContainer && createPortal(<>

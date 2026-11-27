@@ -1621,3 +1621,9 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 .pvc2-glass-options table { min-width: 0; }
 .pvc2-glass-options caption { text-align: start; font-weight: var(--pv-weight-bold); margin-bottom: 8px; }
 .pvc2-glass-options :is(td, th):last-child { text-align: end; }
+
+.os-system-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--pv-space-24, 24px);
+}

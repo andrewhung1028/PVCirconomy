@@ -201,7 +201,7 @@ export function ProfitComparison({ volumeQuery, routes, reference, feePerPanel, 
           showCapacityEstimate(true);
         }}>{t("Adjust recycling fee in Performance")}</a>
         <Link className="pv-button" href={businessCaseHref}>{t("Run your business case")} <Arrow /></Link>
-        <Link className="pv-text-button" href={`?market=${market}&inquiry=1#specification`}>{t("Request equipment information")}</Link>
+        <a className="pv-text-button" href={`?market=${market}${volumeQuery}&inquiry=1#specification`}>{t("Request equipment information")}</a>
       </div>
     </div>
     {reference && money && active && active.fee !== null && active.profit !== null && <div className="pvc2-profit-breakdown" id="pvc2-profit-breakdown">
