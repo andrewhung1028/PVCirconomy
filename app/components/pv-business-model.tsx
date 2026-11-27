@@ -26,8 +26,9 @@ const trialTerms = [
   },
 ];
 
-export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, hasRecyclingPermit, onPermitChange }: {
+export function PVCirculatorBusinessModel({ market, monthlyVolume, t, onPurchase, onPaneWheel, hasRecyclingPermit, onPermitChange }: {
   market: PublicSolutionMarket;
+  monthlyVolume: number;
   hasRecyclingPermit: boolean;
   onPermitChange: (checked: boolean) => void;
   t: (text: string) => string;
@@ -63,7 +64,7 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
             {t("Our organization holds a valid permit to recycle solar PV panels.")}
           </label>
           {hasRecyclingPermit
-            ? <Link className="pv-button pvc2-quote-button" href={`?market=${market}&inquiry=1&purchase=tbp#specification`}
+            ? <Link className="pv-button pvc2-quote-button" href={`?market=${market}&panelsPerMonth=${monthlyVolume}&inquiry=1&purchase=tbp#specification`}
                 onNavigate={() => onPurchase("Trial-based PO (TBP)")}>{applyLabel}</Link>
             : <button type="button" className="pv-button pvc2-quote-button" disabled>{applyLabel}</button>}
         </article>}

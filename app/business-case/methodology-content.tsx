@@ -12,14 +12,16 @@ const Table = ({ headers, rows }: { headers: string[]; rows: string[][] }) => (
   </div>
 );
 
-export function BusinessCaseMethodology({ locale = 'en-US', region, market, panelsPerMonth }: { locale?: OurSolutionLocale; region?: string; market?: string; panelsPerMonth?: string }) {
+export function BusinessCaseMethodology({ locale = 'en-US', region, market, panelsPerMonth, fee, compare }: { locale?: OurSolutionLocale; region?: string; market?: string; panelsPerMonth?: string; fee?: string; compare?: string }) {
   const copy: Record<string, string> = locale === 'zh-TW' ? chineseCopy : locale === 'ja-JP' ? japaneseCopy : {};
   const t = (english: string) => copy[english] ?? english;
   const params = new URLSearchParams();
   const selectedMarket = publicSolutionMarkets.find(item => item === market);
   if (selectedMarket) params.set('market', selectedMarket);
   if (typeof region === 'string' && /^[A-Z0-9-]+$/.test(region)) params.set('region', region);
-  if (typeof panelsPerMonth === 'string' && /^\d+$/.test(panelsPerMonth)) params.set('panelsPerMonth', panelsPerMonth);
+  if (typeof panelsPerMonth === 'string' && /^\d+(\.\d+)?$/.test(panelsPerMonth)) params.set('panelsPerMonth', panelsPerMonth);
+  if (typeof fee === 'string' && fee.trim() && Number.isFinite(Number(fee)) && Number(fee) >= 0) params.set('fee', fee);
+  if (typeof compare === 'string' && /^[A-Z0-9_]+$/.test(compare)) params.set('compare', compare);
   const selector = params.size ? '?' + params : '';
   const path = localizedPublicPath(locale, '/business-case/');
   return (
@@ -28,7 +30,7 @@ export function BusinessCaseMethodology({ locale = 'en-US', region, market, pane
       <main className="methodologyPage">
       <div className="methodologyShell">
         <section className="methodologyHero">
-          <a className="pv-text-button" href={path + selector}>{t("← BACK TO CALCULATOR")}</a>
+          <a className="pv-text-button" href={path + selector + '#operation'}>{t("← BACK TO CALCULATOR")}</a>
           <p className="methodologyEyebrow">{t("CALCULATION METHODOLOGY")}</p>
           <h1>{t("Understand the")}<br />{t("numbers behind")}<br />{t("the business case.")}</h1>
           <p className="methodologyLead">{t("A transparent overview of how the calculator estimates PV recycling revenues, operating costs, capacity requirements and investment payback. Both processing approaches are evaluated using the same input volume and recycling fee.")}</p>
@@ -124,7 +126,7 @@ export function BusinessCaseMethodology({ locale = 'en-US', region, market, pane
           </div>
         </section>
       </div>
-      <footer className="methodologyFooter"><div className="methodologyShell methodologyFooterInner"><span>{t("© PV Circonomy · Business Case Calculator")}</span><a className="methodologyBack" href={path + selector}>{t("RETURN TO CALCULATOR ↗")}</a></div></footer>
+      <footer className="methodologyFooter"><div className="methodologyShell methodologyFooterInner"><span>{t("© PV Circonomy · Business Case Calculator")}</span><a className="methodologyBack" href={path + selector + '#operation'}>{t("RETURN TO CALCULATOR ↗")}</a></div></footer>
     </main></div></div>
   );
 }

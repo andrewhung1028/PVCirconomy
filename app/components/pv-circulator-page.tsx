@@ -34,16 +34,16 @@ function formatCopy(template: string, values: Record<string, string | number>) {
 
 const sections = [
   ["pvcirculator", "PV Circulator"],
+  ["capability", "Capability"],
   ["performance", "Performance"],
   ["process", "Process"],
   ["functions", "Functions"],
   ["layer-by-layer", "Layer by layer"],
+  ["deployability", "Deployability"],
+  ["business-model", "Business model"],
   ["quality", "Quality"],
   ["routes", "Profit"],
-  ["capability", "Capability"],
-  ["deployability", "Deployability"],
   ["configurations", "Configurations"],
-  ["business-model", "Business model"],
   ["specification", "Specification"],
 ] as const;
 
@@ -489,11 +489,15 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
     };
   }, []);
 
-  const navigateSplitPane = (event: ReactWheelEvent<HTMLElement>, nextId: string, previousId: string, direct = false) => {
+  const navigateSplitPane = (event: ReactWheelEvent<HTMLElement>, direct = false) => {
     if (window.innerWidth <= 760 || Math.abs(event.deltaY) < 8 || paneNavigationLocked.current) return;
     const pane = event.currentTarget;
     const atTop = pane.scrollTop <= 1;
     const atBottom = Math.ceil(pane.scrollTop + pane.clientHeight) >= pane.scrollHeight - 1;
+    const index = sections.findIndex(([id]) => id === pane.closest("section")?.id);
+    if (index < 0) return;
+    const nextId = sections[index + 1]?.[0];
+    const previousId = sections[index - 1]?.[0];
     const targetId = direct
       ? (event.deltaY > 0 ? nextId : previousId)
       : (event.deltaY > 0 && atBottom ? nextId : event.deltaY < 0 && atTop ? previousId : "");
@@ -522,6 +526,22 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
         <div className="pv-hero-copy"><h1 id="pvc-title">{t("Separate more.")}<br />{t("Preserve more value.")}</h1><p>{t("Turn end-of-life solar panels into clean, sellable material streams—automatically, at industrial scale, and without chemicals, heat or process water.")}</p></div>
       </section>
 
+      <section id="capability" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="capability-title">
+        <div className="pvc2-split-copy" tabIndex={0} onWheel={navigateSplitPane}><div><h2 id="capability-title">{t("One platform.")}<br />{t("Intact, broken or glass-glass.")}</h2><p>{t("PV Circulator separates intact modules layer by layer. The PLUS module extends the system to broken and glass-glass feedstock through crushing and material separation.")}</p>
+          <table className="pvc2-feedstock-table">
+            <caption>{t("Feedstock and processing route")}</caption>
+            <thead><tr><th scope="col">{t("Feedstock")}</th><th scope="col">{t("Processing route")}</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">{t("Intact glass-backsheet modules")}</th><td>Economic / Basic / Premium</td></tr>
+              <tr><th scope="row">{t("Glass-glass modules")}</th><td>PLUS</td></tr>
+              <tr><th scope="row">{t("Broken modules")}</th><td>PLUS</td></tr>
+            </tbody>
+          </table>
+          <p>{t("For mixed loads, share the proportions and sample models so we can check routing, sorting and preparation for your site.")}</p>
+        </div></div>
+        <div className="pvc2-split-scroll pvc2-photo-stack" tabIndex={0} onWheel={navigateSplitPane}><article className="pvc2-image-card"><img src="/images/pvc-feedstock-intact.jpg" alt={t("Intact solar panels ready for processing")} /><div><span>{locale === "zh-TW" ? "PV Circulator" : "PV CIRCULATOR"}</span><h3>{t("Intact modules")}</h3><p>{t("Automated layer-by-layer separation for framed and frameless glass-backsheet panels.")}</p></div></article><article className="pvc2-image-card"><img src="/images/pvc-feedstock-broken.jpg" alt={t("Broken solar panel feedstock")} /><div><span>{t("PLUS MODULE")}</span><h3>{t("Broken & glass-glass")}</h3><p>{t("Integrated crushing and material separation expands feedstock compatibility.")}</p></div></article></div>
+      </section>
+
       <section id="performance" className="pv-screen pvc2-performance" aria-labelledby="performance-title">
         <div className="pvc2-performance-overview">
           <header className="pvc2-section-heading"><h2 id="performance-title">{t("Built for industrial")}<br />{t("PV recycling.")}</h2><p>{t("Every line is designed around one question: how much value can you recover per panel, at what operating cost?")}</p></header>
@@ -536,8 +556,8 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
         heading={<>{t("Simple principle.")}<br />{t("Layer by layer.")}<br />{t("Material by material.")}</>} />
 
       <section id="functions" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="functions-title">
-        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process", true)}><div><h2 id="functions-title">{t("Configure the line.")}<br />{t("Fit your operation.")}</h2><p>{t("Start with the core line, then add what your operation needs: intelligent identification, integrated junction-box removal or material preparation for downstream buyers.")}</p><Link className="pv-button" href={`?market=${market}&inquiry=1#specification`}>{t("Request equipment information")}{' '}<Arrow /></Link></div></div>
-        <div className="pvc2-split-scroll" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "layer-by-layer", "process")}>{functions.map(([number, title, lead, text, image]) => <article className="pvc2-function" key={number}><img src={image} alt="" /><div><span>{locale === "zh-TW" ? t(number) : number}</span><h3>{t(title)}</h3><strong>{t(lead)}</strong><p>{t(text)}</p></div></article>)}</div>
+        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, true)}><div><h2 id="functions-title">{t("Configure the line.")}<br />{t("Fit your operation.")}</h2><p>{t("Start with the core line, then add what your operation needs: intelligent identification, integrated junction-box removal or material preparation for downstream buyers.")}</p><Link className="pv-button" href={`?market=${market}${volumeQuery}&inquiry=1#specification`} onNavigate={() => setInquiry(true)}>{t("Request equipment information")}{' '}<Arrow /></Link></div></div>
+        <div className="pvc2-split-scroll" tabIndex={0} onWheel={navigateSplitPane}>{functions.map(([number, title, lead, text, image]) => <article className="pvc2-function" key={number}><img src={image} alt="" /><div><span>{locale === "zh-TW" ? t(number) : number}</span><h3>{t(title)}</h3><strong>{t(lead)}</strong><p>{t(text)}</p></div></article>)}</div>
       </section>
 
       <section id="layer-by-layer" className="pv-screen pvc2-media-screen" aria-labelledby="layer-title">
@@ -552,6 +572,49 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <SilverGradeComparison volumeQuery={volumeQuery} grades={silverGrades} locale={locale} market={market} t={t} />
         </div>
       </section>
+
+      <section id="deployability" className="pv-screen pvc2-split pvc2-split-64 pvc2-deployability os-method-comparison" aria-labelledby="deployability-title">
+        <div className="pvc2-split-copy" tabIndex={0} onWheel={navigateSplitPane}>
+          <div>
+            <h2 id="deployability-title">{t("Shorter hauls.")}<br />{t("More competitive recycling.")}</h2>
+            <p>{t("Fixed-site shredding and thermal processing require hauling panels to the plant. PV Circulator can process panels on-site or near the source. Shorter hauls lower what owners pay for freight and make recycling more competitive.")}</p>
+            <DistanceSensitivity annualPanels={estimate.valid ? estimate.netAnnual : null} reference={reference}
+              pricing={transportPricing} market={market} locale={locale} t={t} />
+          </div>
+        </div>
+        <div className="pvc2-split-scroll pvc2-photo-stack" tabIndex={0} onWheel={navigateSplitPane}>
+          <article className="pvc2-image-card pvc2-onsite-card">
+            <img src="/images/pvc-deploy-onsite.webp" alt={t("Illustrative modular PV recycling operation at a solar farm")} />
+            <div>
+              <span>{t("ON-SITE PROCESSING")}</span>
+              <h3>{t("Bring recycling to")}<br />{t("the panels.")}</h3>
+              <p>{t("Set up at large decommissioning projects and collection sites. Skip the long haul.")}</p>
+              <details className="pv-details pvc2-deployment-features">
+                <summary>{t("Deployment features")}</summary>
+                <article><strong>{t("Modular")}</strong> · <span>{t("Install. Dismantle. Redeploy.")}</span><p>{t("Integrated processing modules enable efficient installation, dismantling and redeployment.")}</p></article>
+                <article><strong>{formatCopy(t("{hours} Hours"), claimValues)}</strong> · <span>{t(equipmentClaims.relocationHours === 24 ? "Relocate in a day." : "Rapid relocation.")}</span><p>{t("Designed for rapid teardown and restart, subject to site readiness. Transport time excluded.")}</p></article>
+                <article><strong>{t("Relocatable")}</strong> · <span>{t("Follow the feedstock.")}</span><p>{t("Move the line as panel volumes and collection locations change.")}</p></article>
+              </details>
+            </div>
+          </article>
+          <article className="pvc2-image-card"><img src="/images/pvc-deploy-nearsite.webp" alt={t("Illustrative regional PV recycling hub")} /><div><span>{t("NEAR-SITE PROCESSING")}</span><h3>{t("Build capacity close")}<br />{t("to the supply.")}</h3><p>{t("Run a regional hub for several collection points, and move it when volumes shift.")}</p></div></article>
+        </div>
+      </section>
+
+      <PVCirculatorBusinessModel monthlyVolume={monthlyVolume} market={market} t={t} hasRecyclingPermit={hasRecyclingPermit}
+        onPermitChange={checked => {
+          setPermitMarket(checked ? market : null);
+          if (!checked && purchaseOption === "Trial-based PO (TBP)") {
+            setPurchaseOption("Standard sales");
+            setMouReview(null);
+          }
+        }}
+        onPaneWheel={navigateSplitPane}
+        onPurchase={option => {
+          setPurchaseOption(option);
+          setMouReview(null);
+          setInquiry(true);
+        }} />
 
       <section id="quality" className="pv-screen pvc2-quality" aria-labelledby="quality-title">
         <div className="pvc2-quality-estimate">
@@ -580,76 +643,18 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <div className="pvc2-evidence-note">
             <h4>{t("Check your buyer’s specifications")}</h4>
             <p>{t("For a representative batch, request kilograms of each recovered stream per tonne of input, measured purity, key contaminants and residual waste. Include the panel mix and any buyer acceptance criteria in your inquiry.")}</p>
-            <a className="pv-text-button" href={`?market=${market}&inquiry=1#specification`}>{t("Ask about samples or test reports")} <Arrow /></a>
+            <a className="pv-text-button" href={`?market=${market}${volumeQuery}&inquiry=1#specification`}>{t("Ask about samples or test reports")} <Arrow /></a>
           </div>
         </div>
       </section>
 
       <ProfitComparison volumeQuery={volumeQuery} routes={routes} reference={reference} feePerPanel={feePerPanel} feeRate={feeRate} market={market} locale={locale} businessCaseHref={businessCaseHref} t={t} />
-      <section id="capability" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="capability-title">
-        <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality")}><div><h2 id="capability-title">{t("One platform.")}<br />{t("Intact, broken or glass-glass.")}</h2><p>{t("PV Circulator separates intact modules layer by layer. The PLUS module extends the system to broken and glass-glass feedstock through crushing and material separation.")}</p>
-          <table className="pvc2-feedstock-table">
-            <caption>{t("Feedstock and processing route")}</caption>
-            <thead><tr><th scope="col">{t("Feedstock")}</th><th scope="col">{t("Processing route")}</th></tr></thead>
-            <tbody>
-              <tr><th scope="row">{t("Intact glass-backsheet modules")}</th><td>Economic / Basic / Premium</td></tr>
-              <tr><th scope="row">{t("Glass-glass modules")}</th><td>PLUS</td></tr>
-              <tr><th scope="row">{t("Broken modules")}</th><td>PLUS</td></tr>
-            </tbody>
-          </table>
-          <p>{t("For mixed loads, share the proportions and sample models so we can check routing, sorting and preparation for your site.")}</p>
-        </div></div>
-        <div className="pvc2-split-scroll pvc2-photo-stack" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality")}><article className="pvc2-image-card"><img src="/images/pvc-feedstock-intact.jpg" alt={t("Intact solar panels ready for processing")} /><div><span>{locale === "zh-TW" ? "PV Circulator" : "PV CIRCULATOR"}</span><h3>{t("Intact modules")}</h3><p>{t("Automated layer-by-layer separation for framed and frameless glass-backsheet panels.")}</p></div></article><article className="pvc2-image-card"><img src="/images/pvc-feedstock-broken.jpg" alt={t("Broken solar panel feedstock")} /><div><span>{t("PLUS MODULE")}</span><h3>{t("Broken & glass-glass")}</h3><p>{t("Integrated crushing and material separation expands feedstock compatibility.")}</p></div></article></div>
-      </section>
-
-      <section id="deployability" className="pv-screen pvc2-split pvc2-split-64 pvc2-deployability os-method-comparison" aria-labelledby="deployability-title">
-        <div className="pvc2-split-copy" tabIndex={0} onWheel={event => navigateSplitPane(event, "configurations", "capability")}>
-          <div>
-            <h2 id="deployability-title">{t("Shorter hauls.")}<br />{t("More competitive recycling.")}</h2>
-            <p>{t("Fixed-site shredding and thermal processing require hauling panels to the plant. PV Circulator can process panels on-site or near the source. Shorter hauls lower what owners pay for freight and make recycling more competitive.")}</p>
-            <DistanceSensitivity annualPanels={estimate.valid ? estimate.netAnnual : null} reference={reference}
-              pricing={transportPricing} market={market} locale={locale} t={t} />
-          </div>
-        </div>
-        <div className="pvc2-split-scroll pvc2-photo-stack" tabIndex={0} onWheel={event => navigateSplitPane(event, "configurations", "capability")}>
-          <article className="pvc2-image-card pvc2-onsite-card">
-            <img src="/images/pvc-deploy-onsite.webp" alt={t("Illustrative modular PV recycling operation at a solar farm")} />
-            <div>
-              <span>{t("ON-SITE PROCESSING")}</span>
-              <h3>{t("Bring recycling to")}<br />{t("the panels.")}</h3>
-              <p>{t("Set up at large decommissioning projects and collection sites. Skip the long haul.")}</p>
-              <details className="pv-details pvc2-deployment-features">
-                <summary>{t("Deployment features")}</summary>
-                <article><strong>{t("Modular")}</strong> · <span>{t("Install. Dismantle. Redeploy.")}</span><p>{t("Integrated processing modules enable efficient installation, dismantling and redeployment.")}</p></article>
-                <article><strong>{formatCopy(t("{hours} Hours"), claimValues)}</strong> · <span>{t(equipmentClaims.relocationHours === 24 ? "Relocate in a day." : "Rapid relocation.")}</span><p>{t("Designed for rapid teardown and restart, subject to site readiness. Transport time excluded.")}</p></article>
-                <article><strong>{t("Relocatable")}</strong> · <span>{t("Follow the feedstock.")}</span><p>{t("Move the line as panel volumes and collection locations change.")}</p></article>
-              </details>
-            </div>
-          </article>
-          <article className="pvc2-image-card"><img src="/images/pvc-deploy-nearsite.webp" alt={t("Illustrative regional PV recycling hub")} /><div><span>{t("NEAR-SITE PROCESSING")}</span><h3>{t("Build capacity close")}<br />{t("to the supply.")}</h3><p>{t("Run a regional hub for several collection points, and move it when volumes shift.")}</p></div></article>
-        </div>
-      </section>
 
       <section id="configurations" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="configurations-title">
-        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "business-model", "deployability")}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{t(lead)}</small></span>)}</div>{rows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value={economic} /><ConfigurationValue t={t} value={basic} /><ConfigurationValue t={t} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value /><ConfigurationValue t={t} value /><ConfigurationValue t={t} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
-        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "business-model", "deployability")}><div><h2 id="configurations-title">{t("Choose")}<br />{t("the right fit.")}</h2><strong>{t("Three configurations.")}<br />{t("One goal: maximum material value.")}</strong><p>{t("Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.")}</p><div className="pvc2-business-case"><strong>{t("Evaluate the economics of your configuration.")}</strong><p>{t("Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.")}</p>
+        <div className="pvc2-split-scroll pvc2-config-table" tabIndex={0} onWheel={navigateSplitPane}><div className="pvc2-config-comparison" role="table" aria-label={t("Comparison of PV Circulator configurations")}><div className="pvc2-config-head" role="row"><span role="columnheader">{t("Functions")}</span>{[["Economic", "Start lean."], ["Basic", "Complete separation."], ["Premium", "Automated & traceable."]].map(([name, lead], index) => <span role="columnheader" className={index === 2 ? "is-premium" : ""} key={name}><strong>{name}</strong><small>{t(lead)}</small></span>)}</div>{rows.map(([label, economic, basic, premium]) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value={economic} /><ConfigurationValue t={t} value={basic} /><ConfigurationValue t={t} value={premium} premium /></div>)}<div className="pvc2-config-plus"><strong>{t("PLUS — One module. Every configuration.")}</strong><p>{t("Available with Economic, Basic and Premium. Expand feedstock compatibility without changing your core PV Circulator configuration.")}</p>{["Coarse Crusher", "Fine Crusher", "Material Separation"].map((label) => <div className="pvc2-config-row" role="row" key={label}><span role="rowheader">{t(label)}</span><ConfigurationValue t={t} value /><ConfigurationValue t={t} value /><ConfigurationValue t={t} value premium /></div>)}<div className="pvc2-config-row pvc2-config-dust"><span>{t("Dust Control")}</span><span>{t("Enclosed extraction and dedicated collection")}</span></div></div></div></div>
+        <div className="pvc2-split-copy pvc2-config-copy" tabIndex={0} onWheel={navigateSplitPane}><div><h2 id="configurations-title">{t("Choose")}<br />{t("the right fit.")}</h2><strong>{t("Three configurations.")}<br />{t("One goal: maximum material value.")}</strong><p>{t("Choose Economic, Basic or Premium to match your automation needs and material recovery goals. Add PLUS to expand feedstock compatibility across intact, broken and glass-glass PV modules.")}</p><div className="pvc2-business-case"><strong>{t("Evaluate the economics of your configuration.")}</strong><p>{t("Explore processing costs, material recovery value and annual EBITDA based on your operating conditions.")}</p>
           <p>{t("Premium integrates junction-box removal. Economic and Basic require separate preparation for that step. Check power, floor loading and staffing in the specifications.")}</p><a className="pv-text-button" href={businessCaseHref}>{t("Calculate your business case")}{' '}<Arrow /></a></div></div></div>
       </section>
-
-      <PVCirculatorBusinessModel market={market} t={t} hasRecyclingPermit={hasRecyclingPermit}
-        onPermitChange={checked => {
-          setPermitMarket(checked ? market : null);
-          if (!checked && purchaseOption === "Trial-based PO (TBP)") {
-            setPurchaseOption("Standard sales");
-            setMouReview(null);
-          }
-        }}
-        onPaneWheel={event => navigateSplitPane(event, "specification", "configurations")}
-        onPurchase={option => {
-          setPurchaseOption(option);
-          setMouReview(null);
-          setInquiry(true);
-        }} />
 
       <Specifications economicRate={recovery?.economicRate} panelWeightKg={reference?.panelWeightKg} inquiry={inquiry} setInquiry={setInquiry} hasRecyclingPermit={hasRecyclingPermit} purchaseOption={purchaseOption} setPurchaseOption={setPurchaseOption}
         mouReview={mouReview} setMouReview={setMouReview} locale={locale} market={market} businessCaseHref={businessCaseHref} specificationFx={specificationFx} estimate={estimate} recyclingFee={feeRate} marketDefaults={marketDefaults} sitePowerOptions={sitePowerOptions} equipmentConfigurations={equipmentConfigurations} />

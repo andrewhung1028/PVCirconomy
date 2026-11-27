@@ -256,7 +256,7 @@ export async function POST(request: Request) {
       const note = article.note ? `<p>${escapeHtml(article.note)}</p>` : "";
       return `<h2>${escapeHtml(article.title)}</h2>${introduction}${body}${note}`;
     }).join("");
-    const status = [content.dispatchStatus, `${content.buyerConfirmationLabel}  ${buyerConfirmedAt}`, `${equipmentCaseLabel(input.locale)}  ${caseNumber}`, equipmentSalesNextStep(input)].map(escapeHtml).join("<br>");
+    const status = [content.dispatchStatus, `${content.buyerConfirmationLabel}  ${buyerConfirmedAt}`, `${equipmentCaseLabel(input.locale)}  ${caseNumber}`, equipmentSalesNextStep(input, terms)].map(escapeHtml).join("<br>");
     try {
       const acceptedAt = await sendDocumentEmail(token.id, contact.email, {
         subject: `PV Circulator · ${caseNumber} · ${content.title}`,

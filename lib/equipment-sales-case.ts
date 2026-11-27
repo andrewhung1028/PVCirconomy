@@ -1,16 +1,26 @@
-import type { EquipmentMouInput } from "./equipment-mou";
+import { equipmentMouHasSalesAgent, type EquipmentMouTerms, type EquipmentMouInput } from "./equipment-mou";
 import { mouWording } from "./equipment-mou-articles";
 
 export function equipmentCaseNumber(id: string) {
   return "PV-" + id.toUpperCase();
 }
 
-export function equipmentSalesNextStep(input: EquipmentMouInput, locale = input.locale) {
+export function equipmentSalesNextStep(input: EquipmentMouInput, terms: EquipmentMouTerms, locale = input.locale) {
   const wording = mouWording(locale);
   if (input.installationMarket === "JP") return wording(
     "Your local sales agent will follow up on standard purchase pricing and a formal equipment quotation.",
     "日本當地代理商將與您聯絡，說明標準採購價格並提供正式設備報價。",
     "日本の販売代理店が標準購入の価格についてご連絡し、設備の正式見積書をご案内します。");
+  if (equipmentMouHasSalesAgent(terms)) return wording(
+    input.purchaseOption === "Trial-based PO (TBP)"
+      ? "Your local sales agent will coordinate trial availability and a TBP quotation covering the deposit, fees and trial period."
+      : "Your local sales agent will confirm the configuration with you and prepare a formal equipment quotation for contract review.",
+    input.purchaseOption === "Trial-based PO (TBP)"
+      ? "當地代理商將協調試用名額，並提供載明押金、費用與試用期間的 TBP 報價。"
+      : "當地代理商將與您確認配置，並提供正式設備報價，以便審閱合約。",
+    input.purchaseOption === "Trial-based PO (TBP)"
+      ? "現地の販売代理店が試用枠を確認し、保証金・費用・試用期間を記載した TBP 見積書をご案内します。"
+      : "現地の販売代理店が設備構成を確認し、契約の検討に向けて正式見積書を作成します。");
   if (input.purchaseOption === "Trial-based PO (TBP)") return wording(
     "Our equipment team will confirm trial availability and issue a TBP quotation with the deposit, fees and trial duration. Both parties confirm the quotation in writing before signing the contract.",
     "設備團隊將確認試用名額，並提供載明押金、費用與試用期間的 TBP 正式報價。雙方書面確認報價後再簽約。",

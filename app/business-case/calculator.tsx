@@ -209,10 +209,12 @@ function opexValue(x: any) {
    PAGE
 ========================================================= */
 
-export default function Page({sourceLabel, locale = 'en-US', initialRegion, requestedMarket, initialMonthlyVolume}: {
+export default function Page({sourceLabel, locale = 'en-US', initialRegion, requestedMarket, initialMonthlyVolume, initialFee, initialComparison}: {
   sourceLabel: string;
   locale?: OurSolutionLocale;
   initialRegion?: string;
+  initialFee?: string;
+  initialComparison?: string;
   initialMonthlyVolume?: string;
   requestedMarket?: PublicSolutionMarket;
 }) {
@@ -233,8 +235,8 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
 
   const [region, setRegion] = useState('');
   const [country, setCountry] = useState('');
-  const monthlyVolume = initialMonthlyVolume && /^\d+$/.test(initialMonthlyVolume) ? Number(initialMonthlyVolume) : NaN;
-  const transferredPanels = Number.isSafeInteger(monthlyVolume) && monthlyVolume > 0 ? monthlyVolume : undefined;
+  const monthlyVolume = initialMonthlyVolume && /^\d+(\.\d+)?$/.test(initialMonthlyVolume) ? Number(initialMonthlyVolume) : NaN;
+  const transferredPanels = Number.isFinite(monthlyVolume) && monthlyVolume >= 0 ? monthlyVolume : undefined;
   const [panels, setPanels] = useState(transferredPanels ?? businessCaseDefaultPanels);
   const [fee, setFee] = useState(0.2);
   const [activeSection, setActiveSection] = useState('overview');
@@ -314,24 +316,19 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
               x.active !== false
           ) || [];
 
-        if (
-          compareSolutions.length &&
-          !compareSolutions.some(
-            (x: any) =>
-              x.code === 'CONVENTIONAL'
-          )
-        ) {
-          setCompare(
-            compareSolutions[0].code
-          );
-        }
+        const available = selected?.code === 'JP' ? d.japan?.solutions ?? compareSolutions : compareSolutions;
+        const chosen = available.find((item: any) => item.active !== false && item.code !== primary && item.code === initialComparison);
+        setCompare(chosen?.code ?? compareSolutions.find((item: any) => item.code === 'CONVENTIONAL')?.code ?? compareSolutions[0]?.code ?? 'CONVENTIONAL');
+        const restoredFee = typeof initialFee === 'string' && initialFee.trim() ? Number(initialFee) : NaN;
+        setFee(selected?.code === initialRegion && Number.isFinite(restoredFee) && restoredFee >= 0
+          ? restoredFee : Number(selected?.defaultFee ?? 0.2));
       })
       .catch(() => {
         setMsg(
           'Unable to load calculator data.'
         );
       });
-  }, [initialRegion, requestedMarket, transferredPanels]);
+  }, [initialRegion, requestedMarket, transferredPanels, initialFee, initialComparison]);
 
   /* =======================================================
      MASTER DATA LOOKUPS
@@ -394,20 +391,7 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
     [regionalSolutions]
   );
 
-  useEffect(() => {
-    if (reg?.defaultFee != null) {
-      setFee(
-        Number(reg.defaultFee)
-      );
-    }
-  }, [region, reg?.defaultFee]);
-
-  /* =======================================================
-     PROCESSING SCHEDULE
-  ======================================================= */
-
-  // Use the selected country's SharePoint OPEX assumptions.
-  // Support both the raw SharePoint field names and normalized API rows.
+  // The published operating schedule is specific to the selected country.
   const scheduleParameters = useMemo(() => {
     const countryCode = String(reg?.countryCode || '').trim().toUpperCase();
     const rows = (data?.opex || []).filter((row: any) =>
@@ -717,6 +701,12 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
       pvResult?.materialBreakdown
     );
 
+  const glassRow = pvMaterials.find(row => materialKey(row) === 'GLASS');
+  const glassSale = Boolean(glassRow?.saleable && glassRow.benchmarkPriceLocal > 0 && glassRow.realization > 0);
+  const glassPrice = glassSale
+    ? money2(glassRow.benchmarkPriceLocal * glassRow.realization, currency) + (glassRow.priceUnit?.endsWith('/lb') ? '/lb' : '/t')
+    : null;
+
   const compareMaterials =
     toArray(
       compareResult?.materials ??
@@ -802,7 +792,8 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
     (item: Region) => businessCaseMarketForCountry(item.countryCode) === requestedMarket,
   ));
   const lightNavigation = !['overview', 'business-summary', 'follow-up'].includes(activeSection);
-  const methodologyHref = `${localizedPublicPath(locale, '/business-case/methodology/')}${languageQuery}`;
+  const scenarioParams = new URLSearchParams({ market: selectedMarket, region, panelsPerMonth: String(panels), fee: String(fee), compare });
+  const methodologyHref = localizedPublicPath(locale, '/business-case/methodology/') + '?' + scenarioParams;
 
   return (
     <div className={`pv-review bc-shell${lightNavigation ? ' pv-light-nav' : ''}`} data-section={activeSection}>
@@ -898,7 +889,7 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
               <input
                 type="number"
                 min="0"
-                step={transferredPanels !== undefined ? '1' : region === 'JP' ? '0.01' : '1000'}
+                step={region === 'JP' ? '0.01' : transferredPanels !== undefined ? '1' : '1000'}
                 value={panels}
                 aria-label={t("Panels per month")}
                 onChange={(e) => {
@@ -987,7 +978,9 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
                       : `At ${number(panels)} panels/month, ${number(requiredHoursPerDay, 1)} hours/day are required, within the standard shift.`}
                 </p>
               ) : (
-                <p>{t("Operating days or hours are missing from the selected country's SharePoint OPEX parameters. Verify OPERATING_DAYS_MONTH and OPERATING_HOURS_DAY.")}</p>
+                <p>{region
+                  ? text('The operating schedule is unavailable for this region.', 'この地域の稼働日程は現在表示できません。', '目前無法顯示此地區的排班資料。')
+                  : text('Choose your country and operating region to see the shift estimate.', '国と操業地域を選択すると、必要な稼働時間が表示されます。', '請先選擇國家及營運地區，即可查看所需工時。')}</p>
               )}
             </div>
           </div>
@@ -1017,15 +1010,21 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
                   </p>
 
                   <h2>
-                    {text('See where the economics', '試算結果の', '看懂營運收支')}
-                    <br />
-                    {text('come from.', '内訳を確認する。', '如何計算。')}
+                    {text('Your operating case', '事業収支の試算結果', '您的營運試算結果')}
                   </h2>
 
                   <p className="sectionDescription">
-                    {t("Annualized results using the same panel volume and recycling fee for both approaches.")}
+                    {countryLabel(reg.country, reg.countryCode)} · {reg.code} · {number(panels, Number.isInteger(panels) ? 0 : 2)} {text('panels/month', '枚／月', '片／月')} · {currency}
                   </p>
-
+                  <p className="sectionDescription">
+                    {glassSale
+                      ? text('Glass is sold to a buyer at the modeled price.', 'ガラスは試算上の価格で買い手に売却します。', '玻璃依模型價格售予買家。')
+                      : text('The model includes no glass sales revenue.', 'この試算にガラスの売却収入は含まれていません。', '本次試算的玻璃銷售收入為零。')} {glassPrice && <strong>{glassPrice}</strong>}<br />
+                    {' '}{text('Annual EBITDA', '年間 EBITDA', '年度 EBITDA')} <strong>{money(pvResult.annualEbitda, currency)}</strong>
+                    {' · '}{text('Simple payback', '単純投資回収期間', '簡單投資回收期')} <strong>{pvResult.simplePaybackYears > 0
+                      ? number(pvResult.simplePaybackYears, 1) + text(' years', ' 年', ' 年')
+                      : text('Unavailable', '算出できません', '無法估算')}</strong>
+                  </p>
                   <a
                     className="methodologyLink"
                     href={methodologyHref}

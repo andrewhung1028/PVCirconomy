@@ -16,13 +16,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Page({ searchParams }: {
-  searchParams: Promise<{ market?: string; region?: string; panelsPerMonth?: string | string[] }>;
+  searchParams: Promise<{ market?: string; region?: string; fee?: string; compare?: string; panelsPerMonth?: string | string[] }>;
 }) {
-  const [data, { market, region, panelsPerMonth }] = await Promise.all([loadMasterData(), searchParams]);
+  const [data, { market, region, panelsPerMonth, fee, compare }] = await Promise.all([loadMasterData(), searchParams]);
   return (
     <div lang="ja">
       <div className="bc-calculator bc-calculator-ja">
-        <Calculator key={JSON.stringify([market, region, panelsPerMonth])} sourceLabel={data.source} locale="ja-JP" initialRegion={region} initialMonthlyVolume={typeof panelsPerMonth === "string" ? panelsPerMonth : undefined} requestedMarket={market || !region ? publicSolutionMarketForPage(market, "ja-JP") : undefined} />
+        <Calculator key={JSON.stringify([market, region, panelsPerMonth, fee, compare])} sourceLabel={data.source} initialFee={fee} initialComparison={compare} locale="ja-JP" initialRegion={region} initialMonthlyVolume={typeof panelsPerMonth === "string" ? panelsPerMonth : undefined} requestedMarket={market || !region ? publicSolutionMarketForPage(market, "ja-JP") : undefined} />
       </div>
     </div>
   );

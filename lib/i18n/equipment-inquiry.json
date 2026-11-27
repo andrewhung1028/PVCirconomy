@@ -1,4 +1,6 @@
 {
+  "Review your configuration and draft MOU. After you sign, your local sales agent will contact you about the formal quotation.": ["請確認設備配置並審閱 MOU 草案。簽署後，當地代理商將與您聯絡，確認正式報價。", "設備構成と MOU 案をご確認ください。署名後、現地の販売代理店から正式見積もりについてご連絡します。"],
+  "Check the suggested retail price (MSRP) for your selected equipment, then review and sign the MOU. The equipment team uses that configuration to prepare your formal quotation.": ["查詢所選設備的建議售價（MSRP），再審閱並簽署 MOU。設備團隊會依同一組配置準備正式報價。", "選択した設備のメーカー希望小売価格（MSRP）を確認し、MOU を審査して署名します。設備担当者が同じ構成で正式見積書を作成します。"],
   "Purchase option": ["採購方式", "購入方法"],
   "Standard sales": ["標準採購", "通常購入"],
   "Trial-based PO (TBP)": ["試用採購（TBP）", "試用評価付き発注（TBP）"],
