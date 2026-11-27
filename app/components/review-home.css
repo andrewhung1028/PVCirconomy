@@ -1608,7 +1608,8 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 
 
 .pvc2-mou-article { margin-block: 22px; padding-top: 14px; border-top: 1px solid var(--pv-line); }
-.pvc2-mou-article h3 { font-size: var(--pv-type-subsection); margin: 0 0 8px; }
+.pvc2-mou-article :is(p, li, th, td) { font-size: 14px; }
+.pvc2-mou-article h3 { font-size: 24px; margin: 0 0 8px; }
 #equipment-mou-actions { margin-top: 20px; }
 .pvc2-mou-signing-language { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-block-end: 12px; }
 .pvc2-mou-signing-language p { margin: 0; }
