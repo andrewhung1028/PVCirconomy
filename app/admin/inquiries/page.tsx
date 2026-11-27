@@ -1,3 +1,5 @@
+import { equipmentCaseNumber } from "../../../lib/equipment-sales-case";
+import { salesCaseId } from "../../../server/equipment-mou/cases";
 import { SalesCases } from "./sales-cases";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
@@ -59,6 +61,7 @@ function InquiryRecord({ record }: { record: InquirySubmission }) {
       <span>#{record.id} · <time dateTime={date.toISOString()}>{submittedTime.format(date)}</time></span>
     </div>
     <p>{record.form_complete ? "填寫完整" : "未填完整"} · {field("installationCountry") || "—"} · {field("configuration") || "—"}{verified && " · 工作信箱已驗證"}</p>
+    {record.mou_id && <p>MOU 編號　{equipmentCaseNumber(record.mou_id)}</p>}
     <details>
       <summary>查看填寫內容</summary>
       <dl className="pa-inquiry-fields">
@@ -74,7 +77,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ b
   const staff = await staffSession();
   if (staff?.adminRole !== "admin") notFound();
   const { before, case: query, conflict } = await searchParams;
-  const page = await listInquirySubmissions(before).catch(() => null);
+  const search = typeof query === "string" ? query.trim() : "";
+  const mouId = salesCaseId(search);
+  const page = search && !mouId ? { records: [], showLatest: false, older: undefined }
+    : await listInquirySubmissions(search ? undefined : before, mouId).catch(() => null);
 
   return <div className={font.className}>
     <main className="pa">
@@ -83,9 +89,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ b
         <h1>詢價管理</h1>
         <p>查看客戶從設備詢價表單提交的資料。時間以台北時間顯示。</p>
       </div>
-      <SalesCases query={typeof query === "string" ? query.trim() : ""} conflict={conflict === "1"} />
+      <SalesCases query={search} conflict={conflict === "1"} />
       {page === null ? <p role="alert">無法載入詢價紀錄，請重新整理。</p> : <>
-        {page.records.length === 0 ? <p>{page.showLatest ? "沒有更早的詢價紀錄。" : "目前沒有詢價紀錄。"}</p> :
+        {page.records.length === 0 ? <p>{search ? "沒有對應的詢價紀錄。" : page.showLatest ? "沒有更早的詢價紀錄。" : "目前沒有詢價紀錄。"}</p> :
           <section aria-label="設備詢價紀錄">
             {page.records.map(record => <InquiryRecord key={record.id} record={record} />)}
           </section>}

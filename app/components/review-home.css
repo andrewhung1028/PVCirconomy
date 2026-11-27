@@ -1597,6 +1597,7 @@ html.pv-section-scroll{scroll-snap-type:y mandatory;scroll-behavior:smooth}
 
 .pvc2-mou-preview { padding-bottom: 32px; }
 .pvc2-mou-preview h2 { font-size: var(--pv-type-panel); margin: 0 0 16px; }
+.pvc2-mou-number { overflow-wrap: anywhere; }
 .pvc2-mou-preview p { margin-block: 12px; }
 .pvc2-mou-preview .pv-note { color: var(--pv-ink); }
 .pvc2-mou-terms { width: 100%; margin: 22px 0 12px; border-collapse: collapse; table-layout: fixed; border-top: 1px solid var(--pv-line); }

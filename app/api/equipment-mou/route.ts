@@ -15,7 +15,7 @@ import { loadSolutionOperatingData } from "../../../server/our-solution/public-v
 
 import { equipmentMouMarket, equipmentMouSalesTerms } from "../../../server/equipment-mou/market";
 import { completeMsrpDetails, consumeMsrpCode, isWorkEmail, sendMsrpCode } from "../../../server/equipment-mou/msrp-verification";
-import { parseInquirySubmission, recordInquirySubmission, recordVerifiedInquiryContact } from "../../../server/equipment-mou/submissions";
+import { parseInquirySubmission, recordInquirySubmission, linkInquiryMou, recordVerifiedInquiryContact } from "../../../server/equipment-mou/submissions";
 import { database } from "../../../server/db/client";
 
 export const runtime = "nodejs";
@@ -144,9 +144,9 @@ function verifiedReview(review: EquipmentMouReview | undefined): review is Equip
   return wanted !== null && timingSafeEqual(Buffer.from(wanted, "hex"), Buffer.from(token.signature, "hex"));
 }
 
-function issueReview(review: Omit<EquipmentMouReview, "token">, deadline = Date.now() + 60 * 60 * 1000, id: string = randomUUID()) {
+function createReview(review: Omit<EquipmentMouReview, "token">, deadline = Date.now() + 60 * 60 * 1000, id: string = randomUUID()): EquipmentMouReview {
   const digest = signature(review, id, deadline);
-  return reply({ review: { ...review, token: digest ? { id, expires: deadline, signature: digest } : null } });
+  return { ...review, token: digest ? { id, expires: deadline, signature: digest } : null };
 }
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char =>
@@ -216,15 +216,17 @@ export async function POST(request: Request) {
         ]);
         msrpPerLine = marketData.msrpPerLine;
       }
-      return issueReview({ input, contact, mou: await estimate(input, msrpPerLine), terms });
+      const review = createReview({ input, contact, mou: await estimate(input, msrpPerLine), terms });
+      if (submissionId && review.token) await linkInquiryMou(submissionId, review.token.id);
+      return reply({ review });
     }
     const submittedReview: EquipmentMouReview | undefined = body?.review;
     if (body?.action === "signing-version") {
       if (!verifiedReview(submittedReview)) return reply({ error: "expired_review" }, 409);
       const { input, contact, mou, terms, token } = submittedReview;
       const localizedInput = { ...input, locale: equipmentMouSigningLocales[input.pageMarket] };
-      return issueReview({ input: localizedInput, contact, mou,
-        terms: { ...terms, governingLaw: equipmentMouGoverningLaw(localizedInput) } }, token.expires, token.id);
+      return reply({ review: createReview({ input: localizedInput, contact, mou,
+        terms: { ...terms, governingLaw: equipmentMouGoverningLaw(localizedInput) } }, token.expires, token.id) });
     }
     if (body?.action !== "sign" || body.confirmed !== true) return reply({ error: "invalid_request" }, 400);
     if (!verifiedReview(submittedReview) || submittedReview.input.locale !== equipmentMouSigningLocales[submittedReview.input.pageMarket])
@@ -233,15 +235,15 @@ export async function POST(request: Request) {
     const sql = database();
     await initializeSigningStore();
     let [record] = await sql`SELECT signed_at, completed_at FROM pv_equipment_mou_acceptances WHERE id=${token.id}::uuid`;
+    const caseNumber = equipmentCaseNumber(token.id);
     const content = inquiryText(input, mou, contact, terms);
     if (!record) {
       if (!(await limit(request, "equipment-mou-sign", 3, 3600))) return reply({ error: "too_many_requests" }, 429);
-      const document = JSON.stringify({ input, contact, mou, terms, content, consentVersion });
+      const document = JSON.stringify({ caseNumber, input, contact, mou, terms, content, consentVersion });
       [record] = await sql`INSERT INTO pv_equipment_mou_acceptances(id, document)
         VALUES (${token.id}::uuid, ${document}::jsonb) ON CONFLICT(id) DO NOTHING RETURNING signed_at, completed_at`;
       if (!record) [record] = await sql`SELECT signed_at, completed_at FROM pv_equipment_mou_acceptances WHERE id=${token.id}::uuid`;
     }
-    const caseNumber = equipmentCaseNumber(token.id);
     if (record.completed_at) return reply({ caseNumber, signedAt: new Date(record.completed_at).toISOString(), mail: "accepted" });
     if (!mailConfigured()) return reply({ signedAt: null, mail: "unavailable" });
     const buyerConfirmedAt = new Date(record.signed_at).toISOString();
@@ -256,11 +258,11 @@ export async function POST(request: Request) {
       const note = article.note ? `<p>${escapeHtml(article.note)}</p>` : "";
       return `<h2>${escapeHtml(article.title)}</h2>${introduction}${body}${note}`;
     }).join("");
-    const status = [content.dispatchStatus, `${content.buyerConfirmationLabel}  ${buyerConfirmedAt}`, `${equipmentCaseLabel(input.locale)}  ${caseNumber}`, equipmentSalesNextStep(input, terms)].map(escapeHtml).join("<br>");
+    const status = [content.dispatchStatus, `${content.buyerConfirmationLabel}  ${buyerConfirmedAt}`, equipmentSalesNextStep(input, terms)].map(escapeHtml).join("<br>");
     try {
       const acceptedAt = await sendDocumentEmail(token.id, contact.email, {
         subject: `PV Circulator · ${caseNumber} · ${content.title}`,
-        html: `<h1>${escapeHtml(content.title)}</h1><p>${escapeHtml(content.description)}</p>${articles}<p>${status}</p>`,
+        html: `<h1>${escapeHtml(content.title)}</h1><p>${escapeHtml(equipmentCaseLabel(input.locale))} · ${escapeHtml(caseNumber)}</p><p>${escapeHtml(content.description)}</p>${articles}<p>${status}</p>`,
       });
       const [completed] = await sql`UPDATE pv_equipment_mou_acceptances
         SET completed_at=COALESCE(completed_at,${acceptedAt}::timestamptz)

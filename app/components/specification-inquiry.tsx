@@ -4,7 +4,7 @@ import type { EquipmentMarketDefaults, SitePowerOptions } from "../../lib/equipm
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTransferredVolume } from "./use-transferred-volume";
-import { equipmentSalesNextStep, equipmentCaseLabel } from "../../lib/equipment-sales-case";
+import { equipmentSalesNextStep, equipmentCaseLabel, equipmentCaseNumber } from "../../lib/equipment-sales-case";
 import { fillTransferredContact } from "../../lib/business-case/equipment-contact";
 import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
@@ -386,6 +386,7 @@ export function EquipmentMouPreview({ review: initialReview, onEdit }: { review:
 
   return <article className="pvc2-mou-preview" id="equipment-mou-preview" aria-labelledby="equipment-mou-title" lang={review.input.locale}>
     <h2 id="equipment-mou-title" ref={heading} tabIndex={-1}>{content.title}</h2>
+    {review.token && <p className="pvc2-mou-number"><strong>{equipmentCaseLabel(review.input.locale)}</strong> {equipmentCaseNumber(review.token.id)}</p>}
     <p>{content.description}</p>
     {content.articles.map(article => <section className="pvc2-mou-article" key={article.number} aria-labelledby={`equipment-mou-article-${article.number}`}>
       <h3 id={`equipment-mou-article-${article.number}`}>{article.title}</h3>
