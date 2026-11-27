@@ -321,7 +321,7 @@ function systemCardContent(data: OurSolutionView): Record<SystemTopic, {
     const energyText = energy === 1 ? "小於1千瓦時" : `${compactNumber(energy)} 千瓦時以下`;
     return { ...staticSystemCardContent, process: { ...staticSystemCardContent.process, bullets: [
                 staticSystemCardContent.process.bullets[0],
-                `回收率 ${compactNumber(recovery)}%${recovery > 99 ? "超" : ""}，處理量為每片 ${compactNumber(minutesPerPanel)} 分鐘，每片耗電 ${energyText}`,
+                `回收率 ≥${compactNumber(recovery)}%，處理量為每片 ${compactNumber(minutesPerPanel)} 分鐘，每片耗電 ${energyText}`,
                 staticSystemCardContent.process.bullets[2],
             ] } };
 }
@@ -565,7 +565,7 @@ function methodSources(data: OurSolutionView) {
         .map(([, row]) => row.source)
         .filter(source => !source.startsWith("No public") && source !== "SGS verification")
         .map(source => methodSourceLabels[source] ?? source);
-    return `來源：${[...new Set(sources)].join("；")}。產品回收率是根據純度被視為可銷售的回收材料的百分比。 「—」表示無公開數據。`;
+    return `來源：${[...new Set(sources)].join("；")}。PV Circulator 回收率以回收物料重量除以進料模組重量計算。 「—」表示無公開數據。`;
 }
 function technologyRows(data: OurSolutionView): MethodRow[] {
     const n = (key: string) => webNum(data, key);
@@ -576,7 +576,7 @@ function technologyRows(data: OurSolutionView): MethodRow[] {
         { label: "能源", shredding: `${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} 千瓦時/個`, thermal: `${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} 千瓦時/個`, circulator: `<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} 千瓦時/個` },
         { label: "處理能力", shredding: `~${compactNumber(shredMin)}–${compactNumber(shredMax)} 件/小時`, thermal: `~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))} 張/小時（~${compactNumber(n("methods.thermal.seconds_per_panel"))} 秒/張）`, circulator: `~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))} 件/小時` },
         { label: "人員", shredding: `${compactNumber(n("methods.shredding.total_staff_per_shift"))}人/班`, thermal: `${compactNumber(n("methods.thermal.total_staff_per_shift"))}人/班`, circulator: `${compactNumber(n("methods.circulator.total_staff_per_shift"))}人/班` },
-        { label: "產品回收率", shredding: `<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`, thermal: `~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`, circulator: `${compactNumber(n("methods.circulator.product_recovery_percent"))}%` },
+        { label: "產品回收率", shredding: `<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`, thermal: `~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`, circulator: `≥${compactNumber(n("methods.circulator.product_recovery_percent"))}%` },
         { label: "副產品", shredding: "混合碎片需要額外處理", thermal: "蜂窩層壓板（EVA、背板、電池）需要額外處理", circulator: "不產生廢氣、廢水" },
     ];
 }
@@ -608,12 +608,13 @@ function materialRows(data: OurSolutionView): MethodRow[] {
         { label: "二次處理", shredding: `~${compactNumber(webNum(data, "methods.shredding.secondary_treatment_t_per_mw"))} t / MW`, thermal: `~${compactNumber(data.thermalSecondaryTreatmentTPerMw)} t / MW`, circulator: `~${compactNumber(webNum(data, "methods.circulator.secondary_treatment_t_per_mw"))} t / MW` },
     ];
 }
-function FootprintMethodVisual({ data }: {
+function FootprintMethodVisual({data, basicOperatingFootprint = "—"}: {basicOperatingFootprint?: string;
     data: OurSolutionView;
 }) {
     const shredding = webNum(data, "methods.shredding.footprint_m2"), thermal = webNum(data, "methods.thermal.footprint_m2"), pv = webNum(data, "methods.circulator.footprint_m2");
-    const reduction = (base: number, value: number) => Math.round((1 - value / base) * 100), pvLabel = `${compactNumber(pv)} m²`;
-    return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>模組化 PV Circulator 的設備面積僅 {pvLabel} ，比破碎法約少 {reduction(shredding, pv)}%，比熱處理法約少 {reduction(thermal, pv)}% 。乾式回收設備占地小，可設於退役面板的現場或鄰近地點。</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`安裝面積比較：破碎方式${shredding} m²、熱處理方式${thermal} m²、PV Circulator${pv} m²`}><div><span>破碎法</span><i style={{ width: "100%" }}/><strong>{compactNumber(shredding)} m²</strong></div><div><span>熱處理法</span><i style={{ width: `${thermal / shredding * 100}%` }}/><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: `${pv / shredding * 100}%` }}/><strong>{pvLabel}</strong></div></div></div><MethodTable caption="回收技術比較" rows={technologyRows(data)}/><p className="os-chart-source">{methodSources(data)}</p></div>;
+    const reduction = (base: number, value: number) => Math.round((1 - value / base) * 100);
+  const pvLabel = `${compactNumber(pv)} m²`;
+    return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>設備本體約 {pvLabel}，實際占地依機型而異。以此機身面積比較，約比破碎法少 {reduction(shredding,pv)}%、比熱處理少 {reduction(thermal,pv)}%。設備四周各留 1.5 m 操作空間。Basic 含操作空間為 {basicOperatingFootprint}。選配 PLUS 時，請依所選配置確認整線布局。</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`安裝面積比較：破碎方式${shredding} m²、熱處理方式${thermal} m²、PV Circulator${pv} m²`}><div><span>破碎法</span><i style={{ width: "100%" }}/><strong>{compactNumber(shredding)} m²</strong></div><div><span>熱處理法</span><i style={{ width: `${thermal / shredding * 100}%` }}/><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{ width: `${pv / shredding * 100}%` }}/><strong>{pvLabel}</strong></div></div></div><MethodTable caption="回收技術比較" rows={technologyRows(data)}/><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 function OperatingCostMethodVisual({ economicsData }: {
     economicsData: OurSolutionView;
@@ -671,7 +672,7 @@ function SilverGradeTable({ economicsData }: {
     const silverRows = [
         { method: THREE_METHODS[0], fraction: "混在破碎片中", silver: upper("SHREDDING", 4), recovery: `<${compactNumber(webNum(economicsData, "methods.shredding.product_recovery_percent"))}%` },
         { method: THREE_METHODS[1], fraction: "留在電池層壓件中", silver: upper("HOT_KNIFE", 3), recovery: `~${compactNumber(webNum(economicsData, "methods.thermal.product_recovery_percent"))}%` },
-        { method: "PV Circulator", fraction: <strong>進入矽（電池）粉末</strong>, silver: upper("PVCIRCULATOR", 3), recovery: `${compactNumber(webNum(economicsData, "methods.circulator.product_recovery_percent"))}%` }
+        { method: "PV Circulator", fraction: <strong>進入矽（電池）粉末</strong>, silver: upper("PVCIRCULATOR", 3), recovery: `≥${compactNumber(webNum(economicsData, "methods.circulator.product_recovery_percent"))}%` }
     ];
     return <div className="os-method-detail-table os-silver-grade-table"><table><caption className="pv-sr-only">銀的去向、銀濃度的理論上限以及依方法計算的產品回收率</caption><thead><tr><th scope="col">方法</th><th scope="col">銀色目的地</th><th scope="col">銀濃度理論上限</th><th scope="col">產品回收率</th></tr></thead><tbody>{silverRows.map(row => <tr key={row.method} className={row.method === "PV Circulator" ? "is-circulator" : undefined}><th scope="row">{row.method}</th><td>{row.fraction}</td><td>{row.silver}</td><td>{row.recovery}</td></tr>)}</tbody></table></div>;
 }
@@ -705,7 +706,7 @@ function ValueSection({ economicsData }: {
     <aside className="os-value-explanation">
       <div className="os-value-grade"><h3>維持銀的濃度並保留價值</h3><p>透過逐層分離面板材料，銀不會分散在混合玻璃中，保持電池粉中銀的濃度以進行進一步回收。</p>
         <SilverGradeTable economicsData={economicsData}/>
-        <p className="os-chart-source">理論上限＝銀÷（銀＋轉移到產品中的其他模組材料），假設模組中的所有銀都包含在產品中。PV Circulator 所回收的電池粉中的銀濃度與實際測量值 {compactNumber(webNum(economicsData, "value.circulator_measured_silver_percent"))}% 相符。</p></div>
+        <p className="os-chart-source">模型依參考模組的物料組成，假設所有銀進入電池粉。實測 {compactNumber(webNum(economicsData, "value.circulator_measured_silver_percent"))}% 來自不同來料的樣品，且製程未回收全部矽，因此粉末重量與銀濃度會和模型值不同。</p></div>
       <div id="silver-trend" className="os-silver-trend">
         <h3>未來面板的銀含量更少。回收技術也需要更精進</h3>
         <SilverTechnologyTrend data={economicsData}/>
@@ -957,9 +958,9 @@ function MaterialsSection({ data }: {
     </aside>
   </section>;
 }
-export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "作業本價格", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
+export function OurSolutionZh({ market, basicOperatingFootprint, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData = defaultPressureData, waveAssumptions = defaultWaveAssumptions, priceSources = "作業本價格", pricingRules = initialJapanRules, showPublicPricingBenchmark = true }: {
     market?: PublicSolutionMarket;
-    equipmentClaims?: EquipmentClaims;
+    basicOperatingFootprint?: string; equipmentClaims?: EquipmentClaims;
     economicsData?: OurSolutionView;
     routeMetrics?: ImpactRouteMetric[];
     breakeven?: BreakevenView;
@@ -1028,7 +1029,7 @@ export function OurSolutionZh({ market, equipmentClaims = defaultEquipmentQuanti
     ];
     const pvFacility = economicsSolutions(economicsData).circulator.facilityFootprint;
     const conventionalSlides: DeckSlide[] = [
-        { label: "空間與技術", navigationLabel: "安裝面積", visual: <FootprintMethodVisual data={economicsData}/>, noteTitle: "小的設備占地面積改變了回收地點的使用方式", note: <><p>PV Circulator是模組化且可部署的，允許在處理量變化時在現場或附近安裝處理能力。這個想法很簡單：移動機器，而不是面板。</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>小時</span></p><small>模組化PV Circulator可以在{compactNumber(equipmentClaims.relocationHours)}小時內安裝或拆卸，並且可以重新安置。</small></div></> },
+        { label: "空間與技術", navigationLabel: "安裝面積", visual: <FootprintMethodVisual basicOperatingFootprint={basicOperatingFootprint} data={economicsData}/>, noteTitle: "小的設備占地面積改變了回收地點的使用方式", note: <><p>PV Circulator是模組化且可部署的，允許在處理量變化時在現場或附近安裝處理能力。這個想法很簡單：移動機器，而不是面板。</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>小時</span></p><small>模組化PV Circulator可以在{compactNumber(equipmentClaims.relocationHours)}小時內安裝或拆卸，並且可以重新安置。</small></div></> },
         { label: "營運成本（OPEX）", navigationLabel: "營運成本", visual: <OperatingCostMethodVisual economicsData={economicsData}/>, noteTitle: "PV Circulator改變營運成本結構", note: <><p>以自動化為優先：整合輸送、量測與層間分離，減少重複作業，並維持穩定產出。由於所需人力、電力與占地面積都較少，在財務模型中每片面板的處理成本因此下降。設備折舊與異地運輸成本因基礎不同，不列入比較。</p><p className="os-operating-cost-note">主要營運成本為人事費與場地租金。PV Circulator 模型以每班共 {compactNumber(webNum(economicsData, "methods.circulator.total_staff_per_shift"))} 名操作與場內後勤人員估算。</p><FacilityRentArea footprint={pvFacility} locale="zh-TW" /></> },
         { label: "二次處理及材料", navigationLabel: "二次處理", visual: <MaterialMethodVisual data={economicsData}/>, noteTitle: "真正的區別在於仍然需要二次處理加工的材料。", note: <p>PV Circulator的技術很簡單，從第一原理開始，利用太陽能板的層狀結構，以製造相反的過程，在室溫下，逐層將材料分離。這樣可以將玻璃、矽（電池）粉末和聚合物分開回收，避免材料混雜的二次污染，從而減少需要二次處理加工的材料量。</p> },
     ];

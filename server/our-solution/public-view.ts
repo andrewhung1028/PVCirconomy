@@ -1,3 +1,4 @@
+import { operatingFootprintLabel } from "../../lib/equipment-configurations";
 import { economicsView } from "../../lib/our-solution-data";
 import { capacityTrend } from "../../lib/market-capacity";
 import { capacityHistory, impactRouteMetrics, model } from "../../lib/our-solution/model";
@@ -83,6 +84,7 @@ export async function loadSolutionView(market: PublicSolutionMarket, locale: Our
   return {
     market,
     economicsData,
+    basicOperatingFootprint: operatingFootprintLabel(equipment.configurations.basic, locale),
     equipmentClaims: equipment.quantitative.claims,
     capacityTrend: capacityTrend(data),
     retirementWave: retirementMarketWaves[solutionDemandMarket(market)],

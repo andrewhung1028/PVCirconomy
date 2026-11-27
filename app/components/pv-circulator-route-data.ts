@@ -1,3 +1,4 @@
+import { economicRecovery } from "../../lib/circulator-recovery";
 import { marketNames, ourSolutionParameterMarkets, publicSolutionMarketForPage, type OurSolutionLocale } from "../../lib/our-solution/market";
 import { model } from "../../lib/our-solution/model";
 import { parameter, parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeightLb, scenarioRecyclingFeeSteps } from "../../lib/our-solution/parameters";
@@ -48,6 +49,7 @@ export async function loadPVCirculatorReference(requestedMarket: unknown, locale
       silverUpperPct: Number.isFinite(silverUpperPct) ? silverUpperPct : null,
     })),
     recovery: {
+      economicRate: circulator.materials.reduce((sum, m) => sum + m.share * economicRecovery(m.name), 0),
       materials: circulator.materials.map(material => ({
         name: material.name,
         recoveredTonnesPerPanel: material.recoveredT / result.annualPanels,

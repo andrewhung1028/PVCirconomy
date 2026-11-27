@@ -278,7 +278,7 @@ function systemCardContent(data:OurSolutionView):Record<SystemTopic,{tagline:str
   const recovery=webNum(data,"methods.circulator.product_recovery_percent"),throughput=webNum(data,"methods.circulator.throughput_panels_per_hour")/60,energy=webNum(data,"methods.circulator.energy_max_kwh_per_panel");
   return {...staticSystemCardContent,process:{...staticSystemCardContent.process,bullets:[
     staticSystemCardContent.process.bullets[0],
-    `${recovery>99?">":""}${compactNumber(recovery)}% recovery, ${compactNumber(throughput)} panel/min throughput, ${energy<1?"<1":compactNumber(energy)} kWh/panel`,
+    `≥${compactNumber(recovery)}% recovery, ${compactNumber(throughput)} panel/min throughput, ${energy<1?"<1":compactNumber(energy)} kWh/panel`,
     staticSystemCardContent.process.bullets[2],
   ]}};
 }
@@ -475,7 +475,7 @@ function MethodTable({ caption, rows, columns = THREE_METHODS }: { caption: stri
   return <div className="os-method-detail-table"><table><caption className="pv-sr-only">{caption}</caption><thead><tr><th scope="col">Item</th>{columns.map((column, index) => <th scope="col" key={column} className={index === columns.length - 1 ? "is-circulator" : undefined}>{column}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.shredding}</td><td>{row.thermal}</td><td>{row.circulator}</td></tr>)}</tbody></table></div>;
 }
 
-function methodSources(data:OurSolutionView){return `Sources: ${[...new Set(Object.entries(data.websiteData).filter(([key])=>key.startsWith("methods.")).map(([,row])=>row.source).filter(source=>!source.startsWith("No public")&&source!=="SGS verification"))].join("; ")}. Product recovery = sellable output by purity. — = no public data.`;}
+function methodSources(data:OurSolutionView){return `Sources: ${[...new Set(Object.entries(data.websiteData).filter(([key])=>key.startsWith("methods.")).map(([,row])=>row.source).filter(source=>!source.startsWith("No public")&&source!=="SGS verification"))].join("; ")}. PV Circulator recovery is recovered mass divided by input panel mass. — = no public data.`;}
 
 function technologyRows(data:OurSolutionView):MethodRow[]{
   const n=(key:string)=>webNum(data,key);
@@ -486,7 +486,7 @@ function technologyRows(data:OurSolutionView):MethodRow[]{
     {label:"Energy",shredding:`${compactNumber(n("methods.shredding.energy_kwh_per_panel"))} kWh / panel`,thermal:`${compactNumber(n("methods.thermal.energy_kwh_per_panel"))} kWh / panel`,circulator:`<${compactNumber(n("methods.circulator.energy_max_kwh_per_panel"))} kWh / panel`},
     {label:"Throughput",shredding:`~${compactNumber(shredMin)}–${compactNumber(shredMax)} panels / h`,thermal:`~${compactNumber(n("methods.thermal.throughput_panels_per_hour"))} panels / h (~${compactNumber(n("methods.thermal.seconds_per_panel"))} s per panel)`,circulator:`~${compactNumber(n("methods.circulator.throughput_panels_per_hour"))} panels / h`},
     {label:"Staff",shredding:`${compactNumber(n("methods.shredding.total_staff_per_shift"))} people / shift`,thermal:`${compactNumber(n("methods.thermal.total_staff_per_shift"))} people / shift`,circulator:`${compactNumber(n("methods.circulator.total_staff_per_shift"))} people / shift`},
-    {label:"Product recovery",shredding:`<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator:`${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
+    {label:"Product recovery",shredding:`<${compactNumber(n("methods.shredding.product_recovery_percent"))}%`,thermal:`~${compactNumber(n("methods.thermal.product_recovery_percent"))}%`,circulator: `≥${compactNumber(n("methods.circulator.product_recovery_percent"))}%`},
     {label:"By-products",shredding:"Mixed fragments need further treatment",thermal:"Cell laminate (EVA, backsheet, cells) needs further treatment",circulator:"No off-gas or wastewater"},
   ];
 }
@@ -509,10 +509,11 @@ function materialRows(data:OurSolutionView):MethodRow[]{return [
   {label:"Secondary treatment",shredding:`~${compactNumber(webNum(data,"methods.shredding.secondary_treatment_t_per_mw"))} t / MW`,thermal:`~${compactNumber(data.thermalSecondaryTreatmentTPerMw)} t / MW`,circulator:`~${compactNumber(webNum(data,"methods.circulator.secondary_treatment_t_per_mw"))} t / MW`},
 ];}
 
-function FootprintMethodVisual({data}:{data:OurSolutionView}) {
+function FootprintMethodVisual({data, basicOperatingFootprint = "—"}: {basicOperatingFootprint?: string; data:OurSolutionView}) {
   const shredding=webNum(data,"methods.shredding.footprint_m2"),thermal=webNum(data,"methods.thermal.footprint_m2"),pv=webNum(data,"methods.circulator.footprint_m2");
-  const reduction=(base:number,value:number)=>Math.round((1-value/base)*100),pvLabel=`${compactNumber(pv)} m²`;
-  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>PV Circulator’s modular design requires only {pvLabel}—about {reduction(shredding,pv)}% less footprint than shredding and about {reduction(thermal,pv)}% less than thermal processing. The compact footprint and dry process make near-site or on-site deployment possible.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pv}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pv/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
+  const reduction = (base: number, value: number) => Math.round((1 - value / base) * 100);
+  const pvLabel =`${compactNumber(pv)} m²`;
+  return <div className="os-method-visual"><div className="os-method-top"><div className="os-method-chart-copy"><p>Equipment occupies about {pvLabel}, depending on configuration. At this reference size, the machine occupies about {reduction(shredding,pv)}% less area than shredding and {reduction(thermal,pv)}% less than thermal processing. Allow 1.5 m on every side for operation. Basic with clearance: {basicOperatingFootprint}. Check the selected line and PLUS layout in Specifications.</p></div><div className="os-method-bars is-footprint" role="img" aria-label={`Equipment footprint comparison: shredding ${shredding} square metres, thermal processing ${thermal}, PV Circulator ${pv}`}><div><span>Shredding</span><i style={{width:"100%"}} /><strong>{compactNumber(shredding)} m²</strong></div><div><span>Thermal processing</span><i style={{width:`${thermal/shredding*100}%`}} /><strong>{compactNumber(thermal)} m²</strong></div><div className="is-circulator"><span>PV Circulator</span><i style={{width:`${pv/shredding*100}%`}} /><strong>{pvLabel}</strong></div></div></div><MethodTable caption="Recycling technology comparison" rows={technologyRows(data)} /><p className="os-chart-source">{methodSources(data)}</p></div>;
 }
 
 function OperatingCostMethodVisual({ economicsData }: { economicsData: OurSolutionView }) {
@@ -560,7 +561,7 @@ function SilverGradeTable({economicsData}:{economicsData:OurSolutionView}) {
   const silverRows=[
     {method:"Shredding",fraction:"Mixed fragments",silver:upper("SHREDDING",4),recovery:`<${compactNumber(webNum(economicsData,"methods.shredding.product_recovery_percent"))}%`},
     {method:"Thermal processing",fraction:"Cell laminate",silver:upper("HOT_KNIFE",3),recovery:`~${compactNumber(webNum(economicsData,"methods.thermal.product_recovery_percent"))}%`},
-    {method:"PV Circulator",fraction:"Silicon (cell) powder",silver:upper("PVCIRCULATOR",3)+` · Actual measured value ${compactNumber(webNum(economicsData,"value.circulator_measured_silver_percent"))}%`,recovery:`${compactNumber(webNum(economicsData,"methods.circulator.product_recovery_percent"))}%`}
+    {method:"PV Circulator",fraction:"Silicon (cell) powder",silver:upper("PVCIRCULATOR",3)+` · Separate sample assay ${compactNumber(webNum(economicsData,"value.circulator_measured_silver_percent"))}%`,recovery: `≥${compactNumber(webNum(economicsData,"methods.circulator.product_recovery_percent"))}%`}
   ];
   return <div className="os-method-detail-table os-silver-grade-table"><table><caption className="pv-sr-only">Where silver ends up and product recovery, by method</caption><thead><tr><th scope="col">Method</th><th scope="col">Silver-bearing fraction</th><th scope="col">Silver content</th><th scope="col">Product recovery</th></tr></thead><tbody>{silverRows.map(row => <tr key={row.method} className={row.method === "PV Circulator" ? "is-circulator" : undefined}><th scope="row">{row.method}</th><td>{row.fraction}</td><td>{row.silver}</td><td>{row.recovery}</td></tr>)}</tbody></table></div>;
 }
@@ -592,7 +593,7 @@ function ValueSection({economicsData}:{economicsData:OurSolutionView}) {
     <aside className="os-value-explanation">
       <div className="os-value-grade"><h3>Keep silver concentrated—and preserve its value.</h3><p>Separating panel layers preserves a concentrated cell stream for further recovery instead of dispersing silver into mixed glass.</p>
         <SilverGradeTable economicsData={economicsData} />
-        <p className="os-chart-source">Theoretical upper bound = silver ÷ (silver + the module components that end up in the product), with all module silver assumed in the product.</p></div>
+        <p className="os-chart-source">The reference model assumes all silver enters the powder. The measured value comes from a different feedstock sample. Silicon recovery is below 100%, so the mass and silver concentration of its powder can differ.</p></div>
       <div id="silver-trend" className="os-silver-trend">
         <h3>Less silver in every panel. Recovery has to keep up.</h3>
         <SilverTechnologyTrend data={economicsData} />
@@ -805,7 +806,7 @@ function MaterialsSection({data}:{data:OurSolutionView}) {
   </section>;
 }
 
-export function OurSolution({ market, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices", pricingRules=initialRules, showPublicPricingBenchmark=true }: { market?: PublicSolutionMarket; equipmentClaims?: EquipmentClaims; economicsData?: OurSolutionView; routeMetrics?: ImpactRouteMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string;pricingRules?:PricingRules;showPublicPricingBenchmark?:boolean }) {
+export function OurSolution({ market, basicOperatingFootprint, equipmentClaims = defaultEquipmentQuantitative.claims, economicsData = economicsView(seededOurSolutionData), routeMetrics = [], breakeven = null, capacityTrend = defaultCapacityTrend, retirementWave = defaultRetirementWave, retirementMarketWaves = defaultRetirementMarketWaves, pressureData=defaultPressureData, waveAssumptions=defaultWaveAssumptions, priceSources="Workbook prices", pricingRules=initialRules, showPublicPricingBenchmark=true }: { market?: PublicSolutionMarket; basicOperatingFootprint?: string; equipmentClaims?: EquipmentClaims; economicsData?: OurSolutionView; routeMetrics?: ImpactRouteMetric[]; breakeven?: BreakevenView; capacityTrend?: CapacityTrendPoint[]; retirementWave?: RetirementWave; retirementMarketWaves?: RetirementMarketWaves; pressureData?:{year:string;values:number[]}[];waveAssumptions?:WaveAssumptions;priceSources?:string;pricingRules?:PricingRules;showPublicPricingBenchmark?:boolean }) {
   const capacityPeak = Math.max(...capacityTrend.map(point => point.total));
   const capacityFirst = capacityTrend[0], capacityLast = capacityTrend[capacityTrend.length - 1];
   const capacityMultiples=trendRegions.map((market,index)=>({market,multiple:capacityFirst.values[index]>0?capacityLast.values[index]/capacityFirst.values[index]:0}));
@@ -860,7 +861,7 @@ export function OurSolution({ market, equipmentClaims = defaultEquipmentQuantita
 
   const pvFacility = economicsSolutions(economicsData).circulator.facilityFootprint;
   const conventionalSlides: DeckSlide[] = [
-    { label: "Space and technology", navigationLabel: "Footprint", visual: <FootprintMethodVisual data={economicsData} />, noteTitle: "A small footprint changes where recycling can happen.", note: <><p>PV Circulator is modular and deployable, so capacity can be installed on-site or near-site as volumes shift. The idea is simple: move the machine, not the panels.</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>hours</span></p><small>PV Circulator’s modular design enables installation or decommissioning within {compactNumber(equipmentClaims.relocationHours)} hours, making relocation possible.</small></div></> },
+    { label: "Space and technology", navigationLabel: "Footprint", visual: <FootprintMethodVisual basicOperatingFootprint={basicOperatingFootprint} data={economicsData} />, noteTitle: "A small footprint changes where recycling can happen.", note: <><p>PV Circulator is modular and deployable, so capacity can be installed on-site or near-site as volumes shift. The idea is simple: move the machine, not the panels.</p><div className="os-deployment-time"><p><strong>{compactNumber(equipmentClaims.relocationHours)}</strong><span>hours</span></p><small>PV Circulator’s modular design enables installation or decommissioning within {compactNumber(equipmentClaims.relocationHours)} hours, making relocation possible.</small></div></> },
     { label: "Operating cost", navigationLabel: "OPEX", visual: <OperatingCostMethodVisual economicsData={economicsData} />, noteTitle: "PV Circulator changes the operating-cost structure.", note: <><p>Automation comes first. Integrated handling, measurement and layer separation reduce repetitive labor and support consistent output. Lower labor, electricity and floor-space requirements reduce the modeled cost per panel. The comparison excludes equipment depreciation and off-site transport.</p><p className="os-operating-cost-note">Labor and facility rent are the main operating costs. The PV Circulator model assumes {compactNumber(webNum(economicsData, "methods.circulator.total_staff_per_shift"))} operations and logistics staff per shift.</p><FacilityRentArea footprint={pvFacility} locale="en-US" /></> },
     { label: "Secondary treatment and materials", navigationLabel: "Secondary treatment", visual: <MaterialMethodVisual data={economicsData} />, noteTitle: "The real difference is what still needs treatment.", note: <p>PV Circulator starts from first principles: panels are built in layers, so reverse the manufacturing process and separate them layer by layer. This preserves glass, silicon (cell) powder and polymers as distinct outputs and leaves less material requiring secondary treatment.</p> },
   ];

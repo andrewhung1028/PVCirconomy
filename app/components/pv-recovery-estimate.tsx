@@ -43,7 +43,7 @@ export function RecoveryEstimate({ recovery, reference, annualPanels, locale, t 
     <h3 id="pvc2-recovery-title">{t("Estimated material recovery and value")}</h3>
     {!rows || !reference || !recovery ? <p>{t("Material recovery estimates are unavailable for this market.")}</p> : annualPanels === null
       ? <p>{t("Enter a valid operating schedule in Performance to see the material estimate.")}</p> : <>
-        <p>{t("Based on the annual throughput from Performance and the selected market’s Our Solution material mix, recovery rates and prices.")}</p>
+        <p>{t("Basic / Premium model: material income assumes a glass buyer. Annual tonnage uses the operating schedule, shared panel composition and calibrated material losses.")}</p>
         <p>
           <strong>{Math.round(annualPanels).toLocaleString(locale)} {t("panels/year")}</strong>
           {" · "}{reference.region}{" · "}{reference.currency}
@@ -78,4 +78,26 @@ export function RecoveryEstimate({ recovery, reference, annualPanels, locale, t 
         <p className="pv-note">{t("Combined streams use a weight-based blended sale price. The residue charge uses the market’s modeled disposal rate. Net material value deducts this charge and excludes recycling fees, other operating costs and refining upside.")}</p>
       </>}
   </section>;
+}
+
+export function GlassRevenueComparison({ recovery, annualPanels, feeRevenue, locale, t }: {
+  recovery: PVCirculatorRecovery; annualPanels: number; feeRevenue: number;
+  locale: OurSolutionLocale; t: (english: string) => string;
+}) {
+  const yearlySales = recovery.materials.reduce((sum, m) => sum + m.revenuePerPanel * annualPanels, 0);
+  const glassSales = (recovery.materials.find(m => m.name === "Glass")?.revenuePerPanel ?? 0) * annualPanels;
+  const money = new Intl.NumberFormat(locale, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const ratio = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return <div className="pvc2-recovery-table pvc2-glass-options">
+    <table>
+      <caption>{t("US glass options · Basic / Premium")}</caption>
+      <thead><tr><th scope="col">{t("Glass outlet")}</th><th scope="col">{t("Annual material sales")}</th>
+        <th scope="col">{t("Material sales / recycling fees")}</th></tr></thead>
+      <tbody>{([
+        ["Sell glass to a buyer", yearlySales], ["US offtake at zero glass sale price", yearlySales - glassSales],
+      ] as const).map(([label, sales]) => <tr key={label}><th scope="row">{t(label)}</th><td>{money.format(sales)}</td>
+        <td>{feeRevenue > 0 ? ratio.format(sales / feeRevenue) + "×" : "—"}</td></tr>)}</tbody>
+    </table>
+    <p className="pv-note">{t("Both scenarios use the same throughput and recycling fee. Qualifying US glass has no secondary treatment fee. The recycler pays freight, which is excluded here.")}</p>
+  </div>;
 }

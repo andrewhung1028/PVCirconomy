@@ -11,6 +11,14 @@ function compare(a,b,path=''){for(const [k,v]of Object.entries(b)){if(typeof v==
  const parsed=await parse(fixture);assert.deepEqual(parsed,seed,'parse(fixture) = generated seed');
  await assert.rejects(parse(fixture,parsed),/Assumptions 缺少區段 12/,'admin uploads must use the current workbook with Assumptions section 12');
  const m=model(parsed);
+ const standard=m.solutions.PVCIRCULATOR;
+ close(standard.recoveredT/m.inputT,0.993,'standard line mass recovery');
+ const adjustable=standard.materials.filter(row=>!['Glass','Aluminium','Junction box'].includes(row.name));
+ const lossFactors=adjustable.map(row=>row.residualT/(row.inputT*(1-parsed.assumptions[6][row.name][6])));
+ for(const factor of lossFactors) close(factor,lossFactors[0],'proportional material losses');
+ const economic=model(parsed,{}, {economic:true}).solutions.PVCIRCULATOR;
+ for(const row of economic.materials) close(row.recoveredT/row.inputT,row.name==='Backsheet'?0:row.name==='EVA'?.5:1,row.name+' Economic');
+ close(economic.recoveryRate,1-parsed.assumptions[5].Backsheet[0]-.5*parsed.assumptions[5].EVA[0],'weighted Economic recovery');
  compare(m,{annualPanels:ref.annualPanels,inputT:ref.inputT,operatingDays:ref.operatingDays,solutions:ref.solutions,cellPowder:ref.cellPowder,kgPerMw:ref.kgPerMw,perCapitaKg:ref.perCapitaKg});
  for(const [key,years]of Object.entries(ref.usRetirementT))for(const [year,value]of Object.entries(years))assert.equal(m.retirementWave[key][m.retirementWave.years.indexOf(Number(year))],value);
  for(const [key,values]of Object.entries(ref.usCross))for(const [threshold,year]of Object.entries(values))assert.equal(m.retirementWave.crossings[key][String(Number(threshold))],year);

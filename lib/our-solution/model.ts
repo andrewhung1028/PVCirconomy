@@ -1,3 +1,4 @@
+import { economicRecovery, standardRecoveryRates } from "../circulator-recovery";
 import { labels, localPerUSD, markets, parameter as n, parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeightLb, solutionCodes, type Parameters } from './parameters';
 import { retirementThresholds, websiteDataFromAssumptions, websiteNumber } from './public-data';
 import { retirementSeries, computeRetirementWave } from '../us-retirement-wave';
@@ -17,7 +18,7 @@ export function capacityHistory(p: Parameters) {
   for(let y=2000;y<=2050;y++) cap['Other markets'][y] = cap.World[y] - markets.slice(1).reduce((s,m)=>s+cap[m][y],0);
   return cap;
 }
-export function model(p: Parameters, effective: EffectivePrices = {}, options: { circulatorLines?: number } = {}) {
+export function model(p: Parameters, effective: EffectivePrices = {}, options: { circulatorLines?: number; economic?: boolean } = {}) {
   const websiteData=websiteDataFromAssumptions(p.assumptions);
   const gridKgCo2ePerKwh=websiteNumber(websiteData,'impact.grid_kg_co2e_per_kwh');
   const sc=p.scenario, panelWeightKg=scenarioPanelWeightKg(p),panelWeightLb=scenarioPanelWeightLb(p),annualPanels=sc.panels_per_month*12, inputT=annualPanels*panelWeightKg/1000;
@@ -37,7 +38,11 @@ export function model(p: Parameters, effective: EffectivePrices = {}, options: {
     const burden=labor*(n(p,2,'Labor burden')+n(p,2,"Workers' compensation"));
     const storageM2=Math.ceil(annualPanels/sc.working_weeks_per_year*n(p,7,'Storage time')/n(p,7,'Panels per pallet'))*n(p,7,'Pallet footprint')*(1+n(p,7,'Aisle space added per pallet'))/n(p,7,'Pallet stack levels');
     const equipmentM2=s('Equipment space per line')*lines;
-    const rows=materials.map(m=>{const recovery=n(p,6,m.name,i*3),realization=n(p,6,m.name,i*3+1),saleable=n(p,6,m.name,i*3+2);const input=inputT*m.share,recovered=input*recovery;return {...m,inputT:input,recoveredT:recovered,residualT:input-recovered,revenue:recovered*pricePerTonne(m.price,m.unit,p)*realization*saleable};});
+    const standardRates = code === 'PVCIRCULATOR' && !options.economic
+      ? standardRecoveryRates(materials.map(m => ({ ...m, rate: n(p, 6, m.name, i * 3) }))) : undefined;
+    const rows=materials.map(m=>{const recovery=code === 'PVCIRCULATOR' && options.economic
+      ? economicRecovery(m.name) : standardRates?.get(m.name) ?? n(p,6,m.name,i*3);
+      const realization=n(p,6,m.name,i*3+1),saleable=n(p,6,m.name,i*3+2);const input=inputT*m.share,recovered=input*recovery;return {...m,inputT:input,recoveredT:recovered,residualT:input-recovered,revenue:recovered*pricePerTonne(m.price,m.unit,p)*realization*saleable};});
     const revenue={silver:0,alcu:0,other:0};
     for(const m of rows) revenue[m.name==='Silver'?'silver':['Aluminium','Copper'].includes(m.name)?'alcu':'other']+=m.revenue;
     const residualT=rows.reduce((s,m)=>s+m.residualT,0),recoveredT=rows.reduce((s,m)=>s+m.recoveredT,0);
@@ -53,7 +58,8 @@ export function model(p: Parameters, effective: EffectivePrices = {}, options: {
     return [code,{perPanel,perMw,code,label:labels[i],shifts,lines,storageM2,equipmentM2,opex,opexTotal,revenue,materialRevenue,ebitda,capex:s('Capex per line')*lines,recoveredT,residualT,recoveryRate:recoveredT/inputT,materials:rows,
       feeSens:(p.assumptions[11]['Processing fee steps']??p.assumptions[11]['Processing fee steps (USD/lb)']).map(f=>ebitda+(f as number)*annualPanels*feeWeight),silverSens:p.assumptions[11]['Silver price change steps'].map(c=>ebitda+(c as number)*revenue.silver),breakevenFee:Math.max(0,-ebitda/(annualPanels*feeWeight)),breakevenFeePerLb:feeUnit.endsWith('/lb')?Math.max(0,-ebitda/(annualPanels*feeWeight)):Math.max(0,-ebitda/(annualPanels*feeWeight))*n(p,3,'Kilograms per pound'),feeUnit,perPanelOpex:opexTotal/annualPanels,residualTPerMw:residualT/annualPanels*panelsPerMw,kwh:s('Electricity'),co2eTPerMw:s('Electricity')*panelsPerMw*gridKgCo2ePerKwh/1000,silverUpperPct:material('Silver').share/(flagged+material('Silver').share)*100}];
   })) as unknown as Record<typeof solutionCodes[number], {code:typeof solutionCodes[number];label:string;perPanel:{materialRevenue:number;opex:number;ebitda:number;residualT:number;processingRevenue:number};perMw:Record<string,number>;shifts:number;lines:number;storageM2:number;equipmentM2:number;opex:Record<string,number>;opexTotal:number;revenue:{silver:number;alcu:number;other:number};materialRevenue:number;ebitda:number;capex:number;recoveredT:number;residualT:number;recoveryRate:number;materials: {name:string;share:number;price:number;unit:string;source:string;inputT:number;recoveredT:number;residualT:number;revenue:number}[];feeSens:number[];silverSens:number[];breakevenFee:number;breakevenFeePerLb:number;feeUnit:string;perPanelOpex:number;residualTPerMw:number;kwh:number;co2eTPerMw:number;silverUpperPct:number}>;
-  const ag=inputT*material('Silver').share*n(p,6,'Silver',6),si=inputT*material('Silicon').share*n(p,6,'Silicon',6),agp=pricePerTonne(material('Silver').price,material('Silver').unit,p),sip=pricePerTonne(material('Silicon').price,material('Silicon').unit,p);
+  const powderMaterials = solutions.PVCIRCULATOR.materials;
+  const ag=powderMaterials.find(m => m.name === 'Silver')!.recoveredT,si=powderMaterials.find(m => m.name === 'Silicon')!.recoveredT,agp=pricePerTonne(material('Silver').price,material('Silver').unit,p),sip=pricePerTonne(material('Silicon').price,material('Silicon').unit,p);
   const cp=(l:string)=>n(p,9,l),MAg=cp('Molar mass Ag'),MCu=cp('Molar mass Cu'),MAl=cp('Molar mass Al');
   const reagentsT={h2so4:ag*cp('Molar mass H2SO4')/(2*MAg),h2o2:ag*cp('Molar mass H2O2')/(2*MAg)*(1+cp('H2O2 excess over stoichiometric')),cu:ag*MCu/(2*MAg),al:ag*MCu/(2*MAg)*2*MAl/(3*MCu),hno3:ag*4*cp('Molar mass HNO3')/(3*MAg)};
   const reagentCost=reagentsT.h2so4/cp('Sulfuric acid concentration')*cp('Sulfuric acid price')+reagentsT.h2o2/cp('Hydrogen peroxide concentration')*cp('Hydrogen peroxide price')+reagentsT.hno3/cp('Nitric acid concentration')*cp('Nitric acid price')+reagentsT.cu*pricePerTonne(material('Copper').price,material('Copper').unit,p)+reagentsT.al*pricePerTonne(material('Aluminium').price,material('Aluminium').unit,p);

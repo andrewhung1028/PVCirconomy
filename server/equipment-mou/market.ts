@@ -3,7 +3,7 @@ import { activeOurSolutionParameterData } from "../our-solution/store";
 import { equipmentMouHasSalesAgent, otherSitePowerSupply, type EquipmentMouAgent, type EquipmentMouInput, type EquipmentMouTerms } from "../../lib/equipment-mou";
 
 import { configuredEquipmentMarkets } from "../equipment-configurations/pricing";
-import { defaultEquipmentConfigurations, equipmentLineRating, integratedEquipmentThroughput } from "../../lib/equipment-configurations";
+import { defaultEquipmentConfigurations, equipmentLineRating, operatingFootprintLabel, integratedEquipmentThroughput } from "../../lib/equipment-configurations";
 import { defaultEquipmentQuantitative } from "../../lib/equipment-quantitative";
 import { equipmentMarketAmount, equipmentUsdTotal } from "../../lib/equipment-module-pricing";
 import { ourSolutionParameterMarkets, type PublicSolutionMarket } from "../../lib/our-solution/market";
@@ -60,7 +60,7 @@ export async function equipmentMouMarket(input: EquipmentMouInput): Promise<{ te
     compressedAirLpm: mou.compressedAirLpm,
     compressedAirBar: mou.compressedAirBar,
     installedKw: mou[`${variant}InstalledKw`],
-    footprint: specification["Recommended footprint"],
+    footprint: operatingFootprintLabel(configurations[variant], input.locale),
     moduleLength: specification["Module length"],
     moduleWidth: specification["Module width"],
     moduleWeight: specification["Module max. weight"],

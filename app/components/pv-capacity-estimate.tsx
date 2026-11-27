@@ -45,9 +45,11 @@ export function useCapacityEstimate(rating: LineRating, defaults: CapacityDefaul
   const theoretical = calendarHours * panelsPerHour;
   const afterMaintenance = (calendarHours - calendarMaintenanceHours) * panelsPerHour;
   const availableCapacity = afterMaintenance * uptime / 100;
+  const effectiveHours = scheduledHours * (uptime / 100) * (speed / 100);
+  const standardAnnual = effectiveHours * panelsPerHour;
   const netAnnual = (scheduledHours - scheduledMaintenanceHours) * (uptime / 100) * (speed / 100) * panelsPerHour;
   const monthlyAverage = Math.round(netAnnual / monthsPerYear);
-  return { current, setField: (key: Field, value: string) => setCurrent(current => ({ ...current, [key]: value })), valid, dailyHours, monthlyAverage, scheduledHours, theoretical, afterMaintenance, availableCapacity, netAnnual };
+  return { current, setField: (key: Field, value: string) => setCurrent(current => ({ ...current, [key]: value })), valid, dailyHours, effectiveHours, standardAnnual, monthlyAverage, scheduledHours, theoretical, afterMaintenance, availableCapacity, netAnnual };
 }
 
 export function CapacityEstimate({ estimate, rating, shareThroughput, plusThroughput, businessCaseHref, locale, t, reference, feeInput, setFeeInput, annualFeeRevenue }: {
@@ -79,6 +81,7 @@ export function CapacityEstimate({ estimate, rating, shareThroughput, plusThroug
     ["Calendar maximum", theoretical, "panels/year"],
     ["Calendar capacity after maintenance", afterMaintenance, "panels/year"],
     ["Calendar capacity after downtime", availableCapacity, "panels/year"],
+    ["Standard annual capacity before scheduled maintenance", estimate.standardAnnual, "panels/year"],
     ["Estimated output on your schedule", netAnnual, "panels/year"],
     ["Average output over 12 months", monthlyAverage, "panels/month"],
   ] as const;
