@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   alternates: { languages: { 'en-US': '/business-case/methodology/', 'ja-JP': '/ja/business-case/methodology/' } },
 };
 
-export default async function MethodologyPage({ searchParams }: { searchParams: Promise<{ region?: string }> }) {
-  const { region } = await searchParams;
-  return <div className={manrope.className}><BusinessCaseMethodology region={region} /></div>;
+export default async function MethodologyPage({ searchParams }: { searchParams: Promise<{ region?: string; market?: string; panelsPerMonth?: string }> }) {
+  return <div className={manrope.className}><BusinessCaseMethodology {...await searchParams} /></div>;
 }

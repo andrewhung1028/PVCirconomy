@@ -125,10 +125,11 @@ function CapacityInput({ name, label, value, onChange, t }: {
   </div>;
 }
 
-export function EquipmentFields({ locale = "en-US", market, specificationPerformance, defaults, sitePowerOptions = defaultSitePowerOptions, onInstallationMarketChange }: {
+export function EquipmentFields({ locale = "en-US", market, specificationPerformance, initialMonthlyVolume, defaults, sitePowerOptions = defaultSitePowerOptions, onInstallationMarketChange }: {
   locale?: OurSolutionLocale;
   market?: PublicSolutionMarket;
   specificationPerformance?: EquipmentPerformance | null;
+  initialMonthlyVolume?: number;
   defaults?: EquipmentMarketDefaults;
   sitePowerOptions?: SitePowerOptions;
   onInstallationMarketChange?: (market: PublicSolutionMarket) => void;
@@ -159,7 +160,7 @@ export function EquipmentFields({ locale = "en-US", market, specificationPerform
       <div className="pc-form-pair">
         {fromSpecification ? <>
           <CapacityInput name="targetCapacity" label={t("Target capacity (panels/month)")}
-            value={capacityOverride ?? specificationPerformance?.monthlyAverage ?? ""} onChange={setCapacityOverride} t={t} />
+            value={capacityOverride ?? initialMonthlyVolume ?? specificationPerformance?.monthlyAverage ?? ""} onChange={setCapacityOverride} t={t} />
           <CapacityInput name="dailyHours" label={t("Operating hours per day")}
             value={hoursOverride ?? specificationPerformance?.dailyHours ?? ""} onChange={setHoursOverride} t={t} />
         </> : <>

@@ -5,6 +5,8 @@ const config: NextConfig = {
   images: { unoptimized: true },
   redirects() {
     return [
+      { source: '/services/', destination: '/?market=US#pricing', permanent: true },
+      { source: '/contact/', destination: '/support/', permanent: true },
       {
         source: '/PVCirconomy',
         destination: '/',

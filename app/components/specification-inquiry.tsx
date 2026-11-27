@@ -3,6 +3,9 @@
 import type { EquipmentMarketDefaults, SitePowerOptions } from "../../lib/equipment-quantitative";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
+import { useTransferredVolume } from "./use-transferred-volume";
+import { equipmentSalesNextStep, equipmentCaseLabel } from "../../lib/equipment-sales-case";
+import { fillTransferredContact } from "../../lib/business-case/equipment-contact";
 import { mouWording } from "../../lib/equipment-mou-articles";
 import { EquipmentFields, inquiryTranslate, type EquipmentPerformance } from "./marketing";
 import { equipmentMouPriceRows, equipmentOfftakeLabel, inquiryText } from "../../lib/equipment-mou-copy";
@@ -64,6 +67,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const t = inquiryTranslate(locale);
   const id = useId();
   const heading = useRef<HTMLHeadingElement>(null);
+  const transferredVolume = useTransferredVolume();
   const formRef = useRef<HTMLFormElement>(null);
   const [rememberContact, setRememberContact] = useState(false);
   const [summary, setSummary] = useState<[string, string][]>([]);
@@ -81,7 +85,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
   const awaitingCode = Boolean(challenge) && !noMsrp;
 
   useEffect(() => {
-    if (formRef.current && restoreInquiryContact(formRef.current)) setRememberContact(true);
+    if (formRef.current && !fillTransferredContact(formRef.current) && restoreInquiryContact(formRef.current)) setRememberContact(true);
   }, []);
 
   useEffect(() => {
@@ -267,7 +271,7 @@ export function SpecificationInquiry({ configuration, configurations, onConfigur
           <label>{t("Expected production start")}<input type="month" name="startDate" max="9999-12" /></label>
         </div>
       </fieldset>
-      <EquipmentFields locale={locale} market={market} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={selected => {
+      <EquipmentFields locale={locale} market={market} initialMonthlyVolume={transferredVolume} specificationPerformance={performance} defaults={defaults} sitePowerOptions={sitePowerOptions} onInstallationMarketChange={selected => {
         setInstallationMarket(selected);
         if (selected === "JP") setPurchaseOption(equipmentPurchaseOptions[0]);
       }} />
@@ -327,7 +331,7 @@ export function EquipmentMouPreview({ review: initialReview, onEdit }: { review:
   const [actionsContainer, setActionsContainer] = useState<HTMLElement | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const [pending, setPending] = useState(false);
-  const [receipt, setReceipt] = useState<{ signedAt: string | null; mail: "accepted" | "pending" | "unavailable" }>();
+  const [receipt, setReceipt] = useState<{ caseNumber?: string; signedAt: string | null; mail: "accepted" | "pending" | "unavailable" }>();
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -366,7 +370,7 @@ export function EquipmentMouPreview({ review: initialReview, onEdit }: { review:
         body: JSON.stringify({ action: "sign", confirmed: true, review }),
       });
       const result = await response.json();
-      if (response.ok && ((result.mail === "accepted" && typeof result.signedAt === "string")
+      if (response.ok && ((result.mail === "accepted" && typeof result.signedAt === "string" && typeof result.caseNumber === "string")
         || ((result.mail === "pending" || result.mail === "unavailable") && result.signedAt === null))) setReceipt(result);
       else setError(t(result.error === "expired_review" ? "This preview expired. Edit the inquiry and review it again."
         : result.error === "too_many_requests" ? "Please try again in an hour."
@@ -395,7 +399,11 @@ export function EquipmentMouPreview({ review: initialReview, onEdit }: { review:
       <p>{receipt?.signedAt ? content.signingCompleted : content.signatureStatus}</p>
       {receipt?.signedAt && <p className="pv-note"><time dateTime={receipt.signedAt}>
         {new Date(receipt.signedAt).toLocaleString(review.input.locale)}
-      </time> · {review.token?.id}</p>}
+      </time></p>}
+      {receipt?.signedAt && <div role="status" lang={initialReview.input.locale}>
+        <p><strong>{equipmentCaseLabel(initialReview.input.locale)}</strong> {receipt.caseNumber}</p>
+        <p>{equipmentSalesNextStep(review.input, initialReview.input.locale)}</p>
+      </div>}
     </div>
     {actionsContainer && createPortal(<>
       {!receipt && <>

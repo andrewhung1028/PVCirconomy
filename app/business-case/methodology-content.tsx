@@ -1,7 +1,7 @@
 import { PublicHeader } from '../components/public-header';
 import japaneseCopy from '../../lib/i18n/business-case-methodology-ja.json';
 import chineseCopy from '../../lib/i18n/business-case-methodology-zh.json';
-import { localizedPublicPath, type OurSolutionLocale } from '../../lib/our-solution/market';
+import { localizedPublicPath, publicSolutionMarkets, type OurSolutionLocale } from '../../lib/our-solution/market';
 
 const Table = ({ headers, rows }: { headers: string[]; rows: string[][] }) => (
   <div className="methodologyTableWrap">
@@ -12,14 +12,19 @@ const Table = ({ headers, rows }: { headers: string[]; rows: string[][] }) => (
   </div>
 );
 
-export function BusinessCaseMethodology({ locale = 'en-US', region }: { locale?: OurSolutionLocale; region?: string }) {
+export function BusinessCaseMethodology({ locale = 'en-US', region, market, panelsPerMonth }: { locale?: OurSolutionLocale; region?: string; market?: string; panelsPerMonth?: string }) {
   const copy: Record<string, string> = locale === 'zh-TW' ? chineseCopy : locale === 'ja-JP' ? japaneseCopy : {};
   const t = (english: string) => copy[english] ?? english;
-  const selector = typeof region === 'string' && /^[A-Z0-9-]+$/.test(region) ? '?region=' + encodeURIComponent(region) : '';
+  const params = new URLSearchParams();
+  const selectedMarket = publicSolutionMarkets.find(item => item === market);
+  if (selectedMarket) params.set('market', selectedMarket);
+  if (typeof region === 'string' && /^[A-Z0-9-]+$/.test(region)) params.set('region', region);
+  if (typeof panelsPerMonth === 'string' && /^\d+$/.test(panelsPerMonth)) params.set('panelsPerMonth', panelsPerMonth);
+  const selector = params.size ? '?' + params : '';
   const path = localizedPublicPath(locale, '/business-case/');
   return (
     <div className="bc-calculator bc-methodology"><div className="pv-review pv-light-nav">
-      <PublicHeader locale={locale} solid languagePath="/business-case/methodology/" languageQuery={selector} disableRecycling={region === 'JP' || region?.startsWith('AU-')} />
+      <PublicHeader locale={locale} solid solutionMarket={selectedMarket} languagePath="/business-case/methodology/" languageQuery={selector} disableRecycling={region === 'JP' || region?.startsWith('AU-')} />
       <main className="methodologyPage">
       <div className="methodologyShell">
         <section className="methodologyHero">

@@ -41,7 +41,7 @@ export function PVCirculatorBusinessModel({ market, t, onPurchase, onPaneWheel, 
     <div className="pvc2-split-copy pvc2-business-purchase" tabIndex={0} role="region" aria-labelledby="business-model-title" onWheel={onPaneWheel}>
       <div>
         <h2 id="business-model-title">{t("Bring PV Circulator to your site.")}</h2>
-        <p>{t("Can the line reliably separate the panels you receive? Who will take the outputs, and will the revenue cover your costs? If you already know which configuration you need, you can buy it directly.")}</p>
+        <p>{t("Can the line reliably separate the panels you receive? Who will take the outputs, and will the revenue cover your costs? If you know which configuration you need, start a standard equipment inquiry.")}</p>
         {trialOffered && <article className="pvc2-purchase-option">
           <div className="os-materials-demand">
             <strong aria-hidden="true">180</strong>

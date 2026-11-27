@@ -1,3 +1,5 @@
+import { equipmentCaseLabel, equipmentCaseNumber, equipmentSalesNextStep } from "../../../lib/equipment-sales-case";
+import { initializeSigningStore } from "../../../server/equipment-mou/cases";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { equipmentInquiryMaterials, equipmentInquiryNotesLimit, equipmentMouHasSalesAgent, equipmentMouSigningLocales, equipmentOfftakeStreams, equipmentProjectStages, equipmentPurchaseOptions, equipmentVariants, glassOfftakePrices, otherSitePowerSupply, polymerOfftakeOptions, siteNetworkOptions, type EquipmentMou, type EquipmentMouInput, type EquipmentMouContact, type EquipmentMouReview } from "../../../lib/equipment-mou";
 import { isSitePowerOption } from "../../../lib/equipment-quantitative";
@@ -5,7 +7,7 @@ import { ourSolutionLocales, ourSolutionParameterMarkets, publicSolutionMarkets 
 import { model } from "../../../lib/our-solution/model";
 import { parameterCurrency, scenarioPanelWeightKg, scenarioPanelWeightLb } from "../../../lib/our-solution/parameters";
 import { equipmentMouGoverningLaw } from "../../../lib/equipment-mou-articles";
-import { equipmentInquiryTranslate, inquiryText } from "../../../lib/equipment-mou-copy";
+import { inquiryText } from "../../../lib/equipment-mou-copy";
 import { mailConfigured, sendDocumentEmail } from "../../../server/delivery/communications";
 import { jsonBody, reply, sameOrigin } from "../../../server/delivery/http";
 import { limit } from "../../../server/delivery/limits";
@@ -150,23 +152,6 @@ function issueReview(review: Omit<EquipmentMouReview, "token">, deadline = Date.
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char] ?? char));
 
-let signingStoreReady: Promise<void> | undefined;
-
-function initializeSigningStore() {
-  signingStoreReady ??= (async () => {
-    const sql = database();
-    await sql`CREATE TABLE IF NOT EXISTS pv_equipment_mou_acceptances (
-      id uuid PRIMARY KEY, document jsonb NOT NULL,
-      signed_at timestamptz NOT NULL DEFAULT now(), completed_at timestamptz
-    )`;
-    await sql`ALTER TABLE pv_equipment_mou_acceptances ADD COLUMN IF NOT EXISTS completed_at timestamptz`;
-  })().catch(error => {
-    signingStoreReady = undefined;
-    throw error;
-  });
-  return signingStoreReady;
-}
-
 export async function GET(request: Request) {
   const value = new URL(request.url).searchParams.get("market");
   const market = publicSolutionMarkets.find(option => option === value);
@@ -256,10 +241,10 @@ export async function POST(request: Request) {
         VALUES (${token.id}::uuid, ${document}::jsonb) ON CONFLICT(id) DO NOTHING RETURNING signed_at, completed_at`;
       if (!record) [record] = await sql`SELECT signed_at, completed_at FROM pv_equipment_mou_acceptances WHERE id=${token.id}::uuid`;
     }
-    if (record.completed_at) return reply({ signedAt: new Date(record.completed_at).toISOString(), mail: "accepted" });
+    const caseNumber = equipmentCaseNumber(token.id);
+    if (record.completed_at) return reply({ caseNumber, signedAt: new Date(record.completed_at).toISOString(), mail: "accepted" });
     if (!mailConfigured()) return reply({ signedAt: null, mail: "unavailable" });
     const buyerConfirmedAt = new Date(record.signed_at).toISOString();
-    const t = equipmentInquiryTranslate(input.locale);
     const articles = content.articles.map(article => {
       const introduction = article.introduction ? `<p>${escapeHtml(article.introduction)}</p>` : "";
       const body = article.table
@@ -271,16 +256,16 @@ export async function POST(request: Request) {
       const note = article.note ? `<p>${escapeHtml(article.note)}</p>` : "";
       return `<h2>${escapeHtml(article.title)}</h2>${introduction}${body}${note}`;
     }).join("");
-    const status = [content.dispatchStatus, `${content.buyerConfirmationLabel}  ${buyerConfirmedAt}`, `${t("MOU reference")}  ${token.id}`].map(escapeHtml).join("<br>");
+    const status = [content.dispatchStatus, `${content.buyerConfirmationLabel}  ${buyerConfirmedAt}`, `${equipmentCaseLabel(input.locale)}  ${caseNumber}`, equipmentSalesNextStep(input)].map(escapeHtml).join("<br>");
     try {
       const acceptedAt = await sendDocumentEmail(token.id, contact.email, {
-        subject: `PV Circulator · ${content.title}`,
+        subject: `PV Circulator · ${caseNumber} · ${content.title}`,
         html: `<h1>${escapeHtml(content.title)}</h1><p>${escapeHtml(content.description)}</p>${articles}<p>${status}</p>`,
       });
       const [completed] = await sql`UPDATE pv_equipment_mou_acceptances
         SET completed_at=COALESCE(completed_at,${acceptedAt}::timestamptz)
         WHERE id=${token.id}::uuid RETURNING completed_at`;
-      return reply({ signedAt: new Date(completed.completed_at).toISOString(), mail: "accepted" });
+      return reply({ caseNumber, signedAt: new Date(completed.completed_at).toISOString(), mail: "accepted" });
     } catch (error) {
       return reply({ signedAt: null, mail: error instanceof Error && error.message === "send_in_progress" ? "pending" : "unavailable" });
     }

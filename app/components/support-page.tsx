@@ -79,7 +79,7 @@ export function SupportPage({ locale, market }: { locale: OurSolutionLocale; mar
   const index = locale === "zh-TW" ? 1 : locale === "ja-JP" ? 2 : 0;
   const t = (copy: Copy) => copy[index];
   const product = `${localizedPublicPath(locale, "/pv-circulator/")}?market=${market}`;
-  const links = { specs: `${product}#specification`, inquiry: `${product}&inquiry=1#specification`, case: businessCaseHref(locale, market), contact: "/contact/", recycling: "/recycling-estimate/" };
+  const links = { specs: `${product}#specification`, inquiry: `${product}&inquiry=1#specification`, case: businessCaseHref(locale, market), contact: `${product}&inquiry=1#specification`, recycling: "/?market=US#pricing" };
   const available = topics.filter(topic => market === "US" || topic.id !== "recycling");
   const terms = search.trim().toLocaleLowerCase(locale).split(/\s+/).filter(Boolean);
   const matches = available.map(topic => ({
@@ -130,7 +130,7 @@ export function SupportPage({ locale, market }: { locale: OurSolutionLocale; mar
         </section>
         <section className="pv-support-contact">
           <h2>{t(["Contact us", "聯絡我們", "お問い合わせ"])}</h2>
-          <Link className="pv-button" href={links.contact}>{t(["Contact the PV Circonomy team", "聯絡 PV Circonomy 團隊", "PV Circonomy チームに問い合わせる"])}<Arrow /></Link>
+          <Link className="pv-button" href={links.contact}>{t(["Open equipment inquiry", "填寫設備詢價", "設備について問い合わせる"])}<Arrow /></Link>
         </section>
       </div>
     </main>

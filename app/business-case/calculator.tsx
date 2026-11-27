@@ -1,4 +1,5 @@
 'use client';
+import {transferEquipmentContact} from '../../lib/business-case/equipment-contact';
 import {businessCaseDefaultPanels, businessCaseOpexValue, businessCasePositiveInteger, defaultPanelsParameter} from '../../lib/business-case/defaults';
 import {solutionLabel as defaultSolutionLabel} from '../../lib/business-case/solution-labels';
 import {formatCurrency} from '../../lib/region-format';
@@ -786,12 +787,22 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
   const selectedMarket = (reg && businessCaseMarketForCountry(reg.countryCode))
     ?? requestedMarket ?? businessCaseMarketForCountry(initialRegion?.split('-')[0] ?? '')
     ?? (japanese ? 'JP' : 'US');
-  const languageQuery = `?market=${selectedMarket}${reg ? `&region=${encodeURIComponent(region)}` : ''}`;
+  const followForm = useRef<HTMLFormElement>(null);
+  const emailLabel = text("Email my business case", "事業性試算をメールで受け取る", "將營運試算寄給我");
+  const inquiryLabel = text("Start an equipment inquiry", "設備について問い合わせる", "開始設備詢價");
+  function startEquipmentInquiry() {
+    if (!result) return;
+    const params = new URLSearchParams({ market: selectedMarket, panelsPerMonth: String(panels), inquiry: "1" });
+    const handoff = followForm.current ? transferEquipmentContact(followForm.current) : "";
+    if (handoff) params.set("handoff", handoff);
+    window.location.assign(localizedPublicPath(locale, "/pv-circulator/") + "?" + params + "#specification");
+  }
+  const languageQuery = `?market=${selectedMarket}${reg ? `&region=${encodeURIComponent(region)}` : ''}${panels > 0 ? '&panelsPerMonth=' + panels : ''}`;
   const marketUnavailable = Boolean(requestedMarket && data && !data.regions?.some(
     (item: Region) => businessCaseMarketForCountry(item.countryCode) === requestedMarket,
   ));
   const lightNavigation = !['overview', 'business-summary', 'follow-up'].includes(activeSection);
-  const methodologyHref = `${localizedPublicPath(locale, '/business-case/methodology/')}?region=${encodeURIComponent(region)}`;
+  const methodologyHref = `${localizedPublicPath(locale, '/business-case/methodology/')}${languageQuery}`;
 
   return (
     <div className={`pv-review bc-shell${lightNavigation ? ' pv-light-nav' : ''}`} data-section={activeSection}>
@@ -1452,6 +1463,10 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
                       <strong>{number(pvResult.simplePaybackYears, 1)}{localized ? ' 年' : ' years'}</strong>{localized ? '。' : '.'}
                     </p>
                   )}
+                  <div className="bc-result-actions">
+                    <a className="pv-button" href="#follow-up">{emailLabel}</a>
+                    <button type="button" className="pv-button" onClick={startEquipmentInquiry}>{inquiryLabel}</button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -1867,13 +1882,13 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
                   </h2>
 
                   <p>
-                    {t("Receive your business case and brochure, or connect with our team to discuss equipment, recycling services or your project.")}
+                    {text('Email the results or use your monthly volume to start an equipment inquiry.', '結果をメールで受け取るか、この月間処理量で設備について問い合わせます。', '將試算結果寄到信箱，或沿用本次月處理量開始設備詢價。')}
                   </p>
 
                 </div>
 
                 <form
-                  className="followForm"
+                  ref={followForm} className="followForm"
                   onSubmit={save}
                 >
 
@@ -1941,14 +1956,6 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
                       <option value="Request Meeting">
                         {t("Schedule a Meeting")}
                       </option>
-
-                      <option value="Request Quote">
-                        {t("Request a Quotation")}
-                      </option>
-
-                      <option value="Purchase Interest">
-                        {t("Discuss Purchase")}
-                      </option>
                     </select>
 
                   </label>
@@ -1963,10 +1970,14 @@ export default function Page({sourceLabel, locale = 'en-US', initialRegion, requ
                     type="submit"
                     disabled={!result}
                   >
-                    {t("SUBMIT & SEND MY BUSINESS CASE")}
+                    {emailLabel}
                     <span>→</span>
                   </button>
 
+                  <button className="followSubmit" type="button" disabled={!result}
+                    onClick={startEquipmentInquiry}>
+                    {inquiryLabel} <span>→</span>
+                  </button>
                 </form>
 
               </div>

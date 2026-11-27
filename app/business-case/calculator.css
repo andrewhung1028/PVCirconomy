@@ -1969,3 +1969,19 @@ footer {
   .bc-calculator .operationTopRow { margin-bottom: 24px; }
   .bc-calculator-ja .bc-shell { --bc-body-size: var(--pv-type-body); }
 }
+
+.bc-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.bc-result-actions .pv-button {
+  color: var(--pv-ink, #151719);
+  background: #fff;
+}
+
+.bc-result-actions button.pv-button {
+  background: var(--pv-yellow, #f4c51e);
+}

@@ -10,6 +10,6 @@ export const metadata: Metadata = {
   } },
 };
 
-export default async function ChineseMethodologyPage({ searchParams }: { searchParams: Promise<{ region?: string }> }) {
-  return <div className="pv-traditional-chinese" lang="zh-TW"><BusinessCaseMethodology locale="zh-TW" region={(await searchParams).region} /></div>;
+export default async function ChineseMethodologyPage({ searchParams }: { searchParams: Promise<{ region?: string; market?: string; panelsPerMonth?: string }> }) {
+  return <div className="pv-traditional-chinese" lang="zh-TW"><BusinessCaseMethodology locale="zh-TW" {...await searchParams} /></div>;
 }

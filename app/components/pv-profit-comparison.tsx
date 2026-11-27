@@ -96,13 +96,14 @@ function FeeSensitivity({ routes, reference, feeRate, locale, t }: {
   />;
 }
 
-export function ProfitComparison({ routes, reference, feePerPanel, feeRate, locale, market, businessCaseHref, t }: {
+export function ProfitComparison({ volumeQuery, routes, reference, feePerPanel, feeRate, locale, market, businessCaseHref, t }: {
   routes: PVCirculatorProfitRoute[];
   reference?: PVCirculatorReference;
   feePerPanel: number | null;
   feeRate: number | null;
   locale: OurSolutionLocale;
   market: PublicSolutionMarket;
+  volumeQuery: string;
   businessCaseHref: string;
   t: Translate;
 }) {
@@ -226,7 +227,7 @@ export function ProfitComparison({ routes, reference, feePerPanel, feeRate, loca
         </details>
         <dl className="pvc2-profit-totals pvc2-profit-net"><div><dt>{t("Recycling EBITDA")}</dt><dd>{periodMoney(active.profit)}</dd></div></dl>
         <p className="pv-note">{t("Operating costs use the selected market’s Our Solution reference volume. EBITDA excludes depreciation, financing and taxes.")}{" "}
-          <Link href={solutionHref(locale, market) + "#economic"}>{t("View the market assumptions in Our Solution")}</Link>
+          <Link href={solutionHref(locale, market) + volumeQuery + "#economic"}>{t("View the market assumptions in Our Solution")}</Link>
         </p>
       </div>
     </div>}
