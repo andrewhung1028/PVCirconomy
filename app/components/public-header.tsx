@@ -100,7 +100,9 @@ export function PublicHeader({
   const shopUnavailable = label("Coming soon", "準備中", "準備中");
   const recyclingUnavailable = label("Unavailable in this market", "この市場ではご利用いただけません", "此市場尚未提供回收服務");
   const recyclingDisabled = (solutionMarket ?? (isJapanese ? "JP" : "US")) !== "US" || disableRecycling;
-  const solutionLink = solutionMarket ? solutionHref(locale, solutionMarket) : localizedPublicPath(locale, "/solutions/");
+  const monthlyVolume = new URLSearchParams(languageQuery).get("panelsPerMonth");
+  const volumeQuery = monthlyVolume && /^\d+$/.test(monthlyVolume) ? "&panelsPerMonth=" + monthlyVolume : "";
+  const solutionLink = solutionMarket ? solutionHref(locale, solutionMarket) + volumeQuery : localizedPublicPath(locale, "/solutions/");
   const homeHref = isJapanese || isChinese ? solutionLink : "/";
   const productPrefix = locale === "zh-TW" ? "/zh" : isJapanese ? "/ja" : "";
   const currentMarket = solutionMarket ?? (isJapanese ? "JP" : "US");
@@ -122,7 +124,7 @@ export function PublicHeader({
   const [equipmentTitle, ...equipmentParagraphs] = isChinese && languagePath === "/pv-circulator/" && equipmentTopic === "businesscase"
     ? ["營運試算", "依營運地區比較回收費、材料收入、營運成本及年度 EBITDA。"]
     : equipmentCopy[locale][equipmentTopic];
-  const [companyTopic, setCompanyTopic] = useState<"about" | "mission" | "approach" | "contact">("about");
+  const [companyTopic, setCompanyTopic] = useState<"about" | "mission" | "approach">("about");
   const header = useRef<HTMLElement>(null);
   const accountButton = useRef<HTMLButtonElement>(null);
   const panelOpener = useRef<HTMLButtonElement | null>(null);
@@ -306,8 +308,8 @@ export function PublicHeader({
               <nav className="pv-company-topics" aria-label={label("PV Circulator information", "PV Circulator の関連情報", "PV Circulator 相關資訊")}>
                 {([
                   ["solution", solutionLink],
-                  ["businesscase", solutionMarket ? businessCaseHref(locale, solutionMarket) : `${productPrefix}/business-case/`],
-                  ["circulator", `${productPrefix}/pv-circulator/${solutionMarket ? `?market=${solutionMarket}` : ""}`],
+                  ["businesscase", solutionMarket ? businessCaseHref(locale, solutionMarket) + volumeQuery : `${productPrefix}/business-case/`],
+                  ["circulator", `${productPrefix}/pv-circulator/${solutionMarket ? `?market=${solutionMarket}${volumeQuery}` : ""}`],
                   ["upcycling", `${productPrefix}/material-upcycling/`],
                   ["easycycle", `${productPrefix}/easycycle/`],
                 ] as const).map(([id, href]) => (
@@ -335,7 +337,6 @@ export function PublicHeader({
                   ["about", "About us", "/about-us/"],
                   ["mission", "Mission", "/mission/"],
                   ["approach", "Our approach", "/our-approach/"],
-                  ["contact", "Contact", "/contact/"],
                 ] as const).map(([id, label, href]) => (
                   <Link
                     key={id}
@@ -350,7 +351,7 @@ export function PublicHeader({
                 ))}
               </nav>
               <div className="pv-company-content" aria-live="polite">
-                <h2>{({ about: "About us", mission: "Mission", approach: "Our approach", contact: "Contact" })[companyTopic]}</h2>
+                <h2>{({ about: "About us", mission: "Mission", approach: "Our approach" })[companyTopic]}</h2>
                 {companyTopic === "about" ? (
                   <>
                     <p>PV Circonomy provides US solar panel recycling services using PV Circulator, developed by its parent company TSGC.</p>
@@ -358,13 +359,8 @@ export function PublicHeader({
                   </>
                 ) : companyTopic === "mission" ? (
                   <p>Make end-of-life solar panel recycling easier to understand, with clear processing estimates, delivery terms and visibility into the recycling journey.</p>
-                ) : companyTopic === "approach" ? (
-                  <p>Start with the panel model, quantity and condition. Separate processing from transport costs, agree receiving conditions and document the batch through its recycling journey.</p>
                 ) : (
-                  <>
-                    <p>For recycling inquiries, prepare your panel model, quantity, condition and US location. For equipment inquiries, specify your interest in PV Circulator.</p>
-                    <p>Use the quotation tool to prepare your panel information; sending an inquiry is a separate step.</p>
-                  </>
+                  <p>Start with the panel model, quantity and condition. Separate processing from transport costs, agree receiving conditions and document the batch through its recycling journey.</p>
                 )}
               </div>
             </>

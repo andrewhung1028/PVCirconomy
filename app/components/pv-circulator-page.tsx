@@ -6,6 +6,7 @@ import { CapacityEstimate, useCapacityEstimate } from "./pv-capacity-estimate";
 import { PVCirculatorBusinessModel } from "./pv-business-model";
 import { EquipmentMouPreview, SpecificationInquiry } from "./specification-inquiry";
 import type { EquipmentBaseVariant, EquipmentMouReview, EquipmentPurchaseOption, EquipmentVariant } from "../../lib/equipment-mou";
+import { useTransferredVolume } from "./use-transferred-volume";
 import { inquiryTranslate } from "./marketing";
 import { defaultEquipmentConfigurations, equipmentElectricalRows, equipmentLineRating, integratedEquipmentThroughput, equipmentSpecificationGroups, type EquipmentConfigurations } from "../../lib/equipment-configurations";
 import { defaultEquipmentQuantitative, type EquipmentClaims, type EquipmentMarketDefaults, type SitePowerOptions } from "../../lib/equipment-quantitative";
@@ -311,7 +312,6 @@ function Specifications({ locale, market, businessCaseHref, specificationFx, est
         <button ref={returnToSpecs} type="button" className="pv-button" onClick={toggleInquiry}>{quote("Back to specifications")}</button>
         <a className="pv-button pvc2-quote-button pvc2-inquiry-jump" href="#equipment-inquiry">{quote("Online inquiry")} <Arrow /></a>
       </div> : <div className="pvc2-spec-ctas">
-        <Link className="pv-button" href="/contact/">{t("Contact us")}</Link>
         {businessCaseHref && <a className="pv-button" href={businessCaseHref}>{t("Business case")}</a>}
         <button ref={openQuote} type="button" className="pv-button pvc2-quote-button" onClick={toggleInquiry}>{quote("Online inquiry")} <Arrow /></button>
       </div>}
@@ -375,7 +375,7 @@ function SilverGradeRange({ grades, locale, t }: { grades?: PVCirculatorSilverGr
   </div>;
 }
 
-function SilverGradeComparison({ grades, locale, market, t }: { grades?: PVCirculatorSilverGrades; locale: ProductLocale; market: PublicSolutionMarket; t: Translate }) {
+function SilverGradeComparison({ grades, locale, market, volumeQuery, t }: { volumeQuery: string; grades?: PVCirculatorSilverGrades; locale: ProductLocale; market: PublicSolutionMarket; t: Translate }) {
   return <div className="pvc2-silver-grades">
     <h3 id="pvc2-silver-grade-title">{t("Theoretical silver concentration")}</h3>
     {grades ? <>
@@ -388,7 +388,7 @@ function SilverGradeComparison({ grades, locale, market, t }: { grades?: PVCircu
         })}</tbody>
       </table>
       <p>{t("The model assumes all module silver enters the indicated output. The upper limit is the mass of silver divided by the total mass of that output.")}</p>
-      <Link href={solutionHref(locale, market) + "#value"}>{t("View silver assumptions in Our Solution")}</Link>
+      <Link href={solutionHref(locale, market) + volumeQuery + "#value"}>{t("View silver assumptions in Our Solution")}</Link>
     </> : <p>{t("Silver concentration estimates are unavailable for this market.")}</p>}
   </div>;
 }
@@ -424,7 +424,10 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
     ? Math.round(materialRevenuePerPanel / feePerPanel * 100) / 100
     : null;
   const showRevenueComparison = estimate.valid && estimate.netAnnual > 0 && Boolean(recovery);
-  const businessCaseHref = marketCalculatorHref(locale, market);
+  const transferredVolume = useTransferredVolume();
+  const monthlyVolume = transferredVolume ?? (estimate.valid ? estimate.monthlyAverage : 0);
+  const volumeQuery = monthlyVolume > 0 ? "&panelsPerMonth=" + monthlyVolume : "";
+  const businessCaseHref = marketCalculatorHref(locale, market) + volumeQuery;
   const [active, setActive] = useState<(typeof sections)[number][0]>("pvcirculator");
   const [inquiry, setInquiry] = useState(false);
   const [purchaseOption, setPurchaseOption] = useState<EquipmentPurchaseOption>("Standard sales");
@@ -478,7 +481,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
 
   return <div className={`pv-review pvc2-page${light ? " pv-light-nav" : ""}`} data-active-section={active}>
     <a className="pv-skip" href="#pvcirculator">{t("Skip to PV Circulator")}</a>
-    <PublicHeader locale={locale} languagePath="/pv-circulator/" languageQuery={`?market=${market}`} solutionMarket={market} assistantInlineLinks assistantTechnologyAnchor="#process" />
+    <PublicHeader locale={locale} languagePath="/pv-circulator/" languageQuery={`?market=${market}${volumeQuery}`} solutionMarket={market} assistantInlineLinks assistantTechnologyAnchor="#process" />
     <nav className="pv-dots" aria-label={t("PV Circulator sections")}>
       {sections.map(([id, label]) => (
         <a key={id} href={`#${id}`} aria-label={t(label)} aria-current={active === id ? "step" : undefined}>
@@ -499,7 +502,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
           <figure className="pvc2-machine"><img src="/images/pvc-machine.webp" alt={t("PV Circulator industrial solar panel recycling line")} /></figure>
           <div className="pvc2-card-row">{performance.map(([value, title, text]) => <article key={value}><strong>{formatCopy(t(value), claimValues)}</strong><h3>{t(title)}</h3><p>{formatCopy(t(text), claimValues)}</p></article>)}</div>
         </div>
-        <CapacityEstimate estimate={estimate} rating={rating} shareThroughput={shareThroughput} plusThroughput={integratedEquipmentThroughput(equipmentConfigurations)} businessCaseHref={businessCaseHref} locale={locale} t={t}
+        <CapacityEstimate estimate={estimate} rating={rating} shareThroughput={shareThroughput} plusThroughput={integratedEquipmentThroughput(equipmentConfigurations)} businessCaseHref={marketCalculatorHref(locale, market)} locale={locale} t={t}
           reference={reference} feeInput={feeInput} setFeeInput={value => setFeeOverride({ market, value })} annualFeeRevenue={annualFeeRevenue} />
       </section>
 
@@ -520,7 +523,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
             <p>{t("A PV module is built in layers: glass, encapsulant, cells and backsheet. Shred it, and they end up mixed together. Separate them, and each one stays clean enough for what comes next.")}</p>
           </div>
           <SilverGradeRange grades={silverGrades} locale={locale} t={t} />
-          <SilverGradeComparison grades={silverGrades} locale={locale} market={market} t={t} />
+          <SilverGradeComparison volumeQuery={volumeQuery} grades={silverGrades} locale={locale} market={market} t={t} />
         </div>
       </section>
 
@@ -555,7 +558,7 @@ export function PVCirculatorPage({ routes = [], reference, recovery, silverGrade
         </div>
       </section>
 
-      <ProfitComparison routes={routes} reference={reference} feePerPanel={feePerPanel} feeRate={feeRate} market={market} locale={locale} businessCaseHref={businessCaseHref} t={t} />
+      <ProfitComparison volumeQuery={volumeQuery} routes={routes} reference={reference} feePerPanel={feePerPanel} feeRate={feeRate} market={market} locale={locale} businessCaseHref={businessCaseHref} t={t} />
       <section id="capability" className="pv-screen pvc2-split pvc2-split-64" aria-labelledby="capability-title">
         <div className="pvc2-split-copy" tabIndex={0} onWheel={(event) => navigateSplitPane(event, "deployability", "quality")}><div><h2 id="capability-title">{t("One platform.")}<br />{t("Intact, broken or glass-glass.")}</h2><p>{t("PV Circulator separates intact modules layer by layer. The PLUS module extends the system to broken and glass-glass feedstock through crushing and material separation.")}</p>
           <table className="pvc2-feedstock-table">

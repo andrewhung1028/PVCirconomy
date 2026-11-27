@@ -157,21 +157,3 @@ export const approachPage: UnifiedPublicPageProps = {
   }],
   footerNote: "Our approach · clear terms and documented outcomes",
 };
-
-export const contactPage: UnifiedPublicPageProps = {
-  pageLabel: "Contact",
-  hero: {
-    title: "Start with the right\nproject information.",
-    description: "Choose the recycling, equipment or recovered-material path so the right information reaches the right team.",
-    poster: "/images/circulator-poster.jpg",
-    action: { label: "Choose an inquiry path", href: "#contact" },
-  },
-  sections: [{
-    id: "contact", label: "Contact", title: "Prepare the details that move the conversation forward.",
-    body: ["For recycling, prepare the panel model, quantity, condition and US location. For equipment, specify your PV Circulator interest and intended market. For materials, identify the stream, application and required documentation."],
-    image: "/images/pv-circulator-system.png", imageAlt: "PV Circulator equipment and solar panel recycling line",
-    items: ["Solar panel recycling", "PV Circulator equipment", "Recovered materials"],
-    action: { label: "Open inquiry options", href: "/shop/" },
-  }],
-  footerNote: "Contact · recycling, equipment and materials",
-};
